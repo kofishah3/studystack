@@ -9,6 +9,10 @@ interface TextInputProps {
   type?: string;
 }
 
+interface TextInputwLabelProps extends TextInputProps {
+  label: string;
+}
+
 export default function TextInput({
   name,
   placeholder,
@@ -45,6 +49,20 @@ export default function TextInput({
           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
         </button>
       )}
+    </div>
+  );
+}
+
+export function TextInputwLabel({
+  label,
+  name,
+  placeholder,
+  type = "text",
+}: TextInputwLabelProps) {
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <p className="font-medium text-text">{label}</p>
+      <TextInput name={name} placeholder={placeholder} type={type} />
     </div>
   );
 }

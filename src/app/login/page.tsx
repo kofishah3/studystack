@@ -1,8 +1,13 @@
-import TextInput from "@/components/inputs/TextInput";
+"use client";
+
+import FullButton from "@/components/inputs/FullButton";
+import { TextInputwLabel } from "@/components/inputs/TextInput";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-sm">
       <h1 className="text-2xl font-sora font-bold mb-6">
@@ -10,26 +15,27 @@ export default function LoginPage() {
       </h1>
       <div
         id="form-container"
-        className="w-full max-w-md p-8 bg-background rounded-xl border border-border shadow-sm"
+        className="w-full max-w-lg p-8 bg-background rounded-xl border border-border shadow-sm flex flex-col gap-5"
       >
         <div id="input-fields" className="flex flex-col gap-3">
-          <div id="email-input" className="flex flex-col gap-1">
-            <p>Email:</p>
-            <TextInput
-              name="sample"
-              placeholder="sampleemail@domain.com"
-              type="email"
-            ></TextInput>
-          </div>
-          <div id="email-input" className="flex flex-col gap-1">
-            <p>Password:</p>
-            <TextInput
-              name="sample"
-              placeholder="Enter your password"
-              type="password"
-            ></TextInput>
-          </div>
+          <TextInputwLabel
+            label="Email:"
+            name="email"
+            placeholder="sampleemail@domain.com"
+            type="email"
+          />
+          <TextInputwLabel
+            label="Password:"
+            name="password"
+            placeholder="Enter your password"
+            type="password"
+          />
         </div>
+
+        <FullButton
+          label="Log In"
+          onClick={() => router.push("/home")}
+        ></FullButton>
       </div>
       <p className="mt-4 text-muted">
         Don't have an account?{" "}

@@ -1,13 +1,81 @@
+"use client";
+
+import FullButton from "@/components/inputs/FullButton";
+import { TextInputwLabel } from "@/components/inputs/TextInput";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+  const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-sm">
       <h1 className="text-2xl font-sora font-bold mb-6">Create an account</h1>
-      <div className="w-full max-w-md p-8 bg-background rounded-xl border border-border shadow-sm">
-        <p className="text-center text-muted font-inter">
-          Signup form placeholder
-        </p>
+      <div
+        id="form-container"
+        className="w-full max-w-lg p-8 bg-background rounded-xl border border-border shadow-sm flex flex-col gap-5"
+      >
+        <div id="input-fields" className="flex flex-col gap-3">
+          <TextInputwLabel
+            label="Email:"
+            name="email"
+            placeholder="sampleemail@domain.com"
+            type="email"
+          />
+          <div id="name-field-container" className="flex flex-row gap-3">
+            <div className="w-3/5">
+              <TextInputwLabel
+                label="First Name:"
+                name="firstName"
+                placeholder="Isabella"
+                type="text"
+              />
+            </div>
+            <div className="w-2/5">
+              <TextInputwLabel
+                label="Last Name:"
+                name="lastName"
+                placeholder="Recilla"
+                type="text"
+              />
+            </div>
+          </div>
+          <div id="education-field-container" className="flex flex-row gap-3">
+            <div className="w-3/5">
+              <TextInputwLabel
+                label="Institution:"
+                name="institution"
+                placeholder="UP Cebu"
+                type="text"
+              />
+            </div>
+            <div className="w-2/5">
+              <TextInputwLabel
+                label="Education Level:"
+                name="educlevel"
+                placeholder="Undergraduate"
+                type="text"
+              />
+            </div>
+          </div>
+          <TextInputwLabel
+            label="Password:"
+            name="password"
+            placeholder="Enter your password"
+            type="password"
+          />
+          <TextInputwLabel
+            label="Confirm Password:"
+            name="confirmPassword"
+            placeholder="Re-enter your password"
+            type="password"
+          />
+        </div>
+
+        <FullButton
+          label="Create Account"
+          onClick={() => router.push("/home")}
+        ></FullButton>
       </div>
       <p className="mt-4 text-muted">
         Already have an account?{" "}
