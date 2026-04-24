@@ -1,7 +1,7 @@
 "use client";
 
-import FullButton from "@/components/inputs/FullButton";
-import { TextInputwLabel } from "@/components/inputs/TextInput";
+import FullButton from "@/components/inputs/fullbutton";
+import { TextInputwLabel } from "@/components/inputs/textinput";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,11 +9,11 @@ import { useRouter } from "next/navigation";
 export default function SignupPage() {
   const router = useRouter();
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-sm">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-sm">
       <h1 className="text-2xl font-sora font-bold mb-6">Create an account</h1>
       <div
         id="form-container"
-        className="w-full max-w-lg p-8 bg-background rounded-xl border border-border shadow-sm flex flex-col gap-5"
+        className="w-full max-w-lg p-8 bg-surface rounded-xl border border-border shadow-sm flex flex-col gap-5"
       >
         <div id="input-fields" className="flex flex-col gap-3">
           <TextInputwLabel
