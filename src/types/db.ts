@@ -1,5 +1,13 @@
+type UserID        = string & { readonly _brand: 'UserID' };
+type QuestionID    = string & { readonly _brand: 'QuestionID' };
+type TutorialID    = string & { readonly _brand: 'TutorialID' };
+type AnswerID      = number & { readonly _brand: 'AnswerID' };
+type CommentID     = number & { readonly _brand: 'CommentID' };
+type InteractionID = number & { readonly _brand: 'InteractionID' };
+
+
 export interface User {
-  user_id: string;
+  user_id: UserID;
   user_name: string;
   email: string;
   password_hash: string;
@@ -11,66 +19,64 @@ export interface User {
 }
 
 export interface Questions {
-  question_id: string;
-  user_id: string; // Foreign key to User
+  question_id: QuestionID;
+  user_id: UserID;
   content: string;
-  category: string; // e.g., 'math', 'science', 'literature', etc.
+  category: string;
   demand_score: number;
   popped: boolean;
   created_at: Date;
   resolved_at: Date | null;
 }
 
-
 export interface Answers {
-  answer_id: number;
-  user_id: string; // Foreign key to User
-  question_id: string; // Foreign key to Questions
+  answer_id: AnswerID;
+  user_id: UserID;
+  question_id: QuestionID;
   content: string;
   is_accepted: boolean;
   created_at: Date;
 }
 
-
 export interface Comments {
-  comment_id: number;
-  user_id: string; // Foreign key to User
+  comment_id: CommentID;
+  user_id: UserID;
   content: string;
-  parent_comment_id: number | null; // For nested comments, null if top-level
-  question_id: string; // Foreign key to Questions
-  answer_id: number | null; // Foreign key to Answers, null if comment is on question
-  tutorial_id: string | null; // Foreign key to Tutorials, null if comment is on question or answer
+  parent_comment_id: CommentID | null;
+  question_id: QuestionID;
+  answer_id: AnswerID | null;
+  tutorial_id: TutorialID | null;
   created_at: Date;
 }
 
 
-export interface Interactions {
-  interaction_id: number;
-  user_id: string; // Foreign key to User
-
-  question_id: string | null; // Foreign key to Questions, null if interaction is on answer
-  answer_id: number | null; // Foreign key to Answers, null if interaction is on question
-  comment_id: number | null; // Foreign key to Comments, null if interaction is on question or answer
-  tutorial_id: string | null; // Foreign key to Tutorials, null if interaction is on question or answer
-
+type InteractionBase = {
+  interaction_id: InteractionID;
+  user_id: UserID;
   interaction_type: 'react' | 'rating';
-  value: number | null; // For ratings, a value from 1 to 5; for reactions, null
+  value: number | null;
   created_at: Date;
-}
+};
+
+type QuestionInteraction = InteractionBase & { question_id: QuestionID; answer_id?: never; comment_id?: never; tutorial_id?: never };
+type AnswerInteraction   = InteractionBase & { question_id?: never; answer_id: AnswerID;   comment_id?: never; tutorial_id?: never };
+type CommentInteraction  = InteractionBase & { question_id?: never; answer_id?: never; comment_id: CommentID;  tutorial_id?: never };
+type TutorialInteraction = InteractionBase & { question_id?: never; answer_id?: never; comment_id?: never; tutorial_id: TutorialID };
+
+export type Interaction = QuestionInteraction | AnswerInteraction | CommentInteraction | TutorialInteraction;
 
 
 export interface QuestionsTutorials {
-    question_id: string; // Foreign key to Questions
-    tutorial_id: string; // Foreign key to Tutorials
+  question_id: QuestionID;
+  tutorial_id: TutorialID;
 }
 
-
 export interface Tutorials {
-  tutorial_id: string;
-  user_id: string; // Foreign key to User
-  question_id: string | null; // Foreign key to Questions
+  tutorial_id: TutorialID;
+  user_id: UserID;
+  question_id: QuestionID | null;
   title: string;
   content: string;
-  embedded_video_url: string | null; // URL or embed code for video, null if no video
+  embedded_video_url: string | null;
   created_at: Date;
 }
