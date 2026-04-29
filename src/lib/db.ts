@@ -1,23 +1,22 @@
-import 'server-only';
-import { Pool, type QueryResultRow } from 'pg';
+import "server-only";
+import { Pool, type QueryResultRow } from "pg";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __pgPool: Pool | undefined;
 }
 
 export const pool: Pool =
   globalThis.__pgPool ??
   new Pool({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'studystack',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD,
+    host: process.env.DB_HOST || "localhost",
+    port: parseInt(process.env.DB_PORT || "5432"),
+    database: process.env.DB_NAME || "studystack",
+    user: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD || "",
     max: 10,
   });
 
-if (process.env.NODE_ENV !== 'production') globalThis.__pgPool = pool;
+if (process.env.NODE_ENV !== "production") globalThis.__pgPool = pool;
 
 export async function q<T extends QueryResultRow>(
   sql: string,

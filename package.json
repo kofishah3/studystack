@@ -6,7 +6,8 @@
     "dev": "ts-node server.ts",
     "build": "next build",
     "start": "NODE_ENV=production ts-node server.ts",
-    "lint": "eslint"
+    "lint": "eslint",
+    "init-db": "ts-node scripts/init-db.ts"
   },
   "dependencies": {
     "axios": "^1.15.0",

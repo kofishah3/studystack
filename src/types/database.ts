@@ -1,19 +1,24 @@
-export type UserID        = string & { readonly _brand: 'UserID' };
-export type QuestionID    = string & { readonly _brand: 'QuestionID' };
-export type TutorialID    = string & { readonly _brand: 'TutorialID' };
-export type AnswerID      = number & { readonly _brand: 'AnswerID' };
-export type CommentID     = number & { readonly _brand: 'CommentID' };
-export type InteractionID = number & { readonly _brand: 'InteractionID' };
+export type UserID = string & { readonly _brand: "UserID" };
+export type QuestionID = string & { readonly _brand: "QuestionID" };
+export type TutorialID = string & { readonly _brand: "TutorialID" };
+export type AnswerID = number & { readonly _brand: "AnswerID" };
+export type CommentID = number & { readonly _brand: "CommentID" };
+export type InteractionID = number & { readonly _brand: "InteractionID" };
 
 export interface User {
   user_id: UserID;
   user_name: string;
   email: string;
   password_hash: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
+  age: number | null;
+  gender: "male" | "female" | "other" | null;
   institution: string;
-  education_level: 'high_school' | 'bachelor' | 'master' | 'doctorate' | 'other';
+  education_level:
+    | "high_school"
+    | "bachelor"
+    | "master"
+    | "doctorate"
+    | "other";
   created_at: Date;
 }
 
@@ -51,17 +56,41 @@ export interface Comments {
 type InteractionBase = {
   interaction_id: InteractionID;
   user_id: UserID;
-  interaction_type: 'react' | 'rating';
+  interaction_type: "react" | "rating";
   value: number | null;
   created_at: Date;
 };
 
-type QuestionInteraction = InteractionBase & { question_id: QuestionID; answer_id?: never; comment_id?: never; tutorial_id?: never };
-type AnswerInteraction   = InteractionBase & { question_id?: never; answer_id: AnswerID;   comment_id?: never; tutorial_id?: never };
-type CommentInteraction  = InteractionBase & { question_id?: never; answer_id?: never; comment_id: CommentID;  tutorial_id?: never };
-type TutorialInteraction = InteractionBase & { question_id?: never; answer_id?: never; comment_id?: never; tutorial_id: TutorialID };
+type QuestionInteraction = InteractionBase & {
+  question_id: QuestionID;
+  answer_id?: never;
+  comment_id?: never;
+  tutorial_id?: never;
+};
+type AnswerInteraction = InteractionBase & {
+  question_id?: never;
+  answer_id: AnswerID;
+  comment_id?: never;
+  tutorial_id?: never;
+};
+type CommentInteraction = InteractionBase & {
+  question_id?: never;
+  answer_id?: never;
+  comment_id: CommentID;
+  tutorial_id?: never;
+};
+type TutorialInteraction = InteractionBase & {
+  question_id?: never;
+  answer_id?: never;
+  comment_id?: never;
+  tutorial_id: TutorialID;
+};
 
-export type Interaction = QuestionInteraction | AnswerInteraction | CommentInteraction | TutorialInteraction;
+export type Interaction =
+  | QuestionInteraction
+  | AnswerInteraction
+  | CommentInteraction
+  | TutorialInteraction;
 
 export interface QuestionsTutorials {
   question_id: QuestionID;

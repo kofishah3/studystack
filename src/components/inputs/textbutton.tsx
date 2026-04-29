@@ -18,6 +18,7 @@ export default function TextButton({
   return (
     <div
       id="textbutton-container"
+      onClick={onClick}
       className={`p-2 text-inter text-md font-medium transition-all duration-150
          hover:text-${hoverColor} hover:cursor-pointer hover:underline underline-offset-3
         ${isSelected ? `text-${selectedColor} underline ` : `text-${textColor}`}
