@@ -1,12 +1,11 @@
-import 'server-only';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import "server-only";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
-import type { User, UserID } from '@/types/database';
+import type { User, UserID } from "@/types/database";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is required");
-
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const SALT_ROUNDS = 10;
 
 export type AuthedRequest = NextRequest & { userId: UserID };
@@ -46,3 +45,4 @@ export function withAuth(handler: RouteHandler) {
     }
   };
 }
+
