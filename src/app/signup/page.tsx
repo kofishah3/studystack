@@ -1,7 +1,7 @@
 "use client";
 
-import FullButton from "@/components/inputs/fullbutton";
-import { TextInputwLabel } from "@/components/inputs/textinput";
+import FullButton from "@/components/inputs/FullButton";
+import { TextInputwLabel } from "@/components/inputs/TextInput";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
