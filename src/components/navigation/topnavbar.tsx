@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import TextButton from "../inputs/textbutton";
+import { usePathname } from "next/navigation";
 
 interface TopNavBarProps {}
 
 export default function TopNavBar({}: TopNavBarProps) {
+  const pathname = usePathname();
   const tempUserName = "Momonga";
   const tempEducation = "Undergraduate";
 
@@ -32,9 +36,27 @@ export default function TopNavBar({}: TopNavBarProps) {
         id="navbuttons-container"
         className="flex flex-row gap-3 absolute left-1/2 -translate-x-1/2"
       >
-        <TextButton label="Home" {...defaultTextButtonConfig} />
-        <TextButton label="Tutorials" {...defaultTextButtonConfig} />
-        <TextButton label="Questions" {...defaultTextButtonConfig} />
+        <Link href="/home">
+          <TextButton 
+            label="Home" 
+            {...defaultTextButtonConfig} 
+            isSelected={pathname === "/home"} 
+          />
+        </Link>
+        <Link href="/tutorials">
+          <TextButton 
+            label="Tutorials" 
+            {...defaultTextButtonConfig} 
+            isSelected={pathname === "/tutorials"} 
+          />
+        </Link>
+        <Link href="/questions">
+          <TextButton 
+            label="Questions" 
+            {...defaultTextButtonConfig} 
+            isSelected={pathname === "/questions"} 
+          />
+        </Link>
       </div>
 
       <div id="rightmost-container" className="flex flex-row gap-1">
@@ -62,3 +84,4 @@ export default function TopNavBar({}: TopNavBarProps) {
     </div>
   );
 }
+

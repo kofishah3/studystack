@@ -10,7 +10,7 @@ app.prepare().then(() => {
   const httpServer = createServer((req, res) => handle(req, res));
 
   const io = new Server(httpServer, {
-    cors: { origin: "*" }, // tighten in production
+    cors: { origin: "*" },
   });
 
   (global as any).io = io;

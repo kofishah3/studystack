@@ -20,16 +20,8 @@ export async function POST(request: NextRequest) {
       education_level,
     } = body;
 
-    if (
-      !user_name ||
-      !email ||
-      !password ||
-      !age ||
-      !gender ||
-      !institution ||
-      !education_level
-    ) {
-      throw new ValidationError("All fields are required");
+    if (!user_name || !email || !password || !institution || !education_level) {
+      throw new ValidationError("Required fields are missing");
     }
 
     const existingEmail = await getUserByEmail(email);
@@ -48,8 +40,8 @@ export async function POST(request: NextRequest) {
       user_name,
       email,
       password_hash,
-      age: parseInt(age),
-      gender,
+      age: age ? parseInt(age) : null,
+      gender: gender || null,
       institution,
       education_level,
     });

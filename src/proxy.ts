@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
-const RATE_LIMIT = 60;      
-const WINDOW_MS = 60_000;   // 1 minute window
+const RATE_LIMIT = 60;
+const WINDOW_MS = 60_000;
 
 export default function proxy(req: NextRequest) {
   if (!req.nextUrl.pathname.startsWith("/api")) {
@@ -20,10 +20,7 @@ export default function proxy(req: NextRequest) {
   }
 
   if (entry.count >= RATE_LIMIT) {
-    return NextResponse.json(
-      { error: "Too many requests" },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   entry.count++;
