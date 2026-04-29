@@ -5,7 +5,6 @@ export type AnswerID      = number & { readonly _brand: 'AnswerID' };
 export type CommentID     = number & { readonly _brand: 'CommentID' };
 export type InteractionID = number & { readonly _brand: 'InteractionID' };
 
-
 export interface User {
   user_id: UserID;
   user_name: string;
@@ -49,7 +48,6 @@ export interface Comments {
   created_at: Date;
 }
 
-
 type InteractionBase = {
   interaction_id: InteractionID;
   user_id: UserID;
@@ -64,7 +62,6 @@ type CommentInteraction  = InteractionBase & { question_id?: never; answer_id?: 
 type TutorialInteraction = InteractionBase & { question_id?: never; answer_id?: never; comment_id?: never; tutorial_id: TutorialID };
 
 export type Interaction = QuestionInteraction | AnswerInteraction | CommentInteraction | TutorialInteraction;
-
 
 export interface QuestionsTutorials {
   question_id: QuestionID;
