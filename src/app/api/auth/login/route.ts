@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { one } from '@/lib/db';
-import { verifyPassword, generateToken } from '@/lib/auth';
-import { ValidationError, AuthError, errorToResponse } from '@/lib/errors';
-import type { User } from '@/types/database';
+import { generateToken, verifyPassword } from "@/lib/auth";
+import { AuthError, errorToResponse, ValidationError } from "@/lib/errors";
+import { getUserByEmail } from "@/lib/queries/users";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,10 +9,10 @@ export async function POST(request: NextRequest) {
     const { email, password } = body;
 
     if (!email || !password) {
-      throw new ValidationError('Email and password are required');
+      throw new ValidationError("Email and password are required");
     }
 
-    const user = await one<User>('SELECT * FROM users WHERE email = $1', [email]);
+    const user = await getUserByEmail(email);
 
     if (!user) {
       throw new AuthError();
