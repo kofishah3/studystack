@@ -3,13 +3,34 @@
 import Link from "next/link";
 import TextButton from "../inputs/textbutton";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface TopNavBarProps {}
 
 export default function TopNavBar({}: TopNavBarProps) {
   const pathname = usePathname();
-  const tempUserName = "Momonga";
-  const tempEducation = "Undergraduate";
+  const [userName, setUserName] = useState("Loading...");
+  const [education, setEducation] = useState("Loading...");
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.stringify(userStr) ? JSON.parse(userStr) : null;
+        if (user) {
+          setUserName(user.user_name || "User");
+          const edu = user.education_level || "Undergraduate";
+          // Capitalize first letter and replace underscores
+          setEducation(edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " "));
+        }
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
+    } else {
+      setUserName("Guest");
+      setEducation("Unknown");
+    }
+  }, []);
 
   const defaultTextButtonConfig = {
     textColor: "text",
@@ -59,27 +80,29 @@ export default function TopNavBar({}: TopNavBarProps) {
         </Link>
       </div>
 
-      <div id="rightmost-container" className="flex flex-row gap-1">
-        <div id="profile-container" className="items-center flex">
-          <img
-            src={
-              "https://static.wikia.nocookie.net/chiikawa/images/a/a0/Momonga.png/revision/latest?cb=20240921205329"
-            }
-            alt="temporary profile picture"
-            className="w-13 h-13 rounded-full border-2 border-border"
-          />
-        </div>
-        <div
-          id="profile-details-container"
-          className="flex-col font-inter p-2 max-w-30 justify-center hidden sm:flex"
-        >
-          <p className="text-md text-text font-medium overflow-hidden leading-tight">
-            {tempUserName}
-          </p>
-          <p className="text-sm text-muted -mt-1 overflow-hidden ">
-            {tempEducation}
-          </p>
-        </div>
+      <div id="rightmost-container" className="flex flex-row gap-1 cursor-pointer">
+        <Link href="/profile" className="flex flex-row gap-1 items-center">
+          <div id="profile-container" className="items-center flex">
+            <img
+              src={
+                "https://static.wikia.nocookie.net/chiikawa/images/a/a0/Momonga.png/revision/latest?cb=20240921205329"
+              }
+              alt="temporary profile picture"
+              className="w-13 h-13 rounded-full border-2 border-border"
+            />
+          </div>
+          <div
+            id="profile-details-container"
+            className="flex-col font-inter p-2 max-w-30 justify-center hidden sm:flex"
+          >
+            <p className="text-md text-text font-medium overflow-hidden leading-tight">
+              {userName}
+            </p>
+            <p className="text-sm text-muted -mt-1 overflow-hidden ">
+              {education}
+            </p>
+          </div>
+        </Link>
       </div>
     </div>
   );
