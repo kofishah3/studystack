@@ -1,20 +1,36 @@
-// lib/db.ts
-import { Pool } from 'pg';
+import 'server-only';
+import { Pool, type QueryResultRow } from 'pg';
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'studystack',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-});
-
-export async function query(text: string, params?: any[]) {
-  const start = Date.now();
-  const res = await pool.query(text, params);
-  const duration = Date.now() - start;
-  console.log('Executed query', { text, duration, rows: res.rowCount });
-  return res;
+declare global {
+  // eslint-disable-next-line no-var
+  var __pgPool: Pool | undefined;
 }
 
-export default pool;
+export const pool: Pool =
+  globalThis.__pgPool ??
+  new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'studystack',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD,
+    max: 10,
+  });
+
+if (process.env.NODE_ENV !== 'production') globalThis.__pgPool = pool;
+
+export async function q<T extends QueryResultRow>(
+  sql: string,
+  params: readonly unknown[] = [],
+): Promise<T[]> {
+  const res = await pool.query<T>(sql, params as unknown[]);
+  return res.rows;
+}
+
+export async function one<T extends QueryResultRow>(
+  sql: string,
+  params: readonly unknown[] = [],
+): Promise<T | null> {
+  const rows = await q<T>(sql, params);
+  return rows[0] ?? null;
+}
