@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node --loader ts-node/esm server.ts",
+    "dev": "ts-node server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production node --loader ts-node/esm server.ts",
+    "start": "NODE_ENV=production ts-node server.ts",
     "lint": "eslint"
   },
   "dependencies": {
