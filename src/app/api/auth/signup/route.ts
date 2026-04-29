@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { one, q } from '@/lib/db';
+import { one } from '@/lib/db';
 import { hashPassword, generateToken } from '@/lib/auth';
+import { ValidationError, ConflictError, errorToResponse } from '@/lib/errors';
 import type { User } from '@/types/database';
 
 export async function POST(request: NextRequest) {
@@ -9,17 +10,17 @@ export async function POST(request: NextRequest) {
     const { user_name, email, password, age, gender, institution, education_level } = body;
 
     if (!user_name || !email || !password || !age || !gender || !institution || !education_level) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+      throw new ValidationError('All fields are required');
     }
 
     const existingEmail = await one<User>('SELECT * FROM users WHERE email = $1', [email]);
     if (existingEmail) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+      throw new ConflictError('Email already registered');
     }
 
     const existingUsername = await one<User>('SELECT * FROM users WHERE user_name = $1', [user_name]);
     if (existingUsername) {
-      return NextResponse.json({ error: 'Username already taken' }, { status: 409 });
+      throw new ConflictError('Username already taken');
     }
 
     const password_hash = await hashPassword(password);
@@ -37,7 +38,6 @@ export async function POST(request: NextRequest) {
       token: generateToken(newUser!.user_id),
     }, { status: 201 });
   } catch (error) {
-    console.error('Signup error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return errorToResponse(error);
   }
 }
