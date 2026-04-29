@@ -1,9 +1,18 @@
-import 'server-only';
-import { q, one } from '@/lib/db';
-import { asTutorialId } from '@/lib/db-brands';
-import type { Tutorials, TutorialID, UserID, QuestionID } from '@/types/database';
+import { one, q } from "@/lib/db";
+import { asQuestionId, asTutorialId, asUserId } from "@/lib/db-brands";
+import { DatabaseError } from "@/lib/errors";
+import type {
+  QuestionID,
+  TutorialID,
+  Tutorials,
+  UserID,
+} from "@/types/database";
+import "server-only";
 
-type TutorialRow = Omit<Tutorials, 'tutorial_id' | 'user_id' | 'question_id'> & {
+type TutorialRow = Omit<
+  Tutorials,
+  "tutorial_id" | "user_id" | "question_id"
+> & {
   tutorial_id: string;
   user_id: string;
   question_id: string | null;
@@ -13,22 +22,27 @@ function mapTutorial(r: TutorialRow): Tutorials {
   return {
     ...r,
     tutorial_id: asTutorialId(r.tutorial_id),
-    user_id: r.user_id as UserID,
-    question_id: r.question_id !== null ? (r.question_id as unknown as QuestionID) : null,
+    user_id: asUserId(r.user_id),
+    question_id: r.question_id !== null ? asQuestionId(r.question_id) : null,
   };
 }
 
-export async function getTutorialById(id: TutorialID): Promise<Tutorials | null> {
+export async function getTutorialById(
+  id: TutorialID,
+): Promise<Tutorials | null> {
   const row = await one<TutorialRow>(
-    'SELECT * FROM tutorials WHERE tutorial_id = $1',
+    "SELECT * FROM tutorials WHERE tutorial_id = $1",
     [id],
   );
   return row ? mapTutorial(row) : null;
 }
 
-export async function listTutorials(limit: number, offset: number): Promise<Tutorials[]> {
+export async function listTutorials(
+  limit: number,
+  offset: number,
+): Promise<Tutorials[]> {
   const rows = await q<TutorialRow>(
-    'SELECT * FROM tutorials ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+    "SELECT * FROM tutorials ORDER BY created_at DESC LIMIT $1 OFFSET $2",
     [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0)],
   );
   return rows.map(mapTutorial);
@@ -44,10 +58,16 @@ export async function insertTutorial(input: {
   const row = await one<TutorialRow>(
     `INSERT INTO tutorials
        (tutorial_id, user_id, question_id, title, content, embedded_video_url)
-     VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
      RETURNING *`,
-    [input.user_id, input.question_id, input.title, input.content, input.embedded_video_url],
+    [
+      input.user_id,
+      input.question_id,
+      input.title,
+      input.content,
+      input.embedded_video_url,
+    ],
   );
-  if (!row) throw new Error('insertTutorial: no row returned');
+  if (!row) throw new DatabaseError("insertTutorial: no row returned");
   return mapTutorial(row);
 }

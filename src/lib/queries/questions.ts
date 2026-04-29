@@ -1,9 +1,10 @@
-import 'server-only';
-import { q, one } from '@/lib/db';
-import { asQuestionId } from '@/lib/db-brands';
-import type { Questions, QuestionID, UserID } from '@/types/database';
+import { one, q } from "@/lib/db";
+import { asQuestionId, asUserId } from "@/lib/db-brands";
+import { DatabaseError } from "@/lib/errors";
+import type { QuestionID, Questions, UserID } from "@/types/database";
+import "server-only";
 
-type QuestionRow = Omit<Questions, 'question_id' | 'user_id'> & {
+type QuestionRow = Omit<Questions, "question_id" | "user_id"> & {
   question_id: string;
   user_id: string;
 };
@@ -12,21 +13,26 @@ function mapQuestion(r: QuestionRow): Questions {
   return {
     ...r,
     question_id: asQuestionId(r.question_id),
-    user_id: r.user_id as UserID,
+    user_id: asUserId(r.user_id),
   };
 }
 
-export async function getQuestionById(id: QuestionID): Promise<Questions | null> {
+export async function getQuestionById(
+  id: QuestionID,
+): Promise<Questions | null> {
   const row = await one<QuestionRow>(
-    'SELECT * FROM questions WHERE question_id = $1',
+    "SELECT * FROM questions WHERE question_id = $1",
     [id],
   );
   return row ? mapQuestion(row) : null;
 }
 
-export async function listQuestions(limit: number, offset: number): Promise<Questions[]> {
+export async function listQuestions(
+  limit: number,
+  offset: number,
+): Promise<Questions[]> {
   const rows = await q<QuestionRow>(
-    'SELECT * FROM questions ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+    "SELECT * FROM questions ORDER BY created_at DESC LIMIT $1 OFFSET $2",
     [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0)],
   );
   return rows.map(mapQuestion);
@@ -40,17 +46,17 @@ export async function insertQuestion(
   const row = await one<QuestionRow>(
     `INSERT INTO questions
        (question_id, user_id, content, category, demand_score, popped)
-     VALUES (uuid_generate_v4(), $1, $2, $3, 0, false)
+     VALUES (gen_random_uuid(), $1, $2, $3, 0, false)
      RETURNING *`,
     [user_id, content, category],
   );
-  if (!row) throw new Error('insertQuestion: no row returned');
+  if (!row) throw new DatabaseError("insertQuestion: no row returned");
   return mapQuestion(row);
 }
 
 export async function markResolved(id: QuestionID): Promise<Questions | null> {
   const row = await one<QuestionRow>(
-    'UPDATE questions SET resolved_at = now() WHERE question_id = $1 RETURNING *',
+    "UPDATE questions SET resolved_at = now() WHERE question_id = $1 RETURNING *",
     [id],
   );
   return row ? mapQuestion(row) : null;

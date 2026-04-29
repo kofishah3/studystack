@@ -1,13 +1,18 @@
-import 'server-only';
-import { q } from '@/lib/db';
-import type { QuestionsTutorials, QuestionID, TutorialID } from '@/types/database';
+import { q } from "@/lib/db";
+import { asQuestionId, asTutorialId } from "@/lib/db-brands";
+import type {
+  QuestionID,
+  QuestionsTutorials,
+  TutorialID,
+} from "@/types/database";
+import "server-only";
 
 type QTRow = { question_id: string; tutorial_id: string };
 
 function mapQT(r: QTRow): QuestionsTutorials {
   return {
-    question_id: r.question_id as QuestionID,
-    tutorial_id: r.tutorial_id as TutorialID,
+    question_id: asQuestionId(r.question_id),
+    tutorial_id: asTutorialId(r.tutorial_id),
   };
 }
 
@@ -35,9 +40,11 @@ export async function unlinkQuestionTutorial(
   return rows.map(mapQT);
 }
 
-export async function tutorialsForQuestion(qid: QuestionID): Promise<QuestionsTutorials[]> {
+export async function tutorialsForQuestion(
+  qid: QuestionID,
+): Promise<QuestionsTutorials[]> {
   const rows = await q<QTRow>(
-    'SELECT * FROM questions_tutorials WHERE question_id = $1',
+    "SELECT * FROM questions_tutorials WHERE question_id = $1",
     [qid],
   );
   return rows.map(mapQT);

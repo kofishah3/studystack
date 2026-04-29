@@ -1,11 +1,11 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable UUID extension (older pg versions)
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
 -- 1. USERS TABLE (no dependencies)
 -- ============================================
 CREATE TABLE users (
-  user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_name VARCHAR(100) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE users (
 -- 2. QUESTIONS TABLE (depends on users)
 -- ============================================
 CREATE TABLE questions (
-  question_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  question_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   category VARCHAR(100) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE questions (
 -- 3. TUTORIALS TABLE (depends on users, questions)
 -- ============================================
 CREATE TABLE tutorials (
-  tutorial_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tutorial_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   question_id UUID REFERENCES questions(question_id) ON DELETE SET NULL,
   title VARCHAR(255) NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE comments (
   answer_id INTEGER REFERENCES answers(answer_id) ON DELETE CASCADE,
   tutorial_id UUID REFERENCES tutorials(tutorial_id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  
+
   CHECK (
     (question_id IS NOT NULL AND answer_id IS NULL AND tutorial_id IS NULL) OR
     (question_id IS NULL AND answer_id IS NOT NULL AND tutorial_id IS NULL) OR
@@ -97,7 +97,7 @@ CREATE TABLE interactions (
   comment_id INTEGER REFERENCES comments(comment_id) ON DELETE CASCADE,
   tutorial_id UUID REFERENCES tutorials(tutorial_id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  
+
   CHECK (
     (question_id IS NOT NULL AND answer_id IS NULL AND comment_id IS NULL AND tutorial_id IS NULL) OR
     (question_id IS NULL AND answer_id IS NOT NULL AND comment_id IS NULL AND tutorial_id IS NULL) OR
@@ -160,7 +160,7 @@ CREATE UNIQUE INDEX unique_user_tutorial_interaction ON interactions(user_id, tu
 
 -- Questions with author info and statistics
 CREATE VIEW question_details AS
-SELECT 
+SELECT
   q.question_id,
   q.user_id,
   q.content,
@@ -182,7 +182,7 @@ GROUP BY q.question_id, q.user_id, q.content, q.category, q.demand_score, q.popp
 
 -- Tutorials with popularity
 CREATE VIEW tutorial_stats AS
-SELECT 
+SELECT
   t.tutorial_id,
   t.user_id,
   t.question_id,
@@ -199,8 +199,8 @@ JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
 GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name;
 
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
   AND table_type = 'BASE TABLE'
 ORDER BY table_name;
