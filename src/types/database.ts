@@ -1,10 +1,9 @@
-type UserID        = string & { readonly _brand: 'UserID' };
-type QuestionID    = string & { readonly _brand: 'QuestionID' };
-type TutorialID    = string & { readonly _brand: 'TutorialID' };
-type AnswerID      = number & { readonly _brand: 'AnswerID' };
-type CommentID     = number & { readonly _brand: 'CommentID' };
-type InteractionID = number & { readonly _brand: 'InteractionID' };
-
+export type UserID        = string & { readonly _brand: 'UserID' };
+export type QuestionID    = string & { readonly _brand: 'QuestionID' };
+export type TutorialID    = string & { readonly _brand: 'TutorialID' };
+export type AnswerID      = number & { readonly _brand: 'AnswerID' };
+export type CommentID     = number & { readonly _brand: 'CommentID' };
+export type InteractionID = number & { readonly _brand: 'InteractionID' };
 
 export interface User {
   user_id: UserID;
@@ -49,7 +48,6 @@ export interface Comments {
   created_at: Date;
 }
 
-
 type InteractionBase = {
   interaction_id: InteractionID;
   user_id: UserID;
@@ -64,7 +62,6 @@ type CommentInteraction  = InteractionBase & { question_id?: never; answer_id?: 
 type TutorialInteraction = InteractionBase & { question_id?: never; answer_id?: never; comment_id?: never; tutorial_id: TutorialID };
 
 export type Interaction = QuestionInteraction | AnswerInteraction | CommentInteraction | TutorialInteraction;
-
 
 export interface QuestionsTutorials {
   question_id: QuestionID;
