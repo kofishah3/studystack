@@ -19,8 +19,6 @@ export async function listInteractionsByUser(uid: UserID): Promise<Interaction[]
   return rows.map(rowToInteraction);
 }
 
-// Takes the discriminated union directly — TypeScript enforces exactly one FK
-// is present in the input, matching the DB CHECK constraint.
 export async function insertInteraction(
   input: Omit<Interaction, 'interaction_id' | 'created_at'>,
 ): Promise<Interaction> {
