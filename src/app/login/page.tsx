@@ -24,6 +24,7 @@ export default function LoginPage() {
       const res = await axios.post("/api/auth/login", { email, password });
       if (res.data.success) {
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
         router.push("/home");
       }
     } catch (err: any) {
