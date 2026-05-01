@@ -36,6 +36,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class RateLimitError extends AppError {
+  constructor(message = "Too many requests") {
+    super(message, 429, "RATE_LIMIT_EXCEEDED");
+  }
+}
+
 export class DatabaseError extends AppError {
   constructor(message = "Database operation failed") {
     super(message, 500, "DATABASE_ERROR");
@@ -50,7 +56,6 @@ export function errorToResponse(error: unknown): NextResponse {
     );
   }
 
-  const message = error instanceof Error ? error.message : "Unknown error";
   console.error("[Unhandled Error]", error);
   return NextResponse.json(
     { error: "Internal Server Error", code: "INTERNAL_ERROR" },

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
 import type { User, UserID } from "@/types/database";
+import { AuthError, errorToResponse } from "@/lib/errors";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -31,7 +32,7 @@ export function withAuth(handler: RouteHandler) {
     const authHeader = req.headers.get("authorization");
 
     if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return errorToResponse(new AuthError("Unauthorized"));
     }
 
     const token = authHeader.slice(7);
@@ -41,7 +42,7 @@ export function withAuth(handler: RouteHandler) {
       (req as AuthedRequest).userId = payload.userId as UserID;
       return handler(req as AuthedRequest);
     } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      return errorToResponse(new AuthError("Invalid token"));
     }
   };
 }

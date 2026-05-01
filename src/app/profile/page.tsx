@@ -25,7 +25,7 @@ export default function ProfilePage() {
         const inst = user.institution || "University";
         setSubtitle(`${eduFormatted} @ ${inst}`);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to parse user from localStorage", e);
       }
     }
 
