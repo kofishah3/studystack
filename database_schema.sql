@@ -197,7 +197,28 @@ SELECT
 FROM tutorials t
 JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
+WHERE t.deleted_at IS NULL
 GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name;
+
+-- ============================================
+-- MIGRATIONS
+-- ============================================
+
+-- Soft delete support for tutorials
+ALTER TABLE tutorials ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+CREATE INDEX idx_tutorials_deleted_at ON tutorials(deleted_at) WHERE deleted_at IS NOT NULL;
+
+-- Tutorial materials (uploaded files) table
+CREATE TABLE tutorial_materials (
+  material_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tutorial_id  UUID NOT NULL REFERENCES tutorials(tutorial_id) ON DELETE CASCADE,
+  file_name    VARCHAR(255) NOT NULL,
+  storage_key  VARCHAR(1000) NOT NULL,
+  mime_type    VARCHAR(100) NOT NULL,
+  size_bytes   BIGINT NOT NULL,
+  uploaded_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_tutorial_materials_tutorial_id ON tutorial_materials(tutorial_id);
 
 SELECT table_name
 FROM information_schema.tables
