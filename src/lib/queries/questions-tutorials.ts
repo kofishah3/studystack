@@ -49,3 +49,13 @@ export async function tutorialsForQuestion(
   );
   return rows.map(mapQT);
 }
+
+export async function questionsForTutorial(
+  tid: TutorialID,
+): Promise<QuestionsTutorials[]> {
+  const rows = await q<QTRow>(
+    "SELECT * FROM questions_tutorials WHERE tutorial_id = $1",
+    [tid],
+  );
+  return rows.map(mapQT);
+}
