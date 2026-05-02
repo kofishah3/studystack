@@ -20,8 +20,9 @@ export default function TopNavBar({}: TopNavBarProps) {
         if (user) {
           setUserName(user.user_name || "User");
           const edu = user.education_level || "Undergraduate";
-          // Capitalize first letter and replace underscores
-          setEducation(edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " "));
+          setEducation(
+            edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " "),
+          );
         }
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
@@ -58,29 +59,32 @@ export default function TopNavBar({}: TopNavBarProps) {
         className="flex flex-row gap-3 absolute left-1/2 -translate-x-1/2"
       >
         <Link href="/home">
-          <TextButton 
-            label="Home" 
-            {...defaultTextButtonConfig} 
-            isSelected={pathname === "/home"} 
+          <TextButton
+            label="Home"
+            {...defaultTextButtonConfig}
+            isSelected={pathname === "/home"}
           />
         </Link>
         <Link href="/tutorials">
-          <TextButton 
-            label="Tutorials" 
-            {...defaultTextButtonConfig} 
-            isSelected={pathname === "/tutorials"} 
+          <TextButton
+            label="Tutorials"
+            {...defaultTextButtonConfig}
+            isSelected={pathname === "/tutorials"}
           />
         </Link>
         <Link href="/questions">
-          <TextButton 
-            label="Questions" 
-            {...defaultTextButtonConfig} 
-            isSelected={pathname === "/questions"} 
+          <TextButton
+            label="Questions"
+            {...defaultTextButtonConfig}
+            isSelected={pathname === "/questions"}
           />
         </Link>
       </div>
 
-      <div id="rightmost-container" className="flex flex-row gap-1 cursor-pointer">
+      <div
+        id="rightmost-container"
+        className="flex flex-row gap-1 cursor-pointer"
+      >
         <Link href="/profile" className="flex flex-row gap-1 items-center">
           <div id="profile-container" className="items-center flex">
             <img
@@ -93,7 +97,7 @@ export default function TopNavBar({}: TopNavBarProps) {
           </div>
           <div
             id="profile-details-container"
-            className="flex-col font-inter p-2 max-w-30 justify-center hidden sm:flex"
+            className="flex-col font-inter p-2 max-w-30 justify-center hidden sm:flex hover:bg-border/50 transition-all duration-200 rounded-lg"
           >
             <p className="text-md text-text font-medium overflow-hidden leading-tight">
               {userName}
@@ -107,4 +111,3 @@ export default function TopNavBar({}: TopNavBarProps) {
     </div>
   );
 }
-
