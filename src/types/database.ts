@@ -4,6 +4,9 @@ export type TutorialID = string & { readonly _brand: "TutorialID" };
 export type AnswerID = number & { readonly _brand: "AnswerID" };
 export type CommentID = number & { readonly _brand: "CommentID" };
 export type InteractionID = number & { readonly _brand: "InteractionID" };
+export type TutorialMaterialID = string & {
+  readonly _brand: "TutorialMaterialID";
+};
 
 export interface User {
   user_id: UserID;
@@ -105,4 +108,15 @@ export interface Tutorials {
   content: string;
   embedded_video_url: string | null;
   created_at: Date;
+  deleted_at: Date | null;
+}
+
+export interface TutorialMaterial {
+  material_id: TutorialMaterialID;
+  tutorial_id: TutorialID;
+  file_name: string;
+  storage_key: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_at: Date;
 }
