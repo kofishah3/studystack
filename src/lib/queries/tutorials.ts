@@ -90,3 +90,66 @@ export async function insertTutorial(input: {
   if (!row) throw new DatabaseError("insertTutorial: no row returned");
   return mapTutorial(row);
 }
+
+export async function updateTutorial(
+  id: TutorialID,
+  input: {
+    title?: string;
+    content?: string;
+    embedded_video_url?: string | null;
+  },
+): Promise<Tutorials | null> {
+  const sets: string[] = [];
+  const params: unknown[] = [];
+
+  if (input.title !== undefined) {
+    params.push(input.title);
+    sets.push(`title = $${params.length}`);
+  }
+  if (input.content !== undefined) {
+    params.push(input.content);
+    sets.push(`content = $${params.length}`);
+  }
+  if (input.embedded_video_url !== undefined) {
+    params.push(input.embedded_video_url);
+    sets.push(`embedded_video_url = $${params.length}`);
+  }
+
+  if (sets.length === 0) {
+    return getTutorialById(id);
+  }
+
+  params.push(id);
+  const row = await one<TutorialRow>(
+    `UPDATE tutorials SET ${sets.join(", ")}
+     WHERE tutorial_id = $${params.length} AND deleted_at IS NULL
+     RETURNING *`,
+    params,
+  );
+  return row ? mapTutorial(row) : null;
+}
+
+export async function softDeleteTutorial(
+  id: TutorialID,
+): Promise<Tutorials | null> {
+  const row = await one<TutorialRow>(
+    `UPDATE tutorials SET deleted_at = now()
+     WHERE tutorial_id = $1 AND deleted_at IS NULL
+     RETURNING *`,
+    [id],
+  );
+  return row ? mapTutorial(row) : null;
+}
+
+export async function hardDeleteExpiredTutorials(
+  olderThanDays: number,
+): Promise<number> {
+  const rows = await q<{ tutorial_id: string }>(
+    `DELETE FROM tutorials
+     WHERE deleted_at IS NOT NULL
+       AND deleted_at < now() - ($1 || ' days')::interval
+     RETURNING tutorial_id`,
+    [olderThanDays],
+  );
+  return rows.length;
+}
