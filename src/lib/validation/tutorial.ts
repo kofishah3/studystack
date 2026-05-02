@@ -1,5 +1,15 @@
 import { ValidationError } from "@/lib/errors";
-import { z } from "zod";
+import { z, ZodType } from "zod";
+
+export function parseOrThrow<T>(schema: ZodType<T>, value: unknown): T {
+  const result = schema.safeParse(value);
+  if (!result.success) {
+    const first = result.error.issues[0];
+    const path = first.path.length ? `${first.path.join(".")}: ` : "";
+    throw new ValidationError(`${path}${first.message}`);
+  }
+  return result.data;
+}
 
 export const DOCUMENT_MIMES = [
   "application/pdf",
@@ -30,15 +40,15 @@ export const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
 export const createTutorialSchema = z.object({
   title: z.string().min(1).max(255),
   content: z.string().min(1),
-  embedded_video_url: z.string().url().nullable().optional(),
-  question_ids: z.array(z.string().uuid()).optional(),
+  embedded_video_url: z.url().nullable().optional(),
+  question_ids: z.array(z.uuid()).optional(),
 });
 
 export const updateTutorialSchema = z
   .object({
     title: z.string().min(1).max(255).optional(),
     content: z.string().min(1).optional(),
-    embedded_video_url: z.string().url().nullable().optional(),
+    embedded_video_url: z.url().nullable().optional(),
   })
   .strict();
 
