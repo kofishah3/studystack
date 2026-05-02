@@ -31,7 +31,7 @@ export async function getTutorialById(
   id: TutorialID,
 ): Promise<Tutorials | null> {
   const row = await one<TutorialRow>(
-    "SELECT * FROM tutorials WHERE tutorial_id = $1",
+    "SELECT * FROM tutorials WHERE tutorial_id = $1 AND deleted_at IS NULL",
     [id],
   );
   return row ? mapTutorial(row) : null;
@@ -40,10 +40,29 @@ export async function getTutorialById(
 export async function listTutorials(
   limit: number,
   offset: number,
+  category?: string,
 ): Promise<Tutorials[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  if (category) {
+    const rows = await q<TutorialRow>(
+      `SELECT DISTINCT t.* FROM tutorials t
+       LEFT JOIN questions_tutorials qt ON qt.tutorial_id = t.tutorial_id
+       LEFT JOIN questions q ON q.question_id = qt.question_id
+       WHERE t.deleted_at IS NULL AND q.category = $3
+       ORDER BY t.created_at DESC
+       LIMIT $1 OFFSET $2`,
+      [safeLimit, safeOffset, category],
+    );
+    return rows.map(mapTutorial);
+  }
+
   const rows = await q<TutorialRow>(
-    "SELECT * FROM tutorials ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-    [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0)],
+    `SELECT * FROM tutorials
+     WHERE deleted_at IS NULL
+     ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+    [safeLimit, safeOffset],
   );
   return rows.map(mapTutorial);
 }
