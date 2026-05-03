@@ -66,6 +66,13 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
         storage_key: key,
         mime_type: mime,
         size_bytes: size,
+      }).catch(async (insertErr) => {
+        await storage
+          .delete(key)
+          .catch((cleanupErr) =>
+            console.error("[Orphan Cleanup]", cleanupErr),
+          );
+        throw insertErr;
       });
 
       const ttl = DEFAULT_URL_TTL_SECONDS;
