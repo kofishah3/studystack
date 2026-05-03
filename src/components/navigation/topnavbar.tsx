@@ -20,7 +20,7 @@ export default function TopNavBar({}: TopNavBarProps) {
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
-        const user = JSON.stringify(userStr) ? JSON.parse(userStr) : null;
+        const user = JSON.parse(userStr);
         if (user) {
           setUserName(user.user_name || "User");
           const edu = user.education_level || "Undergraduate";
