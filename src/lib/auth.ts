@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { User, UserID } from "@/types/database";
 import { AuthError, errorToResponse } from "@/lib/errors";
 
-const JWT_SECRET =
+export const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const SALT_ROUNDS = 10;
 
