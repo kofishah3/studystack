@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { RateLimitError, errorToResponse } from "@/lib/errors";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
@@ -20,7 +21,7 @@ export default function proxy(req: NextRequest) {
   }
 
   if (entry.count >= RATE_LIMIT) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return errorToResponse(new RateLimitError());
   }
 
   entry.count++;

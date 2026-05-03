@@ -2,7 +2,6 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* light mode */
   --primary-50: #eef2ff;
   --primary-100: #e0e7ff;
   --primary-200: #c7d2fe;

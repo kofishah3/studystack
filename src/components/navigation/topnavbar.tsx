@@ -5,6 +5,10 @@ import TextButton from "../inputs/textbutton";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function formatEducationLevel(level: string): string {
+  return level.charAt(0).toUpperCase() + level.slice(1).replace("_", " ");
+}
+
 interface TopNavBarProps {}
 
 export default function TopNavBar({}: TopNavBarProps) {
@@ -16,13 +20,11 @@ export default function TopNavBar({}: TopNavBarProps) {
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
-        const user = JSON.stringify(userStr) ? JSON.parse(userStr) : null;
+        const user = JSON.parse(userStr);
         if (user) {
           setUserName(user.user_name || "User");
           const edu = user.education_level || "Undergraduate";
-          setEducation(
-            edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " "),
-          );
+          setEducation(formatEducationLevel(edu));
         }
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
@@ -38,6 +40,9 @@ export default function TopNavBar({}: TopNavBarProps) {
     selectedColor: "primary-500",
     hoverColor: "primary-500",
   };
+
+  const isActive = (prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix + "/");
 
   return (
     <div
@@ -62,21 +67,21 @@ export default function TopNavBar({}: TopNavBarProps) {
           <TextButton
             label="Home"
             {...defaultTextButtonConfig}
-            isSelected={pathname === "/home"}
+            isSelected={isActive("/home")}
           />
         </Link>
         <Link href="/tutorials">
           <TextButton
             label="Tutorials"
             {...defaultTextButtonConfig}
-            isSelected={pathname === "/tutorials"}
+            isSelected={isActive("/tutorials")}
           />
         </Link>
         <Link href="/questions">
           <TextButton
             label="Questions"
             {...defaultTextButtonConfig}
-            isSelected={pathname === "/questions"}
+            isSelected={isActive("/questions")}
           />
         </Link>
       </div>

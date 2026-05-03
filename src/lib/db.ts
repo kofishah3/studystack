@@ -1,5 +1,5 @@
 import "server-only";
-import { Pool, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
 declare global {
   var __pgPool: Pool | undefined;
@@ -32,4 +32,43 @@ export async function one<T extends QueryResultRow>(
 ): Promise<T | null> {
   const rows = await q<T>(sql, params);
   return rows[0] ?? null;
+}
+
+export async function qOn<T extends QueryResultRow>(
+  client: PoolClient,
+  sql: string,
+  params: readonly unknown[] = [],
+): Promise<T[]> {
+  const res = await client.query<T>(sql, params as unknown[]);
+  return res.rows;
+}
+
+export async function oneOn<T extends QueryResultRow>(
+  client: PoolClient,
+  sql: string,
+  params: readonly unknown[] = [],
+): Promise<T | null> {
+  const rows = await qOn<T>(client, sql, params);
+  return rows[0] ?? null;
+}
+
+export async function withTransaction<T>(
+  fn: (client: PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // ignore rollback errors; surface the original
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
 }

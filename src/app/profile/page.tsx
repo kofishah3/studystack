@@ -18,6 +18,10 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      router.push("/login");
+      return;
+    }
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
@@ -29,7 +33,7 @@ export default function ProfilePage() {
         const inst = user.institution || "University";
         setSubtitle(`${eduFormatted} @ ${inst}`);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to parse user from localStorage", e);
       }
     }
 

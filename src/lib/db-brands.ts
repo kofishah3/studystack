@@ -6,6 +6,7 @@ import type {
   InteractionID,
   QuestionID,
   TutorialID,
+  TutorialMaterialID,
   UserID,
 } from "@/types/database";
 import "server-only";
@@ -16,6 +17,7 @@ export const asTutorialId = (s: string) => s as TutorialID;
 export const asAnswerId = (n: number) => n as AnswerID;
 export const asCommentId = (n: number) => n as CommentID;
 export const asInteractionId = (n: number) => n as InteractionID;
+export const asTutorialMaterialId = (s: string) => s as TutorialMaterialID;
 
 export type InteractionRow = {
   interaction_id: number;

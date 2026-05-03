@@ -30,9 +30,21 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class ForbiddenError extends AppError {
+  constructor(message = "Forbidden") {
+    super(message, 403, "FORBIDDEN");
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message: string) {
     super(message, 409, "CONFLICT");
+  }
+}
+
+export class RateLimitError extends AppError {
+  constructor(message = "Too many requests") {
+    super(message, 429, "RATE_LIMIT_EXCEEDED");
   }
 }
 
@@ -50,7 +62,6 @@ export function errorToResponse(error: unknown): NextResponse {
     );
   }
 
-  const message = error instanceof Error ? error.message : "Unknown error";
   console.error("[Unhandled Error]", error);
   return NextResponse.json(
     { error: "Internal Server Error", code: "INTERNAL_ERROR" },
