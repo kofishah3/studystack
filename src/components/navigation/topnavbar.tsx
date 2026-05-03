@@ -5,6 +5,10 @@ import TextButton from "../inputs/textbutton";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function formatEducationLevel(level: string): string {
+  return level.charAt(0).toUpperCase() + level.slice(1).replace("_", " ");
+}
+
 interface TopNavBarProps {}
 
 export default function TopNavBar({}: TopNavBarProps) {
@@ -20,8 +24,7 @@ export default function TopNavBar({}: TopNavBarProps) {
         if (user) {
           setUserName(user.user_name || "User");
           const edu = user.education_level || "Undergraduate";
-          // Capitalize first letter and replace underscores
-          setEducation(edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " "));
+          setEducation(formatEducationLevel(edu));
         }
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
