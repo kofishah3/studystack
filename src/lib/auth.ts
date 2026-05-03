@@ -2,7 +2,7 @@ import "server-only";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
-import type { User, UserID } from "@/types/database";
+import type { UserID } from "@/types/database";
 import { AuthError, errorToResponse } from "@/lib/errors";
 
 export const JWT_SECRET =
