@@ -1,5 +1,5 @@
-import { errorToResponse, NotFoundError } from "@/lib/errors";
-import { readLocalFile } from "@/lib/storage/local";
+import { AuthError, errorToResponse, NotFoundError } from "@/lib/errors";
+import { readLocalFile, verifyFileToken } from "@/lib/storage/local";
 import { NextResponse } from "next/server";
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -17,12 +17,17 @@ const MIME_BY_EXT: Record<string, string> = {
 };
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ key: string[] }> },
 ) {
   try {
     const { key } = await params;
     const joined = key.map(decodeURIComponent).join("/");
+
+    const token = new URL(req.url).searchParams.get("token");
+    if (!token) throw new AuthError("Missing file URL token");
+    verifyFileToken(joined, token);
+
     const result = await readLocalFile(joined);
     if (!result) throw new NotFoundError("File not found");
 

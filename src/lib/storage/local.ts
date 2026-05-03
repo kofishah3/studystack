@@ -1,9 +1,31 @@
 import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
-import type { StorageDriver } from "@/lib/storage";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "@/lib/auth";
+import { AuthError } from "@/lib/errors";
+import {
+  DEFAULT_URL_TTL_SECONDS,
+  type StorageDriver,
+} from "@/lib/storage";
 
 const UPLOADS_ROOT = path.join(process.cwd(), "uploads");
+
+export function signFileToken(key: string, expiresIn: number): string {
+  return jwt.sign({ k: key }, JWT_SECRET, { expiresIn });
+}
+
+export function verifyFileToken(key: string, token: string): void {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { k?: string };
+    if (payload.k !== key) {
+      throw new AuthError("Invalid or expired file URL");
+    }
+  } catch (err) {
+    if (err instanceof AuthError) throw err;
+    throw new AuthError("Invalid or expired file URL");
+  }
+}
 
 function resolveSafe(key: string): string {
   const target = path.resolve(UPLOADS_ROOT, key);
@@ -22,8 +44,11 @@ export const localStorage: StorageDriver = {
     return key;
   },
 
-  async getUrl(key) {
-    return `/api/files/${key.split("/").map(encodeURIComponent).join("/")}`;
+  async getUrl(key, opts) {
+    const expiresIn = opts?.expiresIn ?? DEFAULT_URL_TTL_SECONDS;
+    const token = signFileToken(key, expiresIn);
+    const encodedPath = key.split("/").map(encodeURIComponent).join("/");
+    return `/api/files/${encodedPath}?token=${encodeURIComponent(token)}`;
   },
 
   async delete(key) {
