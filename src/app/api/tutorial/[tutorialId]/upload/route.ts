@@ -8,7 +8,7 @@ import {
 } from "@/lib/errors";
 import { insertTutorialMaterial } from "@/lib/queries/tutorial-materials";
 import { getTutorialById } from "@/lib/queries/tutorials";
-import { getStorage } from "@/lib/storage";
+import { DEFAULT_URL_TTL_SECONDS, getStorage } from "@/lib/storage";
 import {
   DOCUMENT_MIMES,
   validateMaterialFile,
@@ -68,10 +68,15 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
         size_bytes: size,
       });
 
+      const ttl = DEFAULT_URL_TTL_SECONDS;
+      const url = await storage.getUrl(key, { expiresIn: ttl });
+      const expires_at = new Date(Date.now() + ttl * 1000).toISOString();
+
       return NextResponse.json(
         {
           ...material,
-          url: await storage.getUrl(key),
+          url,
+          expires_at,
         },
         { status: 201 },
       );
