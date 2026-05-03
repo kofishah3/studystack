@@ -4,9 +4,7 @@ export type TutorialID = string & { readonly _brand: "TutorialID" };
 export type AnswerID = number & { readonly _brand: "AnswerID" };
 export type CommentID = number & { readonly _brand: "CommentID" };
 export type InteractionID = number & { readonly _brand: "InteractionID" };
-export type TutorialMaterialID = string & {
-  readonly _brand: "TutorialMaterialID";
-};
+export type TutorialMaterialID = string & { readonly _brand: "TutorialMaterialID";};
 
 export interface User {
   user_id: UserID;
