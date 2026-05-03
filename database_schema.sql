@@ -205,11 +205,11 @@ GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded
 -- ============================================
 
 -- Soft delete support for tutorials
-ALTER TABLE tutorials ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
-CREATE INDEX idx_tutorials_deleted_at ON tutorials(deleted_at) WHERE deleted_at IS NOT NULL;
+ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_tutorials_deleted_at ON tutorials(deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Tutorial materials (uploaded files) table
-CREATE TABLE tutorial_materials (
+CREATE TABLE IF NOT EXISTS tutorial_materials (
   material_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tutorial_id  UUID NOT NULL REFERENCES tutorials(tutorial_id) ON DELETE CASCADE,
   file_name    VARCHAR(255) NOT NULL,
@@ -218,7 +218,7 @@ CREATE TABLE tutorial_materials (
   size_bytes   BIGINT NOT NULL,
   uploaded_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_tutorial_materials_tutorial_id ON tutorial_materials(tutorial_id);
+CREATE INDEX IF NOT EXISTS idx_tutorial_materials_tutorial_id ON tutorial_materials(tutorial_id);
 
 -- Drop legacy single-question FK on tutorials; questions_tutorials is the only link.
 DROP VIEW IF EXISTS tutorial_stats;
