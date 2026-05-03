@@ -22,7 +22,7 @@ export const localStorage: StorageDriver = {
     return key;
   },
 
-  getUrl(key) {
+  async getUrl(key) {
     return `/api/files/${key.split("/").map(encodeURIComponent).join("/")}`;
   },
 

@@ -71,7 +71,7 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
       return NextResponse.json(
         {
           ...material,
-          url: storage.getUrl(key),
+          url: await storage.getUrl(key),
         },
         { status: 201 },
       );
