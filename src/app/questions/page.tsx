@@ -4,7 +4,6 @@ import TopNavBar from "@/components/navigation/topnavbar";
 import { useState } from "react";
 
 export default function QuestionsPage() {
-  const [isSideBarCollapsed, setIsSideBarCollapsed] = useState(false);
   return (
     <div
       id="questionspage-container"

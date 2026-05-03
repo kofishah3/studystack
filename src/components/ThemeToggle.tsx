@@ -45,7 +45,7 @@ export default function ThemeToggle({ className }: ThemeToggleProps) {
   return (
     <button
       onClick={toggleTheme}
-      className={`p-2 rounded-full bg-surface border border-border shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 z-50 text-text flex items-center justify-center group ${className || ''}`}
+      className={`p-2 rounded-full bg-surface border border-border shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 z-50 text-text flex items-center justify-center group ${className || ""}`}
       aria-label="Toggle theme"
     >
       {theme === "light" ? (
