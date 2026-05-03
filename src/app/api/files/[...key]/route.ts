@@ -1,6 +1,8 @@
 import { AuthError, errorToResponse, NotFoundError } from "@/lib/errors";
 import { readLocalFile, verifyFileToken } from "@/lib/storage/local";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+type RouteCtx = { params: Promise<{ key: string[] }> };
 
 const MIME_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",
@@ -16,10 +18,7 @@ const MIME_BY_EXT: Record<string, string> = {
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 };
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ key: string[] }> },
-) {
+export async function GET(req: NextRequest, { params }: RouteCtx) {
   try {
     const { key } = await params;
     const joined = key.map(decodeURIComponent).join("/");
