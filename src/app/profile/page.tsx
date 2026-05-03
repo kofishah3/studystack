@@ -14,6 +14,10 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      router.push("/login");
+      return;
+    }
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
