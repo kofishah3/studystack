@@ -79,6 +79,23 @@ export function withAuth(handler: RouteHandler) {
 
 **Rule of thumb:** use `throw` + single `catch` when you own the whole execution path. Use early returns when the function may not reach the main logic at all.
 
+### Compensating cleanup — `console.error`, not error brands
+
+When an operation fails partway through and you need to undo a prior side-effect (e.g. a storage write before a DB insert), the *cleanup* failure is a different beast from the *primary* failure. The primary failure shapes the HTTP response; the cleanup failure is an internal, operator-only concern — there's no caller to react to it, and you must not let it mask the original error.
+
+Don't brand the cleanup failure as an `AppError`. Brands exist to drive `errorToResponse`, and the cleanup error never reaches that boundary (you're swallowing it on purpose so the original throws through). Log it with `console.error` and a tagged prefix so it's greppable in production logs.
+
+```ts
+const material = await insertTutorialMaterial({ ... }).catch(async (insertErr) => {
+  await storage
+    .delete(key)
+    .catch((cleanupErr) => console.error("[Orphan Cleanup]", cleanupErr));
+  throw insertErr;
+});
+```
+
+The original `insertErr` rethrows into the outer `catch` and gets converted to a response by `errorToResponse` exactly as if no cleanup had happened.
+
 ## Adding a New Error Class
 
 Add it to `src/lib/errors.ts` following the existing pattern. Only add a new class if no existing one fits the semantics — check the table above first.
