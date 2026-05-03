@@ -1,8 +1,8 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { asQuestionId, asTutorialId } from "@/lib/db-brands";
 import {
-  AuthError,
   errorToResponse,
+  ForbiddenError,
   NotFoundError,
   ValidationError,
 } from "@/lib/errors";
@@ -23,7 +23,7 @@ const bodySchema = z.object({ question_id: z.uuid() });
 async function loadOwnedTutorial(tid: string, userId: string) {
   const tutorial = await getTutorialById(asTutorialId(tid));
   if (!tutorial) throw new NotFoundError("Tutorial not found");
-  if (tutorial.user_id !== userId) throw new AuthError("Forbidden");
+  if (tutorial.user_id !== userId) throw new ForbiddenError();
   return tutorial;
 }
 

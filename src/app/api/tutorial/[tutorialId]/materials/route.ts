@@ -1,6 +1,6 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { asTutorialId } from "@/lib/db-brands";
-import { AuthError, errorToResponse, NotFoundError } from "@/lib/errors";
+import { errorToResponse, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { listMaterialsForTutorial } from "@/lib/queries/tutorial-materials";
 import { getTutorialById } from "@/lib/queries/tutorials";
 import { DEFAULT_URL_TTL_SECONDS, getStorage } from "@/lib/storage";
@@ -17,7 +17,7 @@ export const GET = (req: NextRequest, ctx: RouteCtx) =>
       const tutorial = await getTutorialById(tid);
       if (!tutorial) throw new NotFoundError("Tutorial not found");
       if (tutorial.user_id !== authedReq.userId) {
-        throw new AuthError("Forbidden");
+        throw new ForbiddenError();
       }
 
       const storage = getStorage();

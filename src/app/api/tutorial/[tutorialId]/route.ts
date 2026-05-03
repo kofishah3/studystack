@@ -1,6 +1,6 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { asTutorialId } from "@/lib/db-brands";
-import { AuthError, errorToResponse, NotFoundError } from "@/lib/errors";
+import { errorToResponse, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { questionsForTutorial } from "@/lib/queries/questions-tutorials";
 import {
   getTutorialById,
@@ -44,7 +44,7 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
       const existing = await getTutorialById(id);
       if (!existing) throw new NotFoundError("Tutorial not found");
       if (existing.user_id !== authedReq.userId) {
-        throw new AuthError("Forbidden");
+        throw new ForbiddenError();
       }
 
       const body = await authedReq.json();
@@ -72,7 +72,7 @@ export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
       const existing = await getTutorialById(id);
       if (!existing) throw new NotFoundError("Tutorial not found");
       if (existing.user_id !== authedReq.userId) {
-        throw new AuthError("Forbidden");
+        throw new ForbiddenError();
       }
 
       await softDeleteTutorial(id);
