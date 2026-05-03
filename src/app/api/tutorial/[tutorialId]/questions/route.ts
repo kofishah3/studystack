@@ -4,6 +4,7 @@ import {
   AuthError,
   errorToResponse,
   NotFoundError,
+  ValidationError,
 } from "@/lib/errors";
 import {
   linkQuestionTutorial,
@@ -38,10 +39,16 @@ export const POST = (req: NextRequest, ctx: RouteCtx) =>
       const qid = asQuestionId(question_id);
       const question = await getQuestionById(qid);
       if (!question) throw new NotFoundError("Question not found");
+      if (question.user_id === authedReq.userId) {
+        throw new ValidationError(
+          "You cannot link a tutorial to your own question",
+        );
+      }
 
-      const links = await linkQuestionTutorial(qid, tutorial.tutorial_id);
+      const { created } = await linkQuestionTutorial(qid, tutorial.tutorial_id);
       return NextResponse.json({
-        linked: links.length > 0,
+        linked: true,
+        created,
         question_id: qid,
         tutorial_id: tutorial.tutorial_id,
       });

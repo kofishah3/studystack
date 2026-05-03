@@ -41,7 +41,7 @@ export const createTutorialSchema = z.object({
   title: z.string().min(1).max(255),
   content: z.string().min(1),
   embedded_video_url: z.url().nullable().optional(),
-  question_ids: z.array(z.uuid()).optional(),
+  question_ids: z.array(z.uuid()).min(1),
 });
 
 export const updateTutorialSchema = z

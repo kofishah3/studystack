@@ -1,7 +1,8 @@
-import { one, q } from "@/lib/db";
+import { one, q, qOn } from "@/lib/db";
 import { asQuestionId, asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
 import type { QuestionID, Questions, UserID } from "@/types/database";
+import type { PoolClient } from "pg";
 import "server-only";
 
 type QuestionRow = Omit<Questions, "question_id" | "user_id"> & {
@@ -52,6 +53,22 @@ export async function insertQuestion(
   );
   if (!row) throw new DatabaseError("insertQuestion: no row returned");
   return mapQuestion(row);
+}
+
+export async function getQuestionsByIds(
+  ids: QuestionID[],
+  client?: PoolClient,
+): Promise<Pick<Questions, "question_id" | "user_id">[]> {
+  if (ids.length === 0) return [];
+  const sql =
+    "SELECT question_id, user_id FROM questions WHERE question_id = ANY($1::uuid[])";
+  const rows = client
+    ? await qOn<{ question_id: string; user_id: string }>(client, sql, [ids])
+    : await q<{ question_id: string; user_id: string }>(sql, [ids]);
+  return rows.map((r) => ({
+    question_id: asQuestionId(r.question_id),
+    user_id: asUserId(r.user_id),
+  }));
 }
 
 export async function markResolved(id: QuestionID): Promise<Questions | null> {

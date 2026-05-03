@@ -101,7 +101,6 @@ export interface QuestionsTutorials {
 export interface Tutorials {
   tutorial_id: TutorialID;
   user_id: UserID;
-  question_id: QuestionID | null;
   title: string;
   content: string;
   embedded_video_url: string | null;

@@ -1,7 +1,13 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
-import { errorToResponse } from "@/lib/errors";
+import { withTransaction } from "@/lib/db";
+import {
+  errorToResponse,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors";
 import { asQuestionId } from "@/lib/db-brands";
 import { insertTutorial, listTutorials } from "@/lib/queries/tutorials";
+import { getQuestionsByIds } from "@/lib/queries/questions";
 import { linkQuestionTutorial } from "@/lib/queries/questions-tutorials";
 import {
   createTutorialSchema,
@@ -43,24 +49,43 @@ export const POST = withAuth(async (req: AuthedRequest) => {
       validateVideoUrl(parsed.embedded_video_url);
     }
 
-    const tutorial = await insertTutorial({
-      user_id: req.userId,
-      question_id: null,
-      title: parsed.title,
-      content: parsed.content,
-      embedded_video_url: parsed.embedded_video_url ?? null,
+    const requestedIds = parsed.question_ids.map(asQuestionId);
+    const uniqueIds = Array.from(new Set(requestedIds));
+
+    const result = await withTransaction(async (client) => {
+      const found = await getQuestionsByIds(uniqueIds, client);
+      const foundById = new Map(found.map((q) => [q.question_id, q]));
+
+      for (const qid of uniqueIds) {
+        const question = foundById.get(qid);
+        if (!question) {
+          throw new NotFoundError(`Question not found: ${qid}`);
+        }
+        if (question.user_id === req.userId) {
+          throw new ValidationError(
+            "You cannot link a tutorial to your own question",
+          );
+        }
+      }
+
+      const tutorial = await insertTutorial(
+        {
+          user_id: req.userId,
+          title: parsed.title,
+          content: parsed.content,
+          embedded_video_url: parsed.embedded_video_url ?? null,
+        },
+        client,
+      );
+
+      for (const qid of uniqueIds) {
+        await linkQuestionTutorial(qid, tutorial.tutorial_id, client);
+      }
+
+      return { tutorial, linked_question_ids: uniqueIds };
     });
 
-    if (parsed.question_ids?.length) {
-      for (const qid of parsed.question_ids) {
-        await linkQuestionTutorial(asQuestionId(qid), tutorial.tutorial_id);
-      }
-    }
-
-    return NextResponse.json(
-      { tutorial, linked_question_ids: parsed.question_ids ?? [] },
-      { status: 201 },
-    );
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return errorToResponse(error);
   }

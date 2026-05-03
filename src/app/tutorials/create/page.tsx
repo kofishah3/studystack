@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 type QuestionPreview = {
   question_id: string;
@@ -10,7 +10,7 @@ type QuestionPreview = {
   created_at: string;
 };
 
-export default function CreateTutorialPage() {
+function CreateTutorialForm() {
   const searchParams = useSearchParams();
   const questionId = searchParams.get("question");
 
@@ -69,16 +69,27 @@ export default function CreateTutorialPage() {
           )}
         </section>
       ) : (
-        <p className="text-sm text-muted-foreground mb-6">
-          No source question selected. The tutorial will be created standalone.
+        <p className="text-sm text-red-500 mb-6">
+          A source question is required. Open this page from a question to
+          start a tutorial in response to it.
         </p>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        Tutorial editor form goes here. On submit, POST /api/tutorial with the
-        title, content, optional embedded_video_url, and{" "}
-        <code>question_ids</code> seeded from the URL parameter.
-      </p>
+      {questionId && (
+        <p className="text-sm text-muted-foreground">
+          Tutorial editor form goes here. On submit, POST /api/tutorial with
+          the title, content, optional embedded_video_url, and{" "}
+          <code>question_ids: [&quot;{questionId}&quot;]</code>.
+        </p>
+      )}
     </div>
+  );
+}
+
+export default function CreateTutorialPage() {
+  return (
+    <Suspense>
+      <CreateTutorialForm />
+    </Suspense>
   );
 }
