@@ -41,6 +41,9 @@ export default function TopNavBar({}: TopNavBarProps) {
     hoverColor: "primary-500",
   };
 
+  const isActive = (prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix + "/");
+
   return (
     <div
       id="topnavbar-container"
@@ -61,24 +64,24 @@ export default function TopNavBar({}: TopNavBarProps) {
         className="flex flex-row gap-3 absolute left-1/2 -translate-x-1/2"
       >
         <Link href="/home">
-          <TextButton 
-            label="Home" 
-            {...defaultTextButtonConfig} 
-            isSelected={pathname === "/home"} 
+          <TextButton
+            label="Home"
+            {...defaultTextButtonConfig}
+            isSelected={isActive("/home")}
           />
         </Link>
         <Link href="/tutorials">
-          <TextButton 
-            label="Tutorials" 
-            {...defaultTextButtonConfig} 
-            isSelected={pathname === "/tutorials"} 
+          <TextButton
+            label="Tutorials"
+            {...defaultTextButtonConfig}
+            isSelected={isActive("/tutorials")}
           />
         </Link>
         <Link href="/questions">
-          <TextButton 
-            label="Questions" 
-            {...defaultTextButtonConfig} 
-            isSelected={pathname === "/questions"} 
+          <TextButton
+            label="Questions"
+            {...defaultTextButtonConfig}
+            isSelected={isActive("/questions")}
           />
         </Link>
       </div>
