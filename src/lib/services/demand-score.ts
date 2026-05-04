@@ -16,7 +16,6 @@ export function computeDemandScore(input: DemandScoreInput): number {
   return Number(score.toFixed(4));
 }
 
-// FIXED: Changed 'title' to 'content' in SQL
 export async function countSimilarQuestions(content: string): Promise<number> {
   if (!content || content.trim() === '') return 0;
   
@@ -28,7 +27,6 @@ export async function countSimilarQuestions(content: string): Promise<number> {
   return result ? parseInt(result.count) : 0;
 }
 
-// FIXED: Changed 'title' to 'content' in SQL
 export async function countSimilarQuestionsAdvanced(content: string): Promise<number> {
   if (!content || content.trim() === '') return 0;
   
@@ -64,7 +62,6 @@ export async function countSimilarQuestionsWithSimilarity(content: string, thres
   return result ? parseInt(result.count) : 0;
 }
 
-// FIXED: Changed 'title' to 'content' in SQL
 export async function getSimilarQuestions(content: string, limit: number = 10): Promise<Array<{ question_id: number; content: string; similarity: number }>> {
   return q<{ question_id: number; content: string; similarity: number }>(
     `SELECT question_id, content, similarity(content, $1) as similarity
@@ -76,7 +73,6 @@ export async function getSimilarQuestions(content: string, limit: number = 10): 
   );
 }
 
-// This one is already correct - it uses the fixed functions above
 export async function getDemandScoreForQuestion(
   questionId: number,
   content: string,
