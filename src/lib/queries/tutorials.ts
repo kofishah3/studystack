@@ -32,28 +32,35 @@ export async function listTutorials(
   limit: number,
   offset: number,
   category?: string,
+  user_id?: UserID,
 ): Promise<Tutorials[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
   const safeOffset = Math.max(offset, 0);
 
+  const conditions: string[] = ["t.deleted_at IS NULL"];
+  const params: any[] = [safeLimit, safeOffset];
+
   if (category) {
-    const rows = await q<TutorialRow>(
-      `SELECT DISTINCT t.* FROM tutorials t
-       LEFT JOIN questions_tutorials qt ON qt.tutorial_id = t.tutorial_id
-       LEFT JOIN questions q ON q.question_id = qt.question_id
-       WHERE t.deleted_at IS NULL AND q.category = $3
-       ORDER BY t.created_at DESC
-       LIMIT $1 OFFSET $2`,
-      [safeLimit, safeOffset, category],
-    );
-    return rows.map(mapTutorial);
+    params.push(category);
+    conditions.push(`q.category = $${params.length}`);
   }
 
+  if (user_id) {
+    params.push(user_id);
+    conditions.push(`t.user_id = $${params.length}`);
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
   const rows = await q<TutorialRow>(
-    `SELECT * FROM tutorials
-     WHERE deleted_at IS NULL
-     ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-    [safeLimit, safeOffset],
+    `SELECT DISTINCT t.* FROM tutorials t
+     LEFT JOIN questions_tutorials qt ON qt.tutorial_id = t.tutorial_id
+     LEFT JOIN questions q ON q.question_id = qt.question_id
+     ${whereClause}
+     ORDER BY t.created_at DESC
+     LIMIT $1 OFFSET $2`,
+    params,
   );
   return rows.map(mapTutorial);
 }

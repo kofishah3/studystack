@@ -54,3 +54,31 @@ export async function insertUser(
   if (!row) throw new DatabaseError("insertUser: no row returned");
   return mapUser(row);
 }
+
+export type Metrics = {
+  questions: number;
+  answers: number;
+  likes: number;
+  rating: number;
+  engagement: number;
+};
+
+export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
+  const questions_row = await one<{ count: string }>(
+    "SELECT COUNT(*) as count FROM answers WHERE user_id = $1",
+    [user_id],
+  );
+
+  const answers_row = await one<{ count: string }>(
+    "SELECT COUNT(*) as count FROM answers WHERE user_id = $1",
+    [user_id],
+  );
+
+  return {
+    questions: Number(questions_row?.count || 0),
+    answers: Number(answers_row?.count || 0),
+    likes: 0,
+    rating: 0,
+    engagement: 0,
+  };
+}

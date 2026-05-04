@@ -8,14 +8,17 @@ import { Settings, LogOut, Edit2 } from "lucide-react";
 import ProfileMetricCard from "@/components/profile/ProfileMetricCard";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfilePostCard from "@/components/profile/ProfilePostCard";
+import { Metrics } from "@/lib/queries/users";
 
 export default function ProfilePage() {
   const [userName, setUserName] = useState("Loading...");
   const [subtitle, setSubtitle] = useState("Loading...");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Tutorials");
-
-  const [metrics, setMetrics] = useState({
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
+  const [metrics, setMetrics] = useState<Metrics>({
     questions: 0,
     answers: 0,
     likes: 0,
@@ -25,6 +28,61 @@ export default function ProfilePage() {
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetchPosts();
+    fetchUserMetrics();
+  }, [activeTab]);
+
+  const fetchPosts = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setIsLoadingPosts(true);
+    try {
+      const res = await fetch(
+        `/api/user/posts?type=${encodeURIComponent(activeTab)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const json = await res.json();
+      if (json.data) {
+        setPosts(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+    } finally {
+      setIsLoadingPosts(false);
+    }
+  };
+
+  const fetchUserMetrics = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setIsLoadingMetrics(true);
+    try {
+      const res = await fetch(
+        `/api/user/metrics?type=${encodeURIComponent(activeTab)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const json = await res.json();
+      if (json.data) {
+        setMetrics(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch metrics:", error);
+    } finally {
+      setIsLoadingMetrics(false);
+    }
+  };
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -76,6 +134,15 @@ export default function ProfilePage() {
   };
 
   const tabs = ["Tutorials", "Questions asked", "Answers given"];
+
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-1.5rem)] bg-background flex-col m-3 rounded-xl border border-border overflow-hidden relative">
@@ -156,18 +223,32 @@ export default function ProfilePage() {
           id="profile-metrics"
           className="flex flex-row flex-wrap gap-4 w-full"
         >
-          <ProfileMetricCard value={metrics.questions} label="Questions" />
-          <ProfileMetricCard value={metrics.answers} label="Answers" />
-          <ProfileMetricCard value={metrics.likes} label="Likes Given" />
+          <ProfileMetricCard
+            value={metrics.questions}
+            label="Questions"
+            isLoading={isLoadingMetrics}
+          />
+          <ProfileMetricCard
+            value={metrics.answers}
+            label="Answers"
+            isLoading={isLoadingMetrics}
+          />
+          <ProfileMetricCard
+            value={metrics.likes}
+            label="Likes Given"
+            isLoading={isLoadingMetrics}
+          />
           <ProfileMetricCard
             value={metrics.rating}
             label="Rating"
             variant="success"
+            isLoading={isLoadingMetrics}
           />
           <ProfileMetricCard
             value={metrics.engagement}
             label="Engagement"
             variant="warning"
+            isLoading={isLoadingMetrics}
           />
         </div>
 
@@ -179,28 +260,33 @@ export default function ProfilePage() {
           />
 
           <div className="flex flex-col gap-4">
-            {/* Mock Tutorials - as per image */}
-            {activeTab === "Tutorials" && (
-              <>
+            {isLoadingPosts ? (
+              <div className="text-muted text-sm py-8 text-center animate-pulse">
+                Loading your {activeTab.toLowerCase()}...
+              </div>
+            ) : posts.length > 0 ? (
+              posts.map((post) => (
                 <ProfilePostCard
-                  title="Welcome to StudyStack"
-                  type="Tutorial"
-                  timeAgo="Just now"
-                  upvotes={0}
-                  comments={0}
+                  key={post.tutorial_id || post.question_id || post.answer_id}
+                  title={
+                    post.title ||
+                    post.content ||
+                    `Answered: ${post.question_content}`
+                  }
+                  type={
+                    activeTab === "Tutorials"
+                      ? "Tutorial"
+                      : activeTab === "Questions asked"
+                        ? "Question"
+                        : "Answer"
+                  }
+                  timeAgo={formatTime(post.created_at)}
+                  upvotes={post.demand_score || 0}
+                  comments={post.comment_count || 0}
                 />
-                <ProfilePostCard
-                  title="Getting Started Guide"
-                  type="Tutorial"
-                  timeAgo="Recently"
-                  upvotes={0}
-                  comments={0}
-                />
-              </>
-            )}
-
-            {activeTab !== "Tutorials" && (
-              <div className="text-muted text-sm py-4 text-center">
+              ))
+            ) : (
+              <div className="text-muted text-sm py-8 text-center border border-dashed border-border rounded-xl bg-surface-hover/20">
                 No {activeTab.toLowerCase()} yet.
               </div>
             )}
