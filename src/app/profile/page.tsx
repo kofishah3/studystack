@@ -14,6 +14,15 @@ export default function ProfilePage() {
   const [subtitle, setSubtitle] = useState("Loading...");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Tutorials");
+
+  const [metrics, setMetrics] = useState({
+    questions: 0,
+    answers: 0,
+    likes: 0,
+    rating: 0,
+    engagement: 0,
+  });
+
   const settingsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -32,6 +41,14 @@ export default function ProfilePage() {
           edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " ");
         const inst = user.institution || "University";
         setSubtitle(`${eduFormatted} @ ${inst}`);
+
+        setMetrics({
+          questions: user.questions_count || 0,
+          answers: user.answers_count || 0,
+          likes: user.likes_count || 0,
+          rating: user.rating || 0,
+          engagement: user.engagement_score || 0,
+        });
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
       }
@@ -135,12 +152,23 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div id="profile-metrics" className="flex flex-row flex-wrap gap-4 w-full">
-          <ProfileMetricCard value="N/A" label="Questions" />
-          <ProfileMetricCard value="N/A" label="Answers" />
-          <ProfileMetricCard value="N/A" label="Likes Given" />
-          <ProfileMetricCard value="N/A" label="Rating" variant="success" />
-          <ProfileMetricCard value="N/A" label="Engagement" variant="warning" />
+        <div
+          id="profile-metrics"
+          className="flex flex-row flex-wrap gap-4 w-full"
+        >
+          <ProfileMetricCard value={metrics.questions} label="Questions" />
+          <ProfileMetricCard value={metrics.answers} label="Answers" />
+          <ProfileMetricCard value={metrics.likes} label="Likes Given" />
+          <ProfileMetricCard
+            value={metrics.rating}
+            label="Rating"
+            variant="success"
+          />
+          <ProfileMetricCard
+            value={metrics.engagement}
+            label="Engagement"
+            variant="warning"
+          />
         </div>
 
         <div id="profile-content" className="flex flex-col gap-6 w-full">
@@ -149,33 +177,33 @@ export default function ProfilePage() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
-          
+
           <div className="flex flex-col gap-4">
-             {/* Mock Tutorials - as per image */}
-             {activeTab === "Tutorials" && (
+            {/* Mock Tutorials - as per image */}
+            {activeTab === "Tutorials" && (
               <>
-                 <ProfilePostCard 
-                   title="N/A"
-                   type="Tutorial"
-                   timeAgo="N/A"
-                   upvotes="N/A"
-                   comments="N/A"
-                 />
-                 <ProfilePostCard 
-                   title="N/A"
-                   type="Tutorial"
-                   timeAgo="N/A"
-                   upvotes="N/A"
-                   comments="N/A"
-                 />
+                <ProfilePostCard
+                  title="Welcome to StudyStack"
+                  type="Tutorial"
+                  timeAgo="Just now"
+                  upvotes={0}
+                  comments={0}
+                />
+                <ProfilePostCard
+                  title="Getting Started Guide"
+                  type="Tutorial"
+                  timeAgo="Recently"
+                  upvotes={0}
+                  comments={0}
+                />
               </>
-             )}
-             
-             {activeTab !== "Tutorials" && (
-                <div className="text-muted text-sm py-4 text-center">
-                  No {activeTab.toLowerCase()} yet.
-                </div>
-             )}
+            )}
+
+            {activeTab !== "Tutorials" && (
+              <div className="text-muted text-sm py-4 text-center">
+                No {activeTab.toLowerCase()} yet.
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React from "react";
-import { ArrowUp, MessageSquare } from "lucide-react";
+import { ArrowUp, Edit, MessageSquare, Trash } from "lucide-react";
+import IconButton from "../inputs/IconButton";
 
 interface ProfilePostCardProps {
   title: string;
@@ -29,29 +30,34 @@ export default function ProfilePostCard({
         </span>
         <span className="text-xs text-muted">{timeAgo}</span>
       </div>
-      <div className="flex flex-row items-center gap-4 mt-1">
-        <div className="flex items-center gap-1 text-muted text-xs font-medium">
-          <ArrowUp size={14} />
-          <span>{upvotes}</span>
-        </div>
-        <div className="flex items-center gap-1 text-muted text-xs font-medium">
-          <MessageSquare size={14} />
-          <span>{comments}</span>
-        </div>
+      <div className="flex flex-row items-center mt-1">
+        <IconButton
+          icon={ArrowUp}
+          label={String(upvotes)}
+          iconColor="muted"
+          iconSize={14}
+        />
+        <IconButton
+          icon={MessageSquare}
+          label={`${comments} Comments`}
+          iconColor="muted"
+          iconSize={14}
+        />
         <div className="flex-1" />
-        <div className="flex items-center gap-3 text-xs font-medium">
-          <button
+        <div className="flex items-center text-xs font-medium ">
+          <IconButton
+            icon={Edit}
             onClick={onEdit}
-            className="text-muted hover:text-text transition-colors"
-          >
-            Edit
-          </button>
-          <button
+            iconColor="muted"
+            iconSize={14}
+          />
+          <IconButton
+            icon={Trash}
             onClick={onDelete}
-            className="text-red-500 hover:text-red-600 transition-colors"
-          >
-            Delete
-          </button>
+            iconColor="red-500"
+            hoverBg="hover:bg-red-500/10"
+            iconSize={14}
+          />
         </div>
       </div>
     </div>

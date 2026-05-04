@@ -18,14 +18,12 @@ export default function ProfileTabs({
           key={tab}
           onClick={() => onTabChange(tab)}
           className={`pb-3 text-sm font-medium transition-colors relative ${
-            activeTab === tab
-              ? "text-text"
-              : "text-muted hover:text-text"
+            activeTab === tab ? "text-text" : "text-muted hover:text-text"
           }`}
         >
           {tab}
           {activeTab === tab && (
-            <div className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-text rounded-t-full" />
+            <div className="absolute bottom-px left-0 w-full h-[2px] bg-text rounded-t-full" />
           )}
         </button>
       ))}
