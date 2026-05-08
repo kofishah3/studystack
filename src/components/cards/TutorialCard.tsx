@@ -2,6 +2,8 @@
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import FullButton from "../inputs/FullButton";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export type TutorialCardProps = {
   id: string;
@@ -28,6 +30,7 @@ export default function TutorialCard({
   videoUrl,
   linkedQuestions = [],
 }: TutorialCardProps) {
+  const router = useRouter();
   const ratingColor =
     avgRating >= 4
       ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
@@ -55,8 +58,10 @@ export default function TutorialCard({
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col gap-0.5">
-              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight">
-                {title}
+              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Link href={`/tutorials/${id}`}>
+                  {title}
+                </Link>
               </h2>
               {linkedQuestions.length > 0 && (
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -79,6 +84,7 @@ export default function TutorialCard({
                <FullButton
                  label="View Tutorial"
                  size="sm"
+                 onClick={() => router.push(`/tutorials/${id}`)}
                />
             </div>
           </div>

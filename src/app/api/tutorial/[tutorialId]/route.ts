@@ -1,12 +1,14 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { asTutorialId } from "@/lib/db-brands";
 import { errorToResponse, ForbiddenError, NotFoundError } from "@/lib/errors";
-import { questionsForTutorial } from "@/lib/queries/questions-tutorials";
 import {
-  getTutorialById,
+  getTutorialDetailedById,
   softDeleteTutorial,
   updateTutorial,
 } from "@/lib/queries/tutorials";
+import {
+  listQuestionsForTutorialDetailed,
+} from "@/lib/queries/questions-tutorials";
 import {
   parseOrThrow,
   updateTutorialSchema,
@@ -21,14 +23,16 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
     const { tutorialId } = await params;
     const id = asTutorialId(tutorialId);
 
-    const tutorial = await getTutorialById(id);
+    const tutorial = await getTutorialDetailedById(id);
     if (!tutorial) throw new NotFoundError("Tutorial not found");
 
-    const links = await questionsForTutorial(id);
+    const questions = await listQuestionsForTutorialDetailed(id);
 
     return NextResponse.json({
-      tutorial,
-      linked_question_ids: links.map((l) => l.question_id),
+      data: {
+        ...tutorial,
+        linked_questions: questions,
+      },
     });
   } catch (error) {
     return errorToResponse(error);

@@ -166,3 +166,13 @@ export async function listTutorialsDetailed(
   );
   return rows;
 }
+
+export async function getTutorialDetailedById(
+  id: TutorialID,
+): Promise<any | null> {
+  const row = await one<any>(
+    "SELECT * FROM tutorial_stats WHERE tutorial_id = $1",
+    [id],
+  );
+  return row || null;
+}
