@@ -44,18 +44,15 @@ export default function VotePanel({
 
     const handleUpvote = () => {
     if (userVote === "up") {
-      // undo upvote
       setVoteUp((v) => v - 1);
       setUserVote(null);
       submitVote(0);
     } else if (userVote === "down") {
-      // switch from downvote to upvote
       setVoteDown((v) => v - 1);
       setVoteUp((v) => v + 1);
       setUserVote("up");
       submitVote(1);
     } else {
-      // fresh upvote
       setVoteUp((v) => v + 1);
       setUserVote("up");
       submitVote(1);
@@ -64,18 +61,15 @@ export default function VotePanel({
 
   const handleDownvote = () => {
     if (userVote === "down") {
-      // undo downvote
       setVoteDown((v) => v - 1);
       setUserVote(null);
       submitVote(0);
     } else if (userVote === "up") {
-      // switch from upvote to downvote
       setVoteUp((v) => v - 1);
       setVoteDown((v) => v + 1);
       setUserVote("down");
       submitVote(-1);
     } else {
-      // fresh downvote
       setVoteDown((v) => v + 1);
       setUserVote("down");
       submitVote(-1);

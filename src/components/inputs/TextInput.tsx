@@ -51,7 +51,7 @@ export default function TextInput({
           placeholder={placeholder}
           className="
             w-full bg-transparent outline-none border-none
-            text-text placeholder:text-muted
+            text-text text-sm placeholder:text-muted
             rounded-lg p-2 resize-none
           "
         />
@@ -61,7 +61,7 @@ export default function TextInput({
             type={inputType}
             className="
               w-full bg-transparent outline-none border-none
-              text-text placeholder:text-muted
+              text-text text-sm placeholder:text-muted
               rounded-lg p-2
             "
             placeholder={placeholder}

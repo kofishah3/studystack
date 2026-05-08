@@ -79,3 +79,17 @@ export async function listAnswersByUser(
     question_content: r.question_content,
   }));
 }
+
+export async function listAnswersForQuestionDetailed(
+  qid: QuestionID,
+): Promise<any[]> {
+  const rows = await q<any>(
+    `SELECT a.*, u.user_name as author_name, u.institution as author_institution, u.profile_url as author_profile_url, u.credibility_score as author_credibility_score
+     FROM answers a
+     JOIN users u ON a.user_id = u.user_id
+     WHERE a.question_id = $1 
+     ORDER BY a.created_at ASC`,
+    [qid],
+  );
+  return rows;
+}
