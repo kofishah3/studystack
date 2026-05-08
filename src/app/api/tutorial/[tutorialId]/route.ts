@@ -2,6 +2,7 @@ import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { asTutorialId } from "@/lib/db-brands";
 import { errorToResponse, ForbiddenError, NotFoundError } from "@/lib/errors";
 import {
+  getTutorialById,
   getTutorialDetailedById,
   softDeleteTutorial,
   updateTutorial,
