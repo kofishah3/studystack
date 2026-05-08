@@ -199,6 +199,7 @@ SELECT
   t.embedded_video_url,
   t.created_at,
   u.user_name,
+  u.profile_url,
   COUNT(DISTINCT i.interaction_id) as total_interactions,
   COUNT(DISTINCT CASE WHEN i.interaction_type = 'rating' THEN i.interaction_id END) as rating_count,
   AVG(CASE WHEN i.interaction_type = 'rating' THEN i.value END) as avg_rating
@@ -206,7 +207,7 @@ FROM tutorials t
 JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
 WHERE t.deleted_at IS NULL
-GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name;
+GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name, u.profile_url;
 
 -- ============================================
 -- MIGRATIONS
@@ -241,6 +242,7 @@ SELECT
   t.embedded_video_url,
   t.created_at,
   u.user_name,
+  u.profile_url,
   COUNT(DISTINCT i.interaction_id) as total_interactions,
   COUNT(DISTINCT CASE WHEN i.interaction_type = 'rating' THEN i.interaction_id END) as rating_count,
   AVG(CASE WHEN i.interaction_type = 'rating' THEN i.value END) as avg_rating
@@ -248,7 +250,7 @@ FROM tutorials t
 JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
 WHERE t.deleted_at IS NULL
-GROUP BY t.tutorial_id, t.user_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name;
+GROUP BY t.tutorial_id, t.user_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name, u.profile_url;
 
 SELECT table_name
 FROM information_schema.tables

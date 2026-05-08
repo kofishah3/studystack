@@ -153,3 +153,26 @@ export async function hardDeleteExpiredTutorials(
   );
   return rows.length;
 }
+export async function listTutorialsDetailed(
+  limit: number,
+  offset: number,
+): Promise<any[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  const rows = await q<any>(
+    "SELECT * FROM tutorial_stats ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [safeLimit, safeOffset],
+  );
+  return rows;
+}
+
+export async function getTutorialDetailedById(
+  id: TutorialID,
+): Promise<any | null> {
+  const row = await one<any>(
+    "SELECT * FROM tutorial_stats WHERE tutorial_id = $1",
+    [id],
+  );
+  return row || null;
+}
