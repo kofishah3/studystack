@@ -59,3 +59,23 @@ export async function acceptAnswer(id: AnswerID): Promise<Answers | null> {
   );
   return row ? mapAnswer(row) : null;
 }
+
+export async function listAnswersByUser(
+  user_id: UserID,
+  limit: number,
+  offset: number,
+): Promise<(Answers & { question_content: string })[]> {
+  const rows = await q<AnswerRow & { question_content: string }>(
+    `SELECT a.*, q.content as question_content 
+     FROM answers a
+     JOIN questions q ON a.question_id = q.question_id
+     WHERE a.user_id = $3 
+     ORDER BY a.created_at DESC 
+     LIMIT $1 OFFSET $2`,
+    [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0), user_id],
+  );
+  return rows.map((r) => ({
+    ...mapAnswer(r),
+    question_content: r.question_content,
+  }));
+}

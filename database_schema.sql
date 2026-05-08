@@ -40,7 +40,8 @@ CREATE TABLE tutorials (
   title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
   embedded_video_url VARCHAR(500),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 -- ============================================
@@ -205,7 +206,6 @@ GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded
 -- ============================================
 
 -- Soft delete support for tutorials
-ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
 CREATE INDEX IF NOT EXISTS idx_tutorials_deleted_at ON tutorials(deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Tutorial materials (uploaded files) table

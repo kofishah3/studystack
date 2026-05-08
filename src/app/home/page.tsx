@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <div
       id="homepage-container"
-      className="flex h-[calc(100vh-1.5rem)] bg-background flex-col m-3 rounded-xl border border-border overflow-hidden"
+      className="flex min-h-screen bg-background flex-col"
     >
       <TopNavBar />
       <Sidebar isCollapsed={isSideBarCollapsed} />

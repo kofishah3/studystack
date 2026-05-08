@@ -31,10 +31,22 @@ export async function getQuestionById(
 export async function listQuestions(
   limit: number,
   offset: number,
+  user_id?: UserID,
 ): Promise<Questions[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  if (user_id) {
+    const rows = await q<QuestionRow>(
+      "SELECT * FROM questions WHERE user_id = $3 ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+      [safeLimit, safeOffset, user_id],
+    );
+    return rows.map(mapQuestion);
+  }
+
   const rows = await q<QuestionRow>(
     "SELECT * FROM questions ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-    [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0)],
+    [safeLimit, safeOffset],
   );
   return rows.map(mapQuestion);
 }

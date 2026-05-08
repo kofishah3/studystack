@@ -1,40 +1,62 @@
 import React from "react";
+import { LucideIcon } from "lucide-react";
 
 interface ProfileMetricCardProps {
   value: string | number;
   label: string;
+  icon: LucideIcon;
   variant?: "default" | "success" | "warning";
+  isLoading?: boolean;
 }
 
 export default function ProfileMetricCard({
   value,
   label,
+  icon: Icon,
   variant = "default",
+  isLoading,
 }: ProfileMetricCardProps) {
-  let bgColor = "bg-surface border border-border";
+  let bgColor = "bg-surface/40 hover:bg-surface/80";
   let textColor = "text-text";
   let labelColor = "text-muted";
+  let borderColor = "border-border";
+  let iconColor = "text-primary-500/60";
 
   if (variant === "success") {
-    bgColor = "bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800";
-    textColor = "text-green-900 dark:text-green-300";
-    labelColor = "text-green-700 dark:text-green-400";
+    borderColor = "border-green-500/20";
+    textColor = "text-green-600 dark:text-green-400";
+    labelColor = "text-green-600/70 dark:text-green-400/70";
+    bgColor = "bg-green-500/5 hover:bg-green-500/10";
+    iconColor = "text-green-500/60";
   } else if (variant === "warning") {
-    bgColor = "bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800";
-    textColor = "text-yellow-900 dark:text-yellow-300";
-    labelColor = "text-yellow-700 dark:text-yellow-400";
-  } else {
-    bgColor = "bg-muted/5 border border-transparent";
+    borderColor = "border-yellow-500/20";
+    textColor = "text-yellow-600 dark:text-yellow-400";
+    labelColor = "text-yellow-600/70 dark:text-yellow-400/70";
+    bgColor = "bg-yellow-500/5 hover:bg-yellow-500/10";
+    iconColor = "text-yellow-500/60";
   }
 
   return (
     <div
-      className={`flex flex-col items-center justify-center p-4 rounded-xl flex-1 min-w-[120px] ${bgColor}`}
+      className={`flex flex-row items-center p-4 rounded-2xl flex-1 border ${borderColor} ${bgColor} transition-all duration-300 group cursor-default hover:shadow-md hover:-translate-y-0.5`}
     >
-      <span className={`text-2xl font-bold font-sora ${textColor}`}>
-        {value}
-      </span>
-      <span className={`text-xs mt-1 ${labelColor}`}>{label}</span>
+      {isLoading ? (
+        <div className="w-5 h-5 border-2 border-muted/20 border-t-muted/60 rounded-full animate-spin" />
+      ) : (
+        <div className="flex flex-row items-center gap-4">
+          <div className={`p-2 rounded-xl bg-background border border-border group-hover:border-primary-500/30 transition-colors duration-300 ${iconColor}`}>
+            <Icon size={20} strokeWidth={2.5} />
+          </div>
+          <div className="flex flex-col">
+            <span className={`text-xl sm:text-2xl font-bold font-sora tracking-tight ${textColor} group-hover:text-primary-500 transition-colors duration-300`}>
+              {value}
+            </span>
+            <span className={`text-xs font-semibold tracking-tight ${labelColor}`}>
+              {label}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
