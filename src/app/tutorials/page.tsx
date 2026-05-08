@@ -8,10 +8,11 @@ export default function TutorialsPage() {
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState(false);
   return (
     <div
-      id="tutorialspage-container"
-      className="flex h-[calc(100vh-1.5rem)] bg-background flex-col m-3 rounded-xl border border-border overflow-hidden"
+      id="tutorials-container"
+      className="flex min-h-screen bg-background flex-col"
     >
       <TopNavBar />
+      <Sidebar isCollapsed={isSideBarCollapsed} />
     </div>
   );
 }

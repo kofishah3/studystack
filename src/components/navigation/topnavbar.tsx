@@ -47,13 +47,13 @@ export default function TopNavBar({}: TopNavBarProps) {
   return (
     <div
       id="topnavbar-container"
-      className="w-full bg-surface rounded-tl-xl px-8 py-3 border-b border-border 
-      justify-between items-center flex flex-row relative"
+      className="w-full bg-surface px-6 py-2.5 border-b border-border/50 
+      justify-between items-center flex flex-row relative z-50 shadow-sm"
     >
       <div id="logo-container">
         <span
           id="temp-logo"
-          className="text-2xl font-bold font-sora hidden sm:flex"
+          className="text-xl font-bold font-sora hidden sm:flex tracking-tight"
         >
           StudyStack
         </span>
@@ -61,7 +61,7 @@ export default function TopNavBar({}: TopNavBarProps) {
 
       <div
         id="navbuttons-container"
-        className="flex flex-row gap-3 absolute left-1/2 -translate-x-1/2"
+        className="flex flex-row gap-1 absolute left-1/2 -translate-x-1/2"
       >
         <Link href="/home">
           <TextButton
@@ -88,28 +88,29 @@ export default function TopNavBar({}: TopNavBarProps) {
 
       <div
         id="rightmost-container"
-        className="flex flex-row gap-1 cursor-pointer"
+        className="flex flex-row gap-1"
       >
-        <Link href="/profile" className="flex flex-row gap-1 items-center">
-          <div id="profile-container" className="items-center flex">
+        <Link href="/profile" className="flex flex-row gap-3 items-center group">
+          <div
+            id="profile-details-container"
+            className="flex-col font-inter justify-center hidden sm:flex text-right"
+          >
+            <p className="text-sm text-text font-bold leading-tight group-hover:text-primary-500 transition-colors duration-200">
+              {userName}
+            </p>
+            <p className="text-[10px] font-bold text-muted uppercase tracking-wider group-hover:text-primary-500/70 transition-colors duration-200">
+              {education}
+            </p>
+          </div>
+          <div id="profile-container" className="items-center flex relative">
+            <div className="absolute -inset-0.5 bg-primary-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
             <img
               src={
                 "https://static.wikia.nocookie.net/chiikawa/images/a/a0/Momonga.png/revision/latest?cb=20240921205329"
               }
-              alt="temporary profile picture"
-              className="w-13 h-13 rounded-full border-2 border-border"
+              alt="Profile"
+              className="w-9 h-9 rounded-full border border-border group-hover:border-primary-500/50 transition-colors duration-300 relative"
             />
-          </div>
-          <div
-            id="profile-details-container"
-            className="flex-col font-inter p-2 max-w-30 justify-center hidden sm:flex hover:bg-border/50 transition-all duration-200 rounded-lg"
-          >
-            <p className="text-md text-text font-medium overflow-hidden leading-tight">
-              {userName}
-            </p>
-            <p className="text-sm text-muted -mt-1 overflow-hidden ">
-              {education}
-            </p>
           </div>
         </Link>
       </div>

@@ -2,14 +2,18 @@
 
 import TopNavBar from "@/components/navigation/topnavbar";
 import { useState } from "react";
+import Sidebar from "@/components/navigation/sidebar";
 
 export default function QuestionsPage() {
+  const [isSideBarCollapsed, setIsSideBarCollapsed] = useState(false);
+
   return (
     <div
-      id="questionspage-container"
-      className="flex h-[calc(100vh-1.5rem)] bg-background flex-col m-3 rounded-xl border border-border overflow-hidden"
+      id="questions-container"
+      className="flex min-h-screen bg-background flex-col"
     >
       <TopNavBar />
+      <Sidebar isCollapsed={isSideBarCollapsed} />
     </div>
   );
 }
