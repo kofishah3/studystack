@@ -81,18 +81,16 @@ export default function AskQuestionCard() {
         flex flex-col gap-4
       "
     >
-      {/* HEADER */}
       <div>
-        <h2 className="text-xl font-semibold text-text">
+        <h2 className="text-lg font-semibold text-text">
           Ask a Question
         </h2>
 
-        <p className="text-sm text-muted mt-1">
+        <p className="text-xs text-muted mt-1">
           Upload up to 5 images and 3 videos
         </p>
       </div>
 
-      {/* QUESTION INPUT */}
       <TextInput
         name="question"
         placeholder="What would you like to ask?"
@@ -100,7 +98,6 @@ export default function AskQuestionCard() {
         rows={6}
       />
 
-      {/* PREVIEW UPLOADS */}
       {uploads.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {uploads.map((upload, index) => (
@@ -111,7 +108,6 @@ export default function AskQuestionCard() {
                 border border-border bg-background
               "
             >
-              {/* REMOVE BUTTON */}
               <button
                 onClick={() => removeUpload(index)}
                 className="
@@ -124,7 +120,6 @@ export default function AskQuestionCard() {
                 <X size={12} />
               </button>
 
-              {/* IMAGE */}
               {upload.type === "image" ? (
                 <img
                   src={upload.preview}
@@ -142,7 +137,6 @@ export default function AskQuestionCard() {
         </div>
       )}
 
-      {/* ACTIONS */}
       <div className="flex items-center justify-between">
         {/* UPLOAD BUTTON */}
         <label
@@ -166,7 +160,6 @@ export default function AskQuestionCard() {
           />
         </label>
 
-        {/* POST BUTTON */}
         <FullButton
           label="Post"
           size="sm"

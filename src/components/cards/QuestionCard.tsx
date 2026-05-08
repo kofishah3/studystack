@@ -53,26 +53,22 @@ export default function QuestionCard({
 
   return (
     <div className="
-      w-full max-w-7xl mx-auto p-4
+      w-full max-w-7xl mx-auto p-3.5
       bg-white dark:bg-gray-900 
-      border border-gray-200 dark:border-gray-700 rounded-xl"
+      border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
     >
-      {/* TOP ROW: COL1 + COL2 header + COL3 */}
       <div className="flex gap-4">
 
         {/* COL 1: Demand Rate */}
         <div className="shrink-0 flex flex-col items-center">
-          <div className={`flex flex-col items-center justify-center w-16 h-10 rounded-lg border text-center ${demandColor}`}>
-            <span className="text-xl font-bold leading-none">{demandRate}</span>
+          <div className={`flex flex-col items-center justify-center w-14 h-9 rounded-lg border text-center ${demandColor}`}>
+            <span className="text-lg font-bold leading-none">{demandRate}</span>
           </div>
         </div>
 
-        {/* COL 2: Main content */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {/* Title row + Create Tutorial */}
-          
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug">
+            <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight">
               {questionTitle}
             </h2>
 
@@ -82,7 +78,6 @@ export default function QuestionCard({
             />
           </div>
 
-          {/* UserMeta + Tags */}
           <div className="flex flex-wrap items-center gap-2">
             <UserMeta
               name={author}
@@ -98,8 +93,7 @@ export default function QuestionCard({
             </div>
           </div>
 
-          {/* Body */}
-          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-relaxed">
             {body}
           </p>
 
@@ -115,7 +109,6 @@ export default function QuestionCard({
           )}
         </div>
 
-        {/* COL 3: Action Menu */}
         <div className="shrink-0">
           <ActionMenu />
         </div>

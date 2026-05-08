@@ -22,12 +22,15 @@ export interface User {
     | "master"
     | "doctorate"
     | "other";
+  profile_url: string | null;
+  credibility_score: number;
   created_at: Date;
 }
 
 export interface Questions {
   question_id: QuestionID;
   user_id: UserID;
+  title: string;
   content: string;
   category: string;
   demand_score: number;
@@ -41,6 +44,7 @@ export interface Answers {
   user_id: UserID;
   question_id: QuestionID;
   content: string;
+  media_urls: any[];
   is_accepted: boolean;
   created_at: Date;
 }
