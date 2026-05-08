@@ -78,6 +78,9 @@ export default function FullButton({
         text-center cursor-pointer text-white font-semibold
         transition-all duration-200 active:scale-95
 
+        whitespace-nowrap
+        shrink-0
+
         ${fillColorMap[fillColor]}
         ${hoverColorMap[hoverColor]}
         ${sizeMap[size]}

@@ -2,10 +2,10 @@
 import { useState } from "react";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
-import SubjectTag from "../ui/SubjectTag";
+import SubjectTag from "../ui/Tag";
 import AnswerCard from "./AnswerCard";
-import VotePanel from "../inputs/VotePanel";
 import type { AnswerProps } from "./AnswerCard";
+import FullButton from "../inputs/FullButton";
 
 export type QuestionProps = {
   id: string;
@@ -70,16 +70,16 @@ export default function QuestionCard({
         {/* COL 2: Main content */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           {/* Title row + Create Tutorial */}
+          
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug">
               {questionTitle}
             </h2>
-            <button
-              onClick={() => onCreateTutorial?.(id)}
-              className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors whitespace-nowrap"
-            >
-              + Create Tutorial
-            </button>
+
+            <FullButton
+              label="Create Tutorial"
+              size="sm"
+            />
           </div>
 
           {/* UserMeta + Tags */}
