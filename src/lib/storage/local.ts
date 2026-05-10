@@ -51,7 +51,9 @@ export const localStorage: StorageDriver = {
     try {
       await pipeline(stream, createWriteStream(target));
     } catch (err) {
-      await fs.rm(target, { force: true }).catch(() => {});
+      await fs.rm(target, { force: true }).catch((cleanupErr) =>
+        console.error("[Orphan Cleanup]", cleanupErr)
+      );
       throw err;
     }
     return key;
