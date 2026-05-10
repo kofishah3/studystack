@@ -1,6 +1,7 @@
 import "server-only";
-import { promises as fs } from "fs";
+import { createWriteStream, promises as fs } from "fs";
 import path from "path";
+import { pipeline } from "stream/promises";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@/lib/auth";
 import { AuthError } from "@/lib/errors";
@@ -41,6 +42,18 @@ export const localStorage: StorageDriver = {
     const target = resolveSafe(key);
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, buffer);
+    return key;
+  },
+
+  async putStream({ key, stream }) {
+    const target = resolveSafe(key);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    try {
+      await pipeline(stream, createWriteStream(target));
+    } catch (err) {
+      await fs.rm(target, { force: true }).catch(() => {});
+      throw err;
+    }
     return key;
   },
 
