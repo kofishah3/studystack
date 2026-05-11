@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import type { NextResponse as NextResponseType } from "next/server";
 
 export class AppError extends Error {
   readonly statusCode: number;
@@ -54,7 +54,8 @@ export class DatabaseError extends AppError {
   }
 }
 
-export function errorToResponse(error: unknown): NextResponse {
+export function errorToResponse(error: unknown): NextResponseType {
+  const { NextResponse } = require("next/server");
   if (error instanceof AppError) {
     return NextResponse.json(
       { error: error.message, code: error.code },

@@ -1,4 +1,3 @@
-import "server-only";
 import {
   getSupabaseServiceClient,
   SUPABASE_STORAGE_BUCKET,

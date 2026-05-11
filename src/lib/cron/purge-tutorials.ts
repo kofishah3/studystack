@@ -1,13 +1,17 @@
-import "server-only";
-import { q } from "@/lib/db";
-import { hardDeleteExpiredTutorials } from "@/lib/queries/tutorials";
-import { getStorage } from "@/lib/storage";
+import type { q as qFn } from "@/lib/db";
+import type { hardDeleteExpiredTutorials as hardDeleteFn } from "@/lib/queries/tutorials";
+import type { getStorage as getStorageFn } from "@/lib/storage";
 
 export const RETENTION_DAYS = 30;
 
 export type PurgeResult = { deleted: number; files_removed: number };
 
 export async function runTutorialPurge(): Promise<PurgeResult> {
+  const q = require("@/lib/db").q as typeof qFn;
+  const hardDeleteExpiredTutorials = require("@/lib/queries/tutorials")
+    .hardDeleteExpiredTutorials as typeof hardDeleteFn;
+  const getStorage = require("@/lib/storage").getStorage as typeof getStorageFn;
+
   const expiredKeys = await q<{ storage_key: string }>(
     `SELECT m.storage_key
      FROM tutorial_materials m
@@ -21,7 +25,7 @@ export async function runTutorialPurge(): Promise<PurgeResult> {
   for (const { storage_key } of expiredKeys) {
     try {
       await storage.delete(storage_key);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[purge-tutorials] file delete failed", storage_key, err);
     }
   }

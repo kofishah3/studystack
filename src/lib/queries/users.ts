@@ -2,7 +2,6 @@ import { one } from "@/lib/db";
 import { asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
 import type { User, UserID } from "@/types/database";
-import "server-only";
 
 type UserRow = Omit<User, "user_id"> & { user_id: string };
 

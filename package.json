@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node server.ts",
+    "dev": "ts-node -r tsconfig-paths/register server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production ts-node server.ts",
+    "start": "NODE_ENV=production ts-node -r tsconfig-paths/register server.ts",
     "lint": "eslint",
-    "init-db": "ts-node scripts/init-db.ts"
+    "init-db": "ts-node -r tsconfig-paths/register scripts/init-db.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

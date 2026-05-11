@@ -1,4 +1,3 @@
-import "server-only";
 import type { StorageDriver } from "@/lib/storage";
 
 export const s3Storage: StorageDriver = {

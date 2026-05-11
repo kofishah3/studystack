@@ -3,7 +3,6 @@ import { asTutorialId, asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
 import type { TutorialID, Tutorials, UserID } from "@/types/database";
 import type { PoolClient } from "pg";
-import "server-only";
 
 type TutorialRow = Omit<Tutorials, "tutorial_id" | "user_id"> & {
   tutorial_id: string;

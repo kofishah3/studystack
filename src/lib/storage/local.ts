@@ -1,4 +1,3 @@
-import "server-only";
 import { createWriteStream, promises as fs } from "fs";
 import path from "path";
 import { pipeline } from "stream/promises";
