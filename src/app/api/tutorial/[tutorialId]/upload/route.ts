@@ -11,17 +11,132 @@ import { getTutorialById } from "@/lib/queries/tutorials";
 import { DEFAULT_URL_TTL_SECONDS, getStorage } from "@/lib/storage";
 import {
   DOCUMENT_MIMES,
-  validateMaterialFile,
-  validateVideoFile,
+  MAX_MATERIAL_BYTES,
+  MAX_VIDEO_BYTES,
   VIDEO_MIMES,
 } from "@/lib/validation/tutorial";
+import Busboy from "busboy";
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { Readable, Transform } from "stream";
 
 type RouteCtx = { params: Promise<{ tutorialId: string }> };
 
+type UploadResult = {
+  key: string;
+  mime: string;
+  size: number;
+  fileName: string;
+};
+
 function sanitizeFileName(name: string): string {
   return name.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 200) || "file";
+}
+
+async function streamUploadToStorage(
+  req: AuthedRequest,
+  tid: ReturnType<typeof asTutorialId>,
+): Promise<UploadResult> {
+  const ct = req.headers.get("content-type");
+  if (!ct || !ct.toLowerCase().includes("multipart/form-data")) {
+    throw new ValidationError("Expected multipart/form-data");
+  }
+  if (!req.body) {
+    throw new ValidationError("Missing request body");
+  }
+
+  const storage = getStorage();
+  const bb = Busboy({
+    headers: { "content-type": ct },
+    limits: { files: 1, fileSize: MAX_VIDEO_BYTES },
+  });
+
+  return new Promise<UploadResult>((resolve, reject) => {
+    let handled = false;
+    let settled = false;
+    const finish = (err?: Error, value?: UploadResult) => {
+      if (settled) return;
+      settled = true;
+      if (err) reject(err);
+      else resolve(value as UploadResult);
+    };
+
+    bb.on("file", (_name, file, info) => {
+      if (handled) {
+        file.resume();
+        return;
+      }
+      handled = true;
+
+      const mime = info.mimeType || "application/octet-stream";
+      const isVideo = (VIDEO_MIMES as readonly string[]).includes(mime);
+      const isDoc = (DOCUMENT_MIMES as readonly string[]).includes(mime);
+      if (!isVideo && !isDoc) {
+        file.resume();
+        finish(new ValidationError(`Unsupported file type: ${mime}`));
+        return;
+      }
+
+      const limit = isVideo ? MAX_VIDEO_BYTES : MAX_MATERIAL_BYTES;
+      const fileName = info.filename || "file";
+      const safeName = sanitizeFileName(fileName);
+      const key = `tutorials/${tid}/${randomUUID()}-${safeName}`;
+
+      let bytes = 0;
+      const counter = new Transform({
+        transform(chunk, _enc, cb) {
+          bytes += chunk.length;
+          if (bytes > limit) {
+            cb(new ValidationError(`File exceeds size limit (${limit} bytes)`));
+            return;
+          }
+          cb(null, chunk);
+        },
+      });
+
+      file.on("limit", () => {
+        counter.destroy(
+          new ValidationError(`File exceeds size limit (${limit} bytes)`),
+        );
+      });
+
+      file.pipe(counter);
+
+      storage
+        .putStream({ key, stream: counter, mimeType: mime })
+        .then(() => {
+          if (bytes <= 0) {
+            storage
+              .delete(key)
+              .catch((err) => console.error("[Orphan Cleanup]", err));
+            finish(new ValidationError("Empty file"));
+            return;
+          }
+          finish(undefined, { key, mime, size: bytes, fileName });
+        })
+        .catch((err) => {
+          storage
+            .delete(key)
+            .catch((cleanupErr) =>
+              console.error("[Orphan Cleanup]", cleanupErr),
+            );
+          finish(err instanceof Error ? err : new Error(String(err)));
+        });
+    });
+
+    bb.on("error", (err) =>
+      finish(err instanceof Error ? err : new Error(String(err))),
+    );
+    bb.on("close", () => {
+      if (!handled) finish(new ValidationError("Missing 'file' in form data"));
+    });
+
+    Readable.fromWeb(req.body as Parameters<typeof Readable.fromWeb>[0])
+      .pipe(bb)
+      .on("error", (err) =>
+        finish(err instanceof Error ? err : new Error(String(err))),
+      );
+  });
 }
 
 export const PUT = (req: NextRequest, ctx: RouteCtx) =>
@@ -36,39 +151,18 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
         throw new AuthError("Forbidden");
       }
 
-      const formData = await authedReq.formData();
-      const fileEntry = formData.get("file");
-      if (!(fileEntry instanceof File)) {
-        throw new ValidationError("Missing 'file' in form data");
-      }
-
-      const mime = fileEntry.type || "application/octet-stream";
-      const size = fileEntry.size;
-
-      if ((VIDEO_MIMES as readonly string[]).includes(mime)) {
-        validateVideoFile(mime, size);
-      } else if ((DOCUMENT_MIMES as readonly string[]).includes(mime)) {
-        validateMaterialFile(mime, size);
-      } else {
-        throw new ValidationError(`Unsupported file type: ${mime}`);
-      }
+      const upload = await streamUploadToStorage(authedReq, tid);
 
       const storage = getStorage();
-      const safeName = sanitizeFileName(fileEntry.name);
-      const key = `tutorials/${tid}/${randomUUID()}-${safeName}`;
-      const buffer = Buffer.from(await fileEntry.arrayBuffer());
-
-      await storage.put({ key, buffer, mimeType: mime });
-
       const material = await insertTutorialMaterial({
         tutorial_id: tid,
-        file_name: fileEntry.name,
-        storage_key: key,
-        mime_type: mime,
-        size_bytes: size,
+        file_name: upload.fileName,
+        storage_key: upload.key,
+        mime_type: upload.mime,
+        size_bytes: upload.size,
       }).catch(async (insertErr) => {
         await storage
-          .delete(key)
+          .delete(upload.key)
           .catch((cleanupErr) =>
             console.error("[Orphan Cleanup]", cleanupErr),
           );
@@ -76,7 +170,7 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
       });
 
       const ttl = DEFAULT_URL_TTL_SECONDS;
-      const url = await storage.getUrl(key, { expiresIn: ttl });
+      const url = await storage.getUrl(upload.key, { expiresIn: ttl });
       const expires_at = new Date(Date.now() + ttl * 1000).toISOString();
 
       return NextResponse.json(

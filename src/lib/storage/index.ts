@@ -11,6 +11,12 @@ export interface StorageDriver {
     buffer: Buffer;
     mimeType: string;
   }): Promise<string>;
+  putStream(opts: {
+    key: string;
+    stream: NodeJS.ReadableStream;
+    mimeType: string;
+    contentLength?: number;
+  }): Promise<string>;
   getUrl(key: string, opts?: { expiresIn?: number }): Promise<string>;
   delete(key: string): Promise<void>;
 }

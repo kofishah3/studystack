@@ -1,12 +1,26 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import next from "next";
+import cron from "node-cron";
+import { runTutorialPurge } from "./src/lib/cron/purge-tutorials";
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
+  if (process.env.NODE_ENV !== "test") {
+    cron.schedule("0 3 * * *", () => {
+      runTutorialPurge()
+        .then((result) =>
+          console.log(
+            `[purge-tutorials cron] deleted=${result.deleted} files_removed=${result.files_removed}`,
+          ),
+        )
+        .catch((err) => console.error("[purge-tutorials cron]", err));
+    });
+  }
+
   const httpServer = createServer((req, res) => handle(req, res));
 
   const io = new Server(httpServer, {
