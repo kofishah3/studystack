@@ -22,10 +22,8 @@ interface FullButtonProps {
     | "red-700"
     | "gray-900";
 
-  borderColor?:
-    | "primary-500"
-    | "primary-700"
-    | "gray-300";
+  borderColor?: "primary-500" | "primary-700" | "gray-300";
+  id?: string;
 }
 
 const fillColorMap = {
@@ -53,7 +51,7 @@ const borderColorMap = {
 const sizeMap = {
   sm: "px-3 py-1.5 text-sm",
   md: "px-5 py-2.5 text-sm",
-  lg: "px-6 py-3 text-base",
+  lg: "px-6 py-3 text-sm",
 };
 
 export default function FullButton({
@@ -67,10 +65,11 @@ export default function FullButton({
 
   onClick,
   type = "button",
+  id,
 }: FullButtonProps) {
   return (
     <button
-      id="filledbutton-style-container"
+      id={id || "filledbutton-style-container"}
       type={type}
       onClick={onClick}
       className={`
@@ -80,6 +79,7 @@ export default function FullButton({
 
         whitespace-nowrap
         shrink-0
+        w-full
 
         ${fillColorMap[fillColor]}
         ${hoverColorMap[hoverColor]}

@@ -54,6 +54,26 @@ export async function insertUser(
   return mapUser(row);
 }
 
+export async function updateUser(
+  id: UserID,
+  input: Partial<Omit<User, "user_id" | "created_at" | "password_hash" | "email">>,
+): Promise<User | null> {
+  const fields = Object.keys(input);
+  if (fields.length === 0) return getUserById(id);
+
+  const setClause = fields
+    .map((field, index) => `${field} = $${index + 2}`)
+    .join(", ");
+  const values = fields.map((field) => (input as any)[field]);
+
+  const row = await one<UserRow>(
+    `UPDATE users SET ${setClause} WHERE user_id = $1 RETURNING *`,
+    [id, ...values],
+  );
+
+  return row ? mapUser(row) : null;
+}
+
 export type Metrics = {
   questions: number;
   answers: number;
