@@ -4,11 +4,21 @@ import TopNavBar from "@/components/navigation/topnavbar";
 import { useEffect, useState, useRef } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
-import { Settings, LogOut, Edit2, HelpCircle, MessageCircle, Heart, Star, Activity } from "lucide-react";
+import {
+  Settings,
+  LogOut,
+  Edit2,
+  HelpCircle,
+  MessageCircle,
+  Heart,
+  Star,
+  Activity,
+} from "lucide-react";
 import ProfileMetricCard from "@/components/profile/ProfileMetricCard";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfilePostCard from "@/components/profile/ProfilePostCard";
 import { Metrics } from "@/lib/queries/users";
+import { SkeletonList } from "@/components/ui/SkeletonCard";
 
 export default function ProfilePage() {
   const [userName, setUserName] = useState("Loading...");
@@ -271,10 +281,7 @@ export default function ProfilePage() {
 
           <div className="flex flex-col gap-4">
             {isLoadingPosts ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
-                <span className="text-muted text-xs font-medium">Loading {activeTab.toLowerCase()}...</span>
-              </div>
+              <SkeletonList count={3} />
             ) : posts.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {posts.map((post) => (

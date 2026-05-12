@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import TopNavBar from "@/components/navigation/topnavbar";
 import QuestionCard from "@/components/cards/QuestionCard";
 import AskQuestionCard from "@/components/inputs/CreateCards/CreateQuestion";
+import { SkeletonList } from "@/components/ui/SkeletonCard";
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -54,9 +55,7 @@ export default function QuestionsPage() {
         <div className="w-full flex flex-col gap-6">
           <AskQuestionCard />
           {loading ? (
-            <div className="flex justify-center py-10">
-              <span className="text-gray-500">Loading questions...</span>
-            </div>
+            <SkeletonList count={5} />
           ) : (
             <>
               {questions.map((q) => (
