@@ -1,14 +1,12 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { withTransaction } from "@/lib/db";
-import {
-  errorToResponse,
-  NotFoundError,
-  ValidationError,
-} from "@/lib/errors";
-import { asQuestionId } from "@/lib/db-brands";
-import { insertTutorial, listTutorials } from "@/lib/queries/tutorials";
+import { errorToResponse, NotFoundError, ValidationError } from "@/lib/errors";
+import { asQuestionId, asTutorialId } from "@/lib/db-brands";
 import { getQuestionsByIds } from "@/lib/queries/questions";
-import { linkQuestionTutorial } from "@/lib/queries/questions-tutorials";
+import {
+  linkQuestionTutorial,
+  listQuestionsForTutorialDetailed,
+} from "@/lib/queries/questions-tutorials";
 import {
   createTutorialSchema,
   parseOrThrow,
@@ -16,21 +14,31 @@ import {
 } from "@/lib/validation/tutorial";
 import { NextRequest, NextResponse } from "next/server";
 
+import { insertTutorial, listTutorialsDetailed } from "@/lib/queries/tutorials";
+
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams;
     const page = Math.max(parseInt(sp.get("page") || "1"), 1);
-    const limit = Math.min(
-      Math.max(parseInt(sp.get("limit") || "20"), 1),
-      100,
-    );
-    const category = sp.get("category") || undefined;
+    const limit = Math.min(Math.max(parseInt(sp.get("limit") || "20"), 1), 100);
     const offset = (page - 1) * limit;
 
-    const tutorials = await listTutorials(limit, offset, category);
+    const tutorials = await listTutorialsDetailed(limit, offset);
+
+    const detailedTutorials = await Promise.all(
+      tutorials.map(async (t) => {
+        const questions = await listQuestionsForTutorialDetailed(
+          asTutorialId(t.tutorial_id),
+        );
+        return {
+          ...t,
+          linked_questions: questions,
+        };
+      }),
+    );
 
     return NextResponse.json({
-      tutorials,
+      data: detailedTutorials,
       page,
       limit,
       hasMore: tutorials.length === limit,

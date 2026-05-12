@@ -3,18 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node server.ts",
+    "dev": "ts-node -r tsconfig-paths/register server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production ts-node server.ts",
+    "start": "NODE_ENV=production ts-node -r tsconfig-paths/register server.ts",
     "lint": "eslint",
-    "init-db": "ts-node scripts/init-db.ts"
+    "init-db": "ts-node -r tsconfig-paths/register scripts/init-db.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "@types/busboy": "^1.5.4",
+    "@types/node-cron": "^3.0.11",
     "axios": "^1.15.0",
     "bcrypt": "^6.0.0",
+    "busboy": "^1.6.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
+    "next-pwa": "^5.6.0",
+    "node-cron": "^4.2.1",
     "pg": "^8.20.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",

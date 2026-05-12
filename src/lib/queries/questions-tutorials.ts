@@ -67,3 +67,18 @@ export async function questionsForTutorial(
   );
   return rows.map(mapQT);
 }
+export async function listQuestionsForTutorialDetailed(
+  tid: TutorialID,
+): Promise<{ question_id: QuestionID; title: string }[]> {
+  const rows = await q<{ question_id: string; title: string }>(
+    `SELECT q.question_id, q.title 
+     FROM questions_tutorials qt
+     JOIN questions q ON q.question_id = qt.question_id
+     WHERE qt.tutorial_id = $1`,
+    [tid],
+  );
+  return rows.map((r) => ({
+    question_id: asQuestionId(r.question_id),
+    title: r.title,
+  }));
+}

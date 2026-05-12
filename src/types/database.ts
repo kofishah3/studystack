@@ -4,7 +4,9 @@ export type TutorialID = string & { readonly _brand: "TutorialID" };
 export type AnswerID = number & { readonly _brand: "AnswerID" };
 export type CommentID = number & { readonly _brand: "CommentID" };
 export type InteractionID = number & { readonly _brand: "InteractionID" };
-export type TutorialMaterialID = string & { readonly _brand: "TutorialMaterialID";};
+export type TutorialMaterialID = string & {
+  readonly _brand: "TutorialMaterialID";
+};
 
 export interface User {
   user_id: UserID;
@@ -20,12 +22,15 @@ export interface User {
     | "master"
     | "doctorate"
     | "other";
+  profile_url: string | null;
+  credibility_score: number;
   created_at: Date;
 }
 
 export interface Questions {
   question_id: QuestionID;
   user_id: UserID;
+  title: string;
   content: string;
   category: string;
   demand_score: number;
@@ -39,6 +44,7 @@ export interface Answers {
   user_id: UserID;
   question_id: QuestionID;
   content: string;
+  media_urls: any[];
   is_accepted: boolean;
   created_at: Date;
 }

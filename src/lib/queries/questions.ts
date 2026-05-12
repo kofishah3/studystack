@@ -31,25 +31,38 @@ export async function getQuestionById(
 export async function listQuestions(
   limit: number,
   offset: number,
+  user_id?: UserID,
 ): Promise<Questions[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  if (user_id) {
+    const rows = await q<QuestionRow>(
+      "SELECT * FROM questions WHERE user_id = $3 ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+      [safeLimit, safeOffset, user_id],
+    );
+    return rows.map(mapQuestion);
+  }
+
   const rows = await q<QuestionRow>(
     "SELECT * FROM questions ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-    [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0)],
+    [safeLimit, safeOffset],
   );
   return rows.map(mapQuestion);
 }
 
 export async function insertQuestion(
   user_id: UserID,
+  title: string,
   content: string,
   category: string,
 ): Promise<Questions> {
   const row = await one<QuestionRow>(
     `INSERT INTO questions
-       (question_id, user_id, content, category, demand_score, popped)
-     VALUES (gen_random_uuid(), $1, $2, $3, 0, false)
+       (question_id, user_id, title, content, category, demand_score, popped)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, 0, false)
      RETURNING *`,
-    [user_id, content, category],
+    [user_id, title, content, category],
   );
   if (!row) throw new DatabaseError("insertQuestion: no row returned");
   return mapQuestion(row);
@@ -77,4 +90,18 @@ export async function markResolved(id: QuestionID): Promise<Questions | null> {
     [id],
   );
   return row ? mapQuestion(row) : null;
+}
+
+export async function listQuestionsDetailed(
+  limit: number,
+  offset: number,
+): Promise<any[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  const rows = await q<any>(
+    "SELECT * FROM question_details ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [safeLimit, safeOffset],
+  );
+  return rows;
 }

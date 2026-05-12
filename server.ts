@@ -1,12 +1,29 @@
 import { createServer } from "http";
+import path from "path";
 import { Server } from "socket.io";
 import next from "next";
+import cron from "node-cron";
+import { runTutorialPurge } from "./src/lib/cron/purge-tutorials";
+import type { PurgeResult } from "./src/lib/cron/purge-tutorials";
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
+
+  if (process.env.NODE_ENV !== "test") {
+    cron.schedule("0 3 * * *", () => {
+      runTutorialPurge()
+        .then((result: PurgeResult) =>
+          console.log(
+            `[purge-tutorials cron] deleted=${result.deleted} files_removed=${result.files_removed}`,
+          ),
+        )
+        .catch((err: any) => console.error("[purge-tutorials cron]", err));
+    });
+  }
+
   const httpServer = createServer((req, res) => handle(req, res));
 
   const io = new Server(httpServer, {
@@ -20,6 +37,26 @@ app.prepare().then(() => {
 
     socket.on("join:question", (questionId: string) => {
       socket.join(`question:${questionId}`);
+      console.log(`socket ${socket.id} joined question:${questionId}`);
+    });
+
+    socket.on("leave:question", (questionId: string) => {
+      socket.leave(`question:${questionId}`);
+      console.log(`socket ${socket.id} left question:${questionId}`);
+    });
+
+    socket.on("join:tutorial", (tutorialId: string) => {
+      socket.join(`tutorial:${tutorialId}`);
+      console.log(`socket ${socket.id} joined tutorial:${tutorialId}`);
+    });
+
+    socket.on("leave:tutorial", (tutorialId: string) => {
+      socket.leave(`tutorial:${tutorialId}`);
+    });
+
+    socket.on("join:feed", () => {
+      socket.join("feed");
+      console.log(`socket ${socket.id} joined feed`);
     });
 
     socket.on("disconnect", () => {
@@ -31,3 +68,23 @@ app.prepare().then(() => {
     console.log("> Ready on http://localhost:3000");
   });
 });
+
+export function emitNewAnswer(questionId: string, answer: object) {
+  const io = (global as any).io as Server;
+  io.to(`question:${questionId}`).emit("new:answer", answer);
+}
+
+export function emitNewComment(questionId: string, comment: object) {
+  const io = (global as any).io as Server;
+  io.to(`question:${questionId}`).emit("new:comment", comment);
+}
+
+export function emitDemandUpdate(questionId: string, demandScore: number) {
+  const io = (global as any).io as Server;
+  io.to("feed").emit("update:demand", { questionId, demandScore });
+}
+
+export function emitTutorialLinked(questionId: string, tutorial: object) {
+  const io = (global as any).io as Server;
+  io.to(`question:${questionId}`).emit("linked:tutorial", tutorial);
+}

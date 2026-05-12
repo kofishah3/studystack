@@ -1,5 +1,6 @@
 import React from "react";
-import { ArrowUp, MessageSquare } from "lucide-react";
+import { ArrowUp, Edit, MessageSquare, Trash } from "lucide-react";
+import IconButton from "../inputs/IconButton";
 
 interface ProfilePostCardProps {
   title: string;
@@ -21,37 +22,44 @@ export default function ProfilePostCard({
   onDelete,
 }: ProfilePostCardProps) {
   return (
-    <div className="flex flex-col p-5 bg-surface border border-border rounded-xl shadow-sm gap-3 hover:border-primary-300 transition-colors duration-200">
-      <h3 className="text-base font-semibold font-sora text-text">{title}</h3>
-      <div className="flex flex-row items-center gap-3">
-        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-md">
-          {type}
-        </span>
-        <span className="text-xs text-muted">{timeAgo}</span>
+    <div className="flex flex-col p-4 bg-surface/30 border border-border/60 rounded-2xl gap-4 hover:border-primary-500/40 hover:bg-surface/50 transition-all duration-300 group">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-row items-center gap-2">
+          <span className="px-2 py-0.5 text-[10px] font-bold bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-full border border-primary-500/20">
+            {type}
+          </span>
+          <span className="text-[10px] font-medium text-muted/60 tracking-tight">{timeAgo}</span>
+        </div>
+        <h3 className="text-sm sm:text-base font-bold font-sora text-text leading-tight group-hover:text-primary-500 transition-colors duration-300">{title}</h3>
       </div>
-      <div className="flex flex-row items-center gap-4 mt-1">
-        <div className="flex items-center gap-1 text-muted text-xs font-medium">
-          <ArrowUp size={14} />
-          <span>{upvotes}</span>
+      
+      <div className="flex flex-row items-center justify-between mt-auto pt-2 border-t border-border/30">
+        <div className="flex flex-row items-center gap-4">
+          <div className="flex items-center gap-1.5 text-muted group-hover:text-text transition-colors duration-300">
+            <ArrowUp size={14} className={Number(upvotes) > 0 ? "text-green-500" : ""} />
+            <span className="text-xs font-bold">{upvotes}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted group-hover:text-text transition-colors duration-300">
+            <MessageSquare size={14} />
+            <span className="text-xs font-bold">{comments}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-muted text-xs font-medium">
-          <MessageSquare size={14} />
-          <span>{comments}</span>
-        </div>
-        <div className="flex-1" />
-        <div className="flex items-center gap-3 text-xs font-medium">
-          <button
+
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <IconButton
+            icon={Edit}
             onClick={onEdit}
-            className="text-muted hover:text-text transition-colors"
-          >
-            Edit
-          </button>
-          <button
+            iconColor="muted"
+            iconSize={14}
+            className="hover:text-primary-500"
+          />
+          <IconButton
+            icon={Trash}
             onClick={onDelete}
-            className="text-red-500 hover:text-red-600 transition-colors"
-          >
-            Delete
-          </button>
+            iconColor="red-500"
+            hoverBg="hover:bg-red-500/10"
+            iconSize={14}
+          />
         </div>
       </div>
     </div>

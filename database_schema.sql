@@ -13,6 +13,8 @@ CREATE TABLE users (
   gender VARCHAR(10) CHECK (gender IN ('male', 'female', 'other')),
   institution VARCHAR(255),
   education_level VARCHAR(20) CHECK (education_level IN ('high_school', 'bachelor', 'master', 'doctorate', 'other')),
+  profile_url VARCHAR(1000),
+  credibility_score INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -22,6 +24,7 @@ CREATE TABLE users (
 CREATE TABLE questions (
   question_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
   category VARCHAR(100) NOT NULL,
   demand_score INTEGER DEFAULT 0,
@@ -40,7 +43,8 @@ CREATE TABLE tutorials (
   title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
   embedded_video_url VARCHAR(500),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 -- ============================================
@@ -51,6 +55,7 @@ CREATE TABLE answers (
   user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   question_id UUID NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  media_urls JSONB DEFAULT '[]'::jsonb,
   is_accepted BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -163,6 +168,7 @@ CREATE VIEW question_details AS
 SELECT
   q.question_id,
   q.user_id,
+  q.title,
   q.content,
   q.category,
   q.demand_score,
@@ -171,6 +177,8 @@ SELECT
   q.resolved_at,
   u.user_name,
   u.institution,
+  u.profile_url,
+  u.credibility_score,
   COUNT(DISTINCT a.answer_id) as answer_count,
   COUNT(DISTINCT c.comment_id) as comment_count,
   COUNT(DISTINCT CASE WHEN a.is_accepted = true THEN a.answer_id END) as has_accepted_answer
@@ -178,7 +186,7 @@ FROM questions q
 JOIN users u ON q.user_id = u.user_id
 LEFT JOIN answers a ON q.question_id = a.question_id
 LEFT JOIN comments c ON q.question_id = c.question_id
-GROUP BY q.question_id, q.user_id, q.content, q.category, q.demand_score, q.popped, q.created_at, q.resolved_at, u.user_name, u.institution;
+GROUP BY q.question_id, q.user_id, q.title, q.content, q.category, q.demand_score, q.popped, q.created_at, q.resolved_at, u.user_name, u.institution, u.profile_url, u.credibility_score;
 
 -- Tutorials with popularity
 CREATE VIEW tutorial_stats AS
@@ -191,6 +199,7 @@ SELECT
   t.embedded_video_url,
   t.created_at,
   u.user_name,
+  u.profile_url,
   COUNT(DISTINCT i.interaction_id) as total_interactions,
   COUNT(DISTINCT CASE WHEN i.interaction_type = 'rating' THEN i.interaction_id END) as rating_count,
   AVG(CASE WHEN i.interaction_type = 'rating' THEN i.value END) as avg_rating
@@ -198,14 +207,13 @@ FROM tutorials t
 JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
 WHERE t.deleted_at IS NULL
-GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name;
+GROUP BY t.tutorial_id, t.user_id, t.question_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name, u.profile_url;
 
 -- ============================================
 -- MIGRATIONS
 -- ============================================
 
 -- Soft delete support for tutorials
-ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
 CREATE INDEX IF NOT EXISTS idx_tutorials_deleted_at ON tutorials(deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Tutorial materials (uploaded files) table
@@ -234,6 +242,7 @@ SELECT
   t.embedded_video_url,
   t.created_at,
   u.user_name,
+  u.profile_url,
   COUNT(DISTINCT i.interaction_id) as total_interactions,
   COUNT(DISTINCT CASE WHEN i.interaction_type = 'rating' THEN i.interaction_id END) as rating_count,
   AVG(CASE WHEN i.interaction_type = 'rating' THEN i.value END) as avg_rating
@@ -241,7 +250,7 @@ FROM tutorials t
 JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
 WHERE t.deleted_at IS NULL
-GROUP BY t.tutorial_id, t.user_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name;
+GROUP BY t.tutorial_id, t.user_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name, u.profile_url;
 
 SELECT table_name
 FROM information_schema.tables

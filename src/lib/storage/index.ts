@@ -1,4 +1,3 @@
-import "server-only";
 import { localStorage } from "@/lib/storage/local";
 import { s3Storage } from "@/lib/storage/s3";
 import { supabaseStorage } from "@/lib/storage/supabase";
@@ -6,10 +5,12 @@ import { supabaseStorage } from "@/lib/storage/supabase";
 export const DEFAULT_URL_TTL_SECONDS = 3600;
 
 export interface StorageDriver {
-  put(opts: {
+  put(opts: { key: string; buffer: Buffer; mimeType: string }): Promise<string>;
+  putStream(opts: {
     key: string;
-    buffer: Buffer;
+    stream: NodeJS.ReadableStream;
     mimeType: string;
+    contentLength?: number;
   }): Promise<string>;
   getUrl(key: string, opts?: { expiresIn?: number }): Promise<string>;
   delete(key: string): Promise<void>;

@@ -3,7 +3,6 @@ import { asTutorialId, asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
 import type { TutorialID, Tutorials, UserID } from "@/types/database";
 import type { PoolClient } from "pg";
-import "server-only";
 
 type TutorialRow = Omit<Tutorials, "tutorial_id" | "user_id"> & {
   tutorial_id: string;
@@ -32,28 +31,35 @@ export async function listTutorials(
   limit: number,
   offset: number,
   category?: string,
+  user_id?: UserID,
 ): Promise<Tutorials[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
   const safeOffset = Math.max(offset, 0);
 
+  const conditions: string[] = ["t.deleted_at IS NULL"];
+  const params: any[] = [safeLimit, safeOffset];
+
   if (category) {
-    const rows = await q<TutorialRow>(
-      `SELECT DISTINCT t.* FROM tutorials t
-       LEFT JOIN questions_tutorials qt ON qt.tutorial_id = t.tutorial_id
-       LEFT JOIN questions q ON q.question_id = qt.question_id
-       WHERE t.deleted_at IS NULL AND q.category = $3
-       ORDER BY t.created_at DESC
-       LIMIT $1 OFFSET $2`,
-      [safeLimit, safeOffset, category],
-    );
-    return rows.map(mapTutorial);
+    params.push(category);
+    conditions.push(`q.category = $${params.length}`);
   }
 
+  if (user_id) {
+    params.push(user_id);
+    conditions.push(`t.user_id = $${params.length}`);
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
   const rows = await q<TutorialRow>(
-    `SELECT * FROM tutorials
-     WHERE deleted_at IS NULL
-     ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-    [safeLimit, safeOffset],
+    `SELECT DISTINCT t.* FROM tutorials t
+     LEFT JOIN questions_tutorials qt ON qt.tutorial_id = t.tutorial_id
+     LEFT JOIN questions q ON q.question_id = qt.question_id
+     ${whereClause}
+     ORDER BY t.created_at DESC
+     LIMIT $1 OFFSET $2`,
+    params,
   );
   return rows.map(mapTutorial);
 }
@@ -145,4 +151,27 @@ export async function hardDeleteExpiredTutorials(
     [olderThanDays],
   );
   return rows.length;
+}
+export async function listTutorialsDetailed(
+  limit: number,
+  offset: number,
+): Promise<any[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  const rows = await q<any>(
+    "SELECT * FROM tutorial_stats ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [safeLimit, safeOffset],
+  );
+  return rows;
+}
+
+export async function getTutorialDetailedById(
+  id: TutorialID,
+): Promise<any | null> {
+  const row = await one<any>(
+    "SELECT * FROM tutorial_stats WHERE tutorial_id = $1",
+    [id],
+  );
+  return row || null;
 }

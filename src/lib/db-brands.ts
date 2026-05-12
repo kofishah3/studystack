@@ -9,7 +9,6 @@ import type {
   TutorialMaterialID,
   UserID,
 } from "@/types/database";
-import "server-only";
 
 export const asUserId = (s: string) => s as UserID;
 export const asQuestionId = (s: string) => s as QuestionID;
