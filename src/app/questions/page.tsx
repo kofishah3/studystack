@@ -5,19 +5,34 @@ import QuestionCard from "@/components/cards/QuestionCard";
 import AskQuestionCard from "@/components/inputs/CreateCards/CreateQuestion";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
 
+const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
+
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function fetchQuestions(pageNum: number, append = false) {
     try {
       if (!append) setLoading(true);
       else setLoadingMore(true);
 
-      const res = await fetch(`/api/questions?page=${pageNum}`);
+      const params = new URLSearchParams({
+        page: String(pageNum),
+      });
+
+      if (selectedCategory !== "All") {
+        params.append("category", selectedCategory);
+      }
+      if (searchQuery.trim()) {
+        params.append("search", searchQuery.trim());
+      }
+
+      const res = await fetch(`/api/questions?${params}`);
       const json = await res.json();
 
       if (json.data) {
@@ -33,13 +48,20 @@ export default function QuestionsPage() {
   }
 
   useEffect(() => {
+    setPage(1);
     fetchQuestions(1);
-  }, []);
+  }, [selectedCategory, searchQuery]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
     fetchQuestions(nextPage, true);
+  };
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setSearchQuery(formData.get("search") as string);
   };
 
   return (
@@ -50,10 +72,39 @@ export default function QuestionsPage() {
       <TopNavBar />
       <div
         id="questions-content-container"
-        className="flex flex-col px-4 sm:px-8 py-8 gap-10 w-full max-w-5xl mx-auto flex-1 overflow-y-auto"
+        className="flex flex-col px-4 sm:px-8 py-8 gap-6 w-full max-w-5xl mx-auto flex-1 overflow-y-auto"
       >
         <div className="w-full flex flex-col gap-6">
           <AskQuestionCard />
+
+          <div className="flex flex-col gap-4">
+            <form onSubmit={handleSearch} className="w-full">
+              <input
+                type="text"
+                name="search"
+                placeholder="Search questions..."
+                defaultValue={searchQuery}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </form>
+
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === category
+                      ? "bg-primary-500 text-white"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {loading ? (
             <SkeletonList count={5} />
           ) : (

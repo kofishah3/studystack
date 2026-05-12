@@ -4,19 +4,35 @@ import TopNavBar from "@/components/navigation/topnavbar";
 import TutorialCard from "@/components/cards/TutorialCard";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
 
+const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
+
 export default function TutorialsPage() {
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function fetchTutorials(pageNum: number, append = false) {
     try {
       if (!append) setLoading(true);
       else setLoadingMore(true);
 
-      const res = await fetch(`/api/tutorial?page=${pageNum}&limit=20`);
+      const params = new URLSearchParams({
+        page: String(pageNum),
+        limit: "20",
+      });
+
+      if (selectedCategory !== "All") {
+        params.append("category", selectedCategory);
+      }
+      if (searchQuery.trim()) {
+        params.append("search", searchQuery.trim());
+      }
+
+      const res = await fetch(`/api/tutorial?${params}`);
       const json = await res.json();
 
       if (json.data) {
@@ -32,13 +48,20 @@ export default function TutorialsPage() {
   }
 
   useEffect(() => {
+    setPage(1);
     fetchTutorials(1);
-  }, []);
+  }, [selectedCategory, searchQuery]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
     fetchTutorials(nextPage, true);
+  };
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setSearchQuery(formData.get("search") as string);
   };
 
   return (
@@ -49,14 +72,43 @@ export default function TutorialsPage() {
       <TopNavBar />
       <div
         id="tutorials-content-container"
-        className="flex flex-col px-4 sm:px-8 py-8 gap-10 w-full max-w-5xl mx-auto flex-1 overflow-y-auto"
+        className="flex flex-col px-4 sm:px-8 py-8 gap-6 w-full max-w-5xl mx-auto flex-1 overflow-y-auto"
       >
         <div className="w-full flex flex-col gap-6">
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Tutorials
             </h1>
+
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="w-full">
+              <input
+                type="text"
+                name="search"
+                placeholder="Search tutorials..."
+                defaultValue={searchQuery}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </form>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === category
+                      ? "bg-primary-500 text-white"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
+
           {loading ? (
             <SkeletonList count={5} />
           ) : tutorials.length === 0 ? (
@@ -84,7 +136,7 @@ export default function TutorialsPage() {
                   linkedQuestions={t.linked_questions}
                 />
               ))}
-              
+
               {hasMore && (
                 <div className="flex justify-center py-6">
                   <button
