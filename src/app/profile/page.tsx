@@ -19,6 +19,7 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfilePostCard from "@/components/profile/ProfilePostCard";
 import { Metrics } from "@/lib/queries/users";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
+import EditProfileModal from "@/components/profile/EditProfileModal";
 
 export default function ProfilePage() {
   const [userName, setUserName] = useState("Loading...");
@@ -36,15 +37,21 @@ export default function ProfilePage() {
     engagement: 0,
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    fetchPosts();
-    fetchUserMetrics();
+    const controller = new AbortController();
+    
+    fetchPosts(controller.signal);
+    fetchUserMetrics(controller.signal);
+
+    return () => controller.abort();
   }, [activeTab]);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (signal?: AbortSignal) => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -56,20 +63,27 @@ export default function ProfilePage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          signal,
         },
       );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const json = await res.json();
       if (json.data) {
         setPosts(json.data);
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "AbortError") return;
       console.error("Failed to fetch posts:", error);
     } finally {
       setIsLoadingPosts(false);
     }
   };
 
-  const fetchUserMetrics = async () => {
+  const fetchUserMetrics = async (signal?: AbortSignal) => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -81,13 +95,20 @@ export default function ProfilePage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          signal,
         },
       );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const json = await res.json();
       if (json.data) {
         setMetrics(json.data);
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "AbortError") return;
       console.error("Failed to fetch metrics:", error);
     } finally {
       setIsLoadingMetrics(false);
@@ -103,6 +124,7 @@ export default function ProfilePage() {
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
+        setUserProfile(user);
         setUserName(user.user_name || "User");
         const edu = user.education_level || "Undergraduate";
         const eduFormatted =
@@ -143,6 +165,16 @@ export default function ProfilePage() {
     router.push("/login");
   };
 
+  const handleProfileUpdate = (updatedUser: any) => {
+    setUserProfile(updatedUser);
+    setUserName(updatedUser.user_name || "User");
+    const edu = updatedUser.education_level || "Undergraduate";
+    const eduFormatted =
+      edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " ");
+    const inst = updatedUser.institution || "University";
+    setSubtitle(`${eduFormatted} @ ${inst}`);
+  };
+
   const tabs = ["Tutorials", "Questions asked", "Answers given"];
 
   const formatTime = (dateStr: string) => {
@@ -170,7 +202,7 @@ export default function ProfilePage() {
               <div className="absolute -inset-0.5 bg-linear-to-r from-border to-border rounded-full opacity-20 group-hover:opacity-40 transition duration-500"></div>
               <div className="relative p-0.5 bg-background rounded-full shrink-0 overflow-hidden border border-border">
                 <img
-                  src="https://static.wikia.nocookie.net/chiikawa/images/a/a0/Momonga.png/revision/latest?cb=20240921205329"
+                  src={userProfile?.profile_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
                   alt="Profile"
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
                 />
@@ -191,6 +223,7 @@ export default function ProfilePage() {
             className="flex flex-row items-center gap-2"
           >
             <button
+              onClick={() => setIsEditModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-muted/5 
             border border-border rounded-full text-text font-semibold shadow-sm text-xs
             cursor-pointer transition-all duration-200 active:scale-95
@@ -315,6 +348,12 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        user={userProfile}
+        onUpdate={handleProfileUpdate}
+      />
     </div>
   );
 }

@@ -20,12 +20,12 @@ export default function AskQuestionCard() {
 
   const imageCount = useMemo(
     () => uploads.filter((u) => u.type === "image").length,
-    [uploads]
+    [uploads],
   );
 
   const videoCount = useMemo(
     () => uploads.filter((u) => u.type === "video").length,
-    [uploads]
+    [uploads],
   );
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -50,9 +50,7 @@ export default function AskQuestionCard() {
           preview: URL.createObjectURL(file),
           type: "image",
         });
-      }
-
-      else if (isVideo) {
+      } else if (isVideo) {
         if (currentVideos >= MAX_VIDEOS) continue;
 
         currentVideos++;
@@ -82,9 +80,7 @@ export default function AskQuestionCard() {
       "
     >
       <div>
-        <h2 className="text-lg font-semibold text-text">
-          Ask a Question
-        </h2>
+        <h2 className="text-lg font-semibold text-text">Ask a Question</h2>
 
         <p className="text-xs text-muted mt-1">
           Upload up to 5 images and 3 videos
@@ -160,13 +156,13 @@ export default function AskQuestionCard() {
           />
         </label>
 
-        <FullButton
-          label="Post"
-          size="sm"
-          fillColor="primary-500"
-          hoverColor="primary-700"
-          onClick={() => console.log("Post Question")}
-        />
+        <div className="w-fit min-w-[100px]">
+          <FullButton
+            label="Post"
+            className="py-2 px-6 text-sm"
+            onClick={() => console.log("Post Question")}
+          />
+        </div>
       </div>
     </div>
   );

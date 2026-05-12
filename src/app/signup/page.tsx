@@ -111,9 +111,10 @@ export default function SignupPage() {
 
               <FullButton
                 id="signup-submit-button"
-                label={isLoading ? "Creating Account..." : "Create Account"}
+                label="Create Account"
                 type="submit"
-              ></FullButton>
+                isLoading={isLoading}
+              />
 
               <div id="signup-divider" className="relative my-2">
                 <div className="absolute inset-0 flex items-center">

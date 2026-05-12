@@ -59,7 +59,6 @@ export default function QuestionCard({
     >
       <div className="flex gap-4">
 
-        {/* COL 1: Demand Rate */}
         <div className="shrink-0 flex flex-col items-center">
           <div className={`flex flex-col items-center justify-center w-14 h-9 rounded-lg border text-center ${demandColor}`}>
             <span className="text-lg font-bold leading-none">{demandRate}</span>
@@ -72,10 +71,12 @@ export default function QuestionCard({
               {questionTitle}
             </h2>
 
-            <FullButton
-              label="Create Tutorial"
-              size="sm"
-            />
+            <div className="w-fit min-w-[140px]">
+              <FullButton
+                label="Create Tutorial"
+                className="py-2 px-4 text-xs"
+              />
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -97,7 +98,6 @@ export default function QuestionCard({
             {body}
           </p>
 
-          {/* Show/Hide Answers toggle */}
           {answers.length > 0 && (
             <button
               onClick={() => setShowAnswers((v) => !v)}
@@ -114,7 +114,6 @@ export default function QuestionCard({
         </div>
       </div>
 
-      {/* Answer Cards (full-width beneath the columns) */}
       {showAnswers && answers.length > 0 && (
         <div className="mt-4 ml-20 flex flex-col gap-3">
           {answers.map((answer) => (

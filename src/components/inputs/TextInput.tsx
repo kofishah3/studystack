@@ -13,6 +13,7 @@ interface TextInputProps {
 
   multiline?: boolean;
   rows?: number;
+  icon?: React.ReactNode;
 }
 
 interface TextInputwLabelProps extends TextInputProps {
@@ -28,6 +29,7 @@ export default function TextInput({
   id,
   multiline = false,
   rows = 5,
+  icon,
 }: TextInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -64,7 +66,8 @@ export default function TextInput({
           "
         />
       ) : (
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center px-2">
+          {icon && <div className="mr-2 text-muted">{icon}</div>}
           <input
             id={id}
             type={inputType}
@@ -109,6 +112,7 @@ export function TextInputwLabel({
   id,
   multiline,
   rows,
+  icon,
 }: TextInputwLabelProps) {
   return (
     <div id={`${id || name}-field-group`} className="flex flex-col gap-1 w-full">
@@ -123,6 +127,7 @@ export function TextInputwLabel({
         onChange={onChange}
         multiline={multiline}
         rows={rows}
+        icon={icon}
       />
     </div>
   );

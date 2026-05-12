@@ -208,20 +208,16 @@ export default function OnboardingPage() {
             </div>
 
             <div className="mt-10 flex gap-4">
-              <button
-                id="step-2-back"
+              <FullButton
+                label="Back"
+                variant="secondary"
                 onClick={handleBack}
-                className="flex-1 px-5 py-2.5 rounded-xl border border-border text-text font-semibold text-sm hover:bg-slate-50 transition-all duration-200 active:scale-95"
-              >
-                Back
-              </button>
-              <div className="flex-1">
-                <FullButton
-                  id="step-2-next"
-                  label="Continue"
-                  onClick={handleNext}
-                />
-              </div>
+              />
+              <FullButton
+                id="step-2-next"
+                label="Continue"
+                onClick={handleNext}
+              />
             </div>
           </div>
         )}
@@ -286,20 +282,17 @@ export default function OnboardingPage() {
             </div>
 
             <div className="mt-10 flex gap-4">
-              <button
-                id="step-3-back"
+              <FullButton
+                label="Back"
+                variant="secondary"
                 onClick={handleBack}
-                className="flex-1 px-5 py-2.5 rounded-xl border border-border text-text font-semibold text-sm hover:bg-slate-50 transition-all duration-200 active:scale-95"
-              >
-                Back
-              </button>
-              <div className="flex-1">
-                <FullButton
-                  id="onboarding-complete"
-                  label={isLoading ? "Saving..." : "Finish Setup"}
-                  onClick={handleSubmit}
-                />
-              </div>
+              />
+              <FullButton
+                id="onboarding-complete"
+                label="Finish Setup"
+                isLoading={isLoading}
+                onClick={handleSubmit}
+              />
             </div>
           </div>
         )}

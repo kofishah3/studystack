@@ -56,7 +56,9 @@ export async function insertUser(
 
 export async function updateUser(
   id: UserID,
-  input: Partial<Omit<User, "user_id" | "created_at" | "password_hash" | "email">>,
+  input: Partial<
+    Omit<User, "user_id" | "created_at" | "password_hash" | "email">
+  >,
 ): Promise<User | null> {
   const fields = Object.keys(input);
   if (fields.length === 0) return getUserById(id);
@@ -84,7 +86,7 @@ export type Metrics = {
 
 export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
   const questions_row = await one<{ count: string }>(
-    "SELECT COUNT(*) as count FROM answers WHERE user_id = $1",
+    "SELECT COUNT(*) as count FROM questions WHERE user_id = $1",
     [user_id],
   );
 

@@ -15,6 +15,7 @@ export default function TopNavBar({}: TopNavBarProps) {
   const pathname = usePathname();
   const [userName, setUserName] = useState("Loading...");
   const [education, setEducation] = useState("Loading...");
+  const [profileUrl, setProfileUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -25,6 +26,10 @@ export default function TopNavBar({}: TopNavBarProps) {
           setUserName(user.user_name || "User");
           const edu = user.education_level || "Undergraduate";
           setEducation(formatEducationLevel(edu));
+          setProfileUrl(
+            user.profile_url ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`,
+          );
         }
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
@@ -105,13 +110,13 @@ export default function TopNavBar({}: TopNavBarProps) {
             </div>
             <div id="profile-container" className="items-center flex relative">
               <div className="absolute -inset-0.5 bg-primary-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-              <img
-                src={
-                  "https://static.wikia.nocookie.net/chiikawa/images/a/a0/Momonga.png/revision/latest?cb=20240921205329"
-                }
-                alt="Profile"
-                className="w-9 h-9 rounded-full border border-border group-hover:border-primary-500/50 transition-colors duration-300 relative"
-              />
+              {profileUrl && (
+                <img
+                  src={profileUrl}
+                  alt="Profile"
+                  className="w-9 h-9 rounded-full border border-border group-hover:border-primary-500/50 transition-colors duration-300 relative"
+                />
+              )}
             </div>
           </Link>
         </div>

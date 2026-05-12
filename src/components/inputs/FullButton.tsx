@@ -1,94 +1,55 @@
 "use client";
 
+import React from "react";
+import { Loader2 } from "lucide-react";
+
 interface FullButtonProps {
   label?: string;
-
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
-
-  size?: "sm" | "md" | "lg";
-
-  fillColor?:
-    | "primary-500"
-    | "primary-600"
-    | "emerald-500"
-    | "red-500"
-    | "gray-800";
-
-  hoverColor?:
-    | "primary-700"
-    | "primary-800"
-    | "emerald-700"
-    | "red-700"
-    | "gray-900";
-
-  borderColor?: "primary-500" | "primary-700" | "gray-300";
+  variant?: "primary" | "secondary";
+  isLoading?: boolean;
+  disabled?: boolean;
   id?: string;
+  className?: string;
 }
-
-const fillColorMap = {
-  "primary-500": "bg-primary-500",
-  "primary-600": "bg-primary-600",
-  "emerald-500": "bg-emerald-500",
-  "red-500": "bg-red-500",
-  "gray-800": "bg-gray-800",
-};
-
-const hoverColorMap = {
-  "primary-700": "hover:bg-primary-700",
-  "primary-800": "hover:bg-primary-800",
-  "emerald-700": "hover:bg-emerald-700",
-  "red-700": "hover:bg-red-700",
-  "gray-900": "hover:bg-gray-900",
-};
-
-const borderColorMap = {
-  "primary-500": "border-primary-500",
-  "primary-700": "border-primary-700",
-  "gray-300": "border-gray-300",
-};
-
-const sizeMap = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-5 py-2.5 text-sm",
-  lg: "px-6 py-3 text-sm",
-};
 
 export default function FullButton({
   label = "Ok",
-
-  fillColor = "primary-500",
-  hoverColor = "primary-700",
-  borderColor,
-
-  size = "md",
-
   onClick,
   type = "button",
+  variant = "primary",
+  isLoading = false,
+  disabled = false,
   id,
+  className = "",
 }: FullButtonProps) {
+  const baseStyles =
+    "w-full text-sm py-2.5 px-4 rounded-xl font-bold transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+
+  const variantStyles = {
+    primary:
+      "bg-primary-500 text-white hover:bg-primary-600 shadow-lg shadow-primary-500/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:border-transparent",
+    secondary:
+      "bg-transparent border-2 border-primary-500 text-primary-500 hover:bg-primary-50 disabled:border-gray-200 disabled:text-gray-400",
+  };
+
   return (
     <button
-      id={id || "filledbutton-style-container"}
+      id={id}
       type={type}
       onClick={onClick}
-      className={`
-        rounded-xl
-        text-center cursor-pointer text-white font-semibold
-        transition-all duration-200 active:scale-95
-
-        whitespace-nowrap
-        shrink-0
-        w-full
-
-        ${fillColorMap[fillColor]}
-        ${hoverColorMap[hoverColor]}
-        ${sizeMap[size]}
-
-        ${borderColor ? `border ${borderColorMap[borderColor]}` : ""}
-      `}
+      disabled={disabled || isLoading}
+      className={`${baseStyles} ${variantStyles[variant]} ${className}`}
     >
-      {label}
+      {isLoading ? (
+        <>
+          <Loader2 size={18} className="animate-spin" />
+          <span>Please wait...</span>
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }

@@ -95,9 +95,10 @@ export default function LoginPage() {
             </div>
 
             <FullButton
-              label={isLoading ? "Signing in..." : "Sign In"}
+              label="Sign In"
               type="submit"
-            ></FullButton>
+              isLoading={isLoading}
+            />
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
