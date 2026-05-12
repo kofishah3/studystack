@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Camera, Loader2, User, Building, GraduationCap, Calendar, Users } from "lucide-react";
+import {
+  X,
+  Camera,
+  Loader2,
+  User,
+  Building,
+  GraduationCap,
+  Calendar,
+  Users,
+} from "lucide-react";
 import axios from "axios";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
 import FullButton from "@/components/inputs/FullButton";
@@ -30,7 +39,8 @@ export default function EditProfileModal({
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(
-    user?.profile_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.user_name}`
+    user?.profile_url ||
+      `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.user_name}`,
   );
 
   useEffect(() => {
@@ -42,14 +52,19 @@ export default function EditProfileModal({
         age: user.age || "",
         gender: user.gender || "",
       });
-      setPreviewUrl(user.profile_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`);
+      setPreviewUrl(
+        user.profile_url ||
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`,
+      );
     }
   }, [user]);
 
   if (!isOpen) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -72,7 +87,7 @@ export default function EditProfileModal({
     try {
       const token = localStorage.getItem("token");
       const submitData = new FormData();
-      
+
       submitData.append("data", JSON.stringify(formData));
       if (selectedImage) {
         submitData.append("profile_image", selectedImage);
@@ -100,13 +115,15 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div 
+      <div
         className="bg-surface w-full max-w-xl rounded-3xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-8 py-6 border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-10">
-          <h2 className="text-xl font-bold font-sora text-text">Edit Profile</h2>
-          <button 
+          <h2 className="text-xl font-bold font-sora text-text">
+            Edit Profile
+          </h2>
+          <button
             onClick={onClose}
             className="p-2 hover:bg-muted/10 rounded-full transition-colors cursor-pointer"
           >
@@ -131,12 +148,14 @@ export default function EditProfileModal({
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
                   />
-                  <label 
+                  <label
                     htmlFor="profile-upload"
                     className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     <Camera className="text-white mb-1" size={24} />
-                    <span className="text-[10px] text-white font-bold uppercase tracking-wider">Change</span>
+                    <span className="text-[10px] text-white font-bold uppercase tracking-wider">
+                      Change
+                    </span>
                   </label>
                   <input
                     id="profile-upload"
@@ -147,7 +166,9 @@ export default function EditProfileModal({
                   />
                 </div>
               </div>
-              <p className="text-xs text-muted font-medium">Click to change profile picture</p>
+              <p className="text-xs text-muted font-medium">
+                Click to change profile picture
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -194,7 +215,18 @@ export default function EditProfileModal({
                     <option value="other">Other</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -217,7 +249,18 @@ export default function EditProfileModal({
                     <option value="other">Other</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
                   </div>
                 </div>
               </div>
