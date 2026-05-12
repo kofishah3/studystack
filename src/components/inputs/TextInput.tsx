@@ -7,9 +7,13 @@ interface TextInputProps {
   name: string;
   placeholder?: string;
   type?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  id?: string;
 
   multiline?: boolean;
   rows?: number;
+  icon?: React.ReactNode;
 }
 
 interface TextInputwLabelProps extends TextInputProps {
@@ -20,9 +24,12 @@ export default function TextInput({
   name,
   placeholder,
   type = "text",
-
+  value,
+  onChange,
+  id,
   multiline = false,
   rows = 5,
+  icon,
 }: TextInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,7 +42,7 @@ export default function TextInput({
 
   return (
     <div
-      id="text-input-container"
+      id={`${id || name}-container`}
       className="
         group w-full h-fit p-1 cursor-text
         border border-border rounded-xl bg-surface/50
@@ -46,9 +53,12 @@ export default function TextInput({
     >
       {multiline ? (
         <textarea
+          id={id}
           name={name}
           rows={rows}
           placeholder={placeholder}
+          value={value}
+          onChange={onChange as any}
           className="
             w-full bg-transparent outline-none border-none
             text-text text-sm placeholder:text-muted
@@ -56,8 +66,10 @@ export default function TextInput({
           "
         />
       ) : (
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center px-2">
+          {icon && <div className="mr-2 text-muted">{icon}</div>}
           <input
+            id={id}
             type={inputType}
             className="
               w-full bg-transparent outline-none border-none
@@ -66,10 +78,13 @@ export default function TextInput({
             "
             placeholder={placeholder}
             name={name}
+            value={value}
+            onChange={onChange as any}
           />
 
           {type === "password" && (
             <button
+              id={`${id || name}-toggle-password`}
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted hover:text-primary-500 transition-colors p-1"
@@ -92,20 +107,28 @@ export function TextInputwLabel({
   name,
   placeholder,
   type = "text",
+  value,
+  onChange,
+  id,
   multiline,
   rows,
+  icon,
 }: TextInputwLabelProps) {
   return (
-    <div className="flex flex-col gap-1 w-full">
-      <p className="font-medium text-text">{label}</p>
+    <div id={`${id || name}-field-group`} className="flex flex-col gap-1 w-full">
+      <p id={`${id || name}-label`} className="font-medium text-text text-sm">{label}</p>
 
       <TextInput
+        id={id}
         name={name}
         placeholder={placeholder}
         type={type}
+        value={value}
+        onChange={onChange}
         multiline={multiline}
         rows={rows}
+        icon={icon}
       />
     </div>
   );
-}
+}

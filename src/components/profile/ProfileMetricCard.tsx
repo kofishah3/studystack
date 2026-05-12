@@ -8,6 +8,7 @@ interface ProfileMetricCardProps {
   icon: LucideIcon;
   variant?: "default" | "success" | "warning";
   isLoading?: boolean;
+  className?: string;
 }
 
 export default function ProfileMetricCard({
@@ -16,6 +17,7 @@ export default function ProfileMetricCard({
   icon: Icon,
   variant = "default",
   isLoading,
+  className = "",
 }: ProfileMetricCardProps) {
   let bgColor = "bg-surface/40 hover:bg-surface/80";
   let textColor = "text-text";
@@ -38,27 +40,27 @@ export default function ProfileMetricCard({
   }
 
   if (isLoading) {
-    return <MetricSkeleton />;
+    return <MetricSkeleton className={className} />;
   }
 
   return (
     <div
-      className={`flex flex-row items-center p-4 rounded-2xl flex-1 border ${borderColor} ${bgColor} transition-all duration-300 group cursor-default hover:shadow-md hover:-translate-y-0.5`}
+      className={`flex flex-row items-center p-3 sm:p-4 rounded-2xl flex-1 border ${borderColor} ${bgColor} transition-all duration-300 group cursor-default hover:shadow-md hover:-translate-y-0.5 ${className}`}
     >
-      <div className="flex flex-row items-center gap-4">
+      <div className="flex flex-row items-center gap-3 sm:gap-4">
         <div
-          className={`p-2 rounded-xl bg-background border border-border group-hover:border-primary-500/30 transition-colors duration-300 ${iconColor}`}
+          className={`p-1.5 sm:p-2 rounded-xl bg-background border border-border group-hover:border-primary-500/30 transition-colors duration-300 ${iconColor}`}
         >
-          <Icon size={20} strokeWidth={2.5} />
+          <Icon size={18} strokeWidth={2.5} className="sm:w-[20px] sm:h-[20px]" />
         </div>
         <div className="flex flex-col">
           <span
-            className={`text-xl sm:text-2xl font-bold font-sora tracking-tight ${textColor} group-hover:text-primary-500 transition-colors duration-300`}
+            className={`text-lg sm:text-2xl font-bold font-sora tracking-tight ${textColor} group-hover:text-primary-500 transition-colors duration-300`}
           >
             {value}
           </span>
           <span
-            className={`text-xs font-semibold tracking-tight ${labelColor}`}
+            className={`text-[10px] sm:text-xs font-semibold tracking-tight ${labelColor}`}
           >
             {label}
           </span>

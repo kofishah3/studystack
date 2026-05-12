@@ -26,9 +26,10 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 export async function getUserByUsername(
   user_name: string,
 ): Promise<User | null> {
-  const row = await one<UserRow>("SELECT * FROM users WHERE user_name = $1", [
-    user_name,
-  ]);
+  const row = await one<UserRow>(
+    "SELECT * FROM users WHERE LOWER(user_name) = LOWER($1)",
+    [user_name],
+  );
   return row ? mapUser(row) : null;
 }
 
@@ -54,6 +55,28 @@ export async function insertUser(
   return mapUser(row);
 }
 
+export async function updateUser(
+  id: UserID,
+  input: Partial<
+    Omit<User, "user_id" | "created_at" | "password_hash" | "email">
+  >,
+): Promise<User | null> {
+  const fields = Object.keys(input);
+  if (fields.length === 0) return getUserById(id);
+
+  const setClause = fields
+    .map((field, index) => `${field} = $${index + 2}`)
+    .join(", ");
+  const values = fields.map((field) => (input as any)[field]);
+
+  const row = await one<UserRow>(
+    `UPDATE users SET ${setClause} WHERE user_id = $1 RETURNING *`,
+    [id, ...values],
+  );
+
+  return row ? mapUser(row) : null;
+}
+
 export type Metrics = {
   questions: number;
   answers: number;
@@ -64,7 +87,7 @@ export type Metrics = {
 
 export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
   const questions_row = await one<{ count: string }>(
-    "SELECT COUNT(*) as count FROM answers WHERE user_id = $1",
+    "SELECT COUNT(*) as count FROM questions WHERE user_id = $1",
     [user_id],
   );
 
@@ -73,11 +96,32 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
     [user_id],
   );
 
+  const likes_row = await one<{ count: string }>(
+    `SELECT COUNT(*) as count FROM interactions i
+     WHERE i.interaction_type = 'react' AND i.value > 0 AND (
+       i.question_id IN (SELECT question_id FROM questions WHERE user_id = $1) OR
+       i.answer_id IN (SELECT answer_id FROM answers WHERE user_id = $1) OR
+       i.tutorial_id IN (SELECT tutorial_id FROM tutorials WHERE user_id = $1)
+     )`,
+    [user_id],
+  );
+
+  const user = await getUserById(user_id);
+  const questionsCount = Number(questions_row?.count || 0);
+  const answersCount = Number(answers_row?.count || 0);
+  const likesCount = Number(likes_row?.count || 0);
+  const rating = user?.credibility_score || 0;
+
+  const engagement = Math.min(
+    100,
+    Math.round((questionsCount * 3 + answersCount * 5 + likesCount) / 2),
+  );
+
   return {
-    questions: Number(questions_row?.count || 0),
-    answers: Number(answers_row?.count || 0),
-    likes: 0,
-    rating: 0,
-    engagement: 0,
+    questions: questionsCount,
+    answers: answersCount,
+    likes: likesCount,
+    rating,
+    engagement,
   };
 }

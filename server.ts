@@ -24,7 +24,15 @@ app.prepare().then(() => {
     });
   }
 
-  const httpServer = createServer((req, res) => handle(req, res));
+  const httpServer = createServer((req, res) => {
+    try {
+      handle(req, res);
+    } catch (err) {
+      console.error("Next.js handle error:", err);
+      res.statusCode = 500;
+      res.end("internal server error");
+    }
+  });
 
   const io = new Server(httpServer, {
     cors: { origin: "*" },

@@ -165,7 +165,7 @@ export default function TutorialDetailPage() {
           </div>
 
           <div className="flex justify-center pt-6 border-t border-gray-100 dark:border-gray-800">
-            <FullButton label="Was this helpful?" size="lg" />
+            <FullButton label="Was this helpful?" />
           </div>
         </div>
       </main>
