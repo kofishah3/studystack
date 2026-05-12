@@ -1,5 +1,6 @@
 import React from "react";
 import { LucideIcon } from "lucide-react";
+import { MetricSkeleton } from "../ui/SkeletonCard";
 
 interface ProfileMetricCardProps {
   value: string | number;
@@ -36,27 +37,33 @@ export default function ProfileMetricCard({
     iconColor = "text-yellow-500/60";
   }
 
+  if (isLoading) {
+    return <MetricSkeleton />;
+  }
+
   return (
     <div
       className={`flex flex-row items-center p-4 rounded-2xl flex-1 border ${borderColor} ${bgColor} transition-all duration-300 group cursor-default hover:shadow-md hover:-translate-y-0.5`}
     >
-      {isLoading ? (
-        <div className="w-5 h-5 border-2 border-muted/20 border-t-muted/60 rounded-full animate-spin" />
-      ) : (
-        <div className="flex flex-row items-center gap-4">
-          <div className={`p-2 rounded-xl bg-background border border-border group-hover:border-primary-500/30 transition-colors duration-300 ${iconColor}`}>
-            <Icon size={20} strokeWidth={2.5} />
-          </div>
-          <div className="flex flex-col">
-            <span className={`text-xl sm:text-2xl font-bold font-sora tracking-tight ${textColor} group-hover:text-primary-500 transition-colors duration-300`}>
-              {value}
-            </span>
-            <span className={`text-xs font-semibold tracking-tight ${labelColor}`}>
-              {label}
-            </span>
-          </div>
+      <div className="flex flex-row items-center gap-4">
+        <div
+          className={`p-2 rounded-xl bg-background border border-border group-hover:border-primary-500/30 transition-colors duration-300 ${iconColor}`}
+        >
+          <Icon size={20} strokeWidth={2.5} />
         </div>
-      )}
+        <div className="flex flex-col">
+          <span
+            className={`text-xl sm:text-2xl font-bold font-sora tracking-tight ${textColor} group-hover:text-primary-500 transition-colors duration-300`}
+          >
+            {value}
+          </span>
+          <span
+            className={`text-xs font-semibold tracking-tight ${labelColor}`}
+          >
+            {label}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import TopNavBar from "@/components/navigation/topnavbar";
 import TutorialCard from "@/components/cards/TutorialCard";
+import { SkeletonList } from "@/components/ui/SkeletonCard";
 
 export default function TutorialsPage() {
   const [tutorials, setTutorials] = useState<any[]>([]);
@@ -57,9 +58,7 @@ export default function TutorialsPage() {
             </h1>
           </div>
           {loading ? (
-            <div className="flex justify-center py-10">
-              <span className="text-gray-500">Loading tutorials...</span>
-            </div>
+            <SkeletonList count={5} />
           ) : tutorials.length === 0 ? (
             <div className="flex justify-center py-10">
               <span className="text-gray-500">No tutorials found.</span>
