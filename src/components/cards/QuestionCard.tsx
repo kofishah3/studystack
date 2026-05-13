@@ -49,7 +49,10 @@ export default function QuestionCard({
         : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800";
 
   const firstAnswer = answers.length > 0 ? answers[0] : null;
-  const tags = category ? [category] : subjectTag;
+  const tags = [
+    ...(category ? category.split(",").map((s) => s.trim()) : []),
+    ...subjectTag,
+  ].filter((tag, index, self) => tag && self.indexOf(tag) === index);
 
   return (
     <div
@@ -67,10 +70,10 @@ export default function QuestionCard({
           id={`demand-container-${id}`}
         >
           <div
-            className={`flex flex-col items-center justify-center w-14 h-10 rounded-lg border text-center font-bold ${demandColor}`}
+            className={`flex flex-col items-center justify-center w-10 h-8 sm:w-14 sm:h-10 rounded-lg border text-center font-bold ${demandColor}`}
             id={`demand-badge-${id}`}
           >
-            <span className="text-lg leading-none">{demandRate}</span>
+            <span className="text-sm sm:text-lg leading-none">{demandRate}</span>
           </div>
         </div>
 
@@ -93,7 +96,7 @@ export default function QuestionCard({
             </Link>
 
             {mode === "preview" && (
-              <div className="w-fit">
+              <div className="hidden sm:block w-fit">
                 <FullButton
                   id={`create-tutorial-btn-top-${id}`}
                   label="Create Tutorial"
@@ -128,7 +131,7 @@ export default function QuestionCard({
               updatedAt={updatedAt}
               avatarUrl={profileURL}
             />
-            <span className="text-gray-300 dark:text-gray-700 text-xs">|</span>
+            <span className="hidden sm:inline text-gray-300 dark:text-gray-700 text-xs">|</span>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
                 <SubjectTag key={tag} label={tag} />
@@ -169,33 +172,44 @@ export default function QuestionCard({
             </div>
           )}
 
+          {mode === "preview" && (
+            <div className="mt-3 block sm:hidden">
+              <FullButton
+                id={`create-tutorial-btn-mobile-${id}`}
+                label="Create Tutorial"
+                className="w-full py-2 text-xs"
+                variant="secondary"
+              />
+            </div>
+          )}
+
           {mode === "full" && (
             <div
-              className="pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-wrap 
-              items-center gap-3"
+              className="pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row 
+              items-start sm:items-center gap-4 sm:gap-3"
               id="question-footer-actions"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <FullButton
                   label="Helpful"
-                  className="w-fit px-5 py-1.5 text-xs"
+                  className="flex-1 sm:flex-none sm:w-fit sm:px-5 py-1.5 text-xs"
                   id="helpful-button"
                 />
                 <button
                   id="share-button"
                   className="text-xs font-semibold text-gray-500 hover:text-primary-700 transition-colors px-3 py-1.5 
-                  cursor-pointer
-                  rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+                  cursor-pointer flex-1 sm:flex-none
+                  rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 border sm:border-none border-gray-100 dark:border-gray-800"
                 >
                   Share
                 </button>
               </div>
-              <div className="ml-auto">
+              <div className="w-full sm:ml-auto sm:w-auto">
                 <FullButton
                   id="create-tutorial-button"
                   label="Create Tutorial"
                   variant="secondary"
-                  className="w-fit px-5 py-1.5 text-xs"
+                  className="w-full sm:w-fit sm:px-5 py-1.5 text-xs"
                 />
               </div>
             </div>

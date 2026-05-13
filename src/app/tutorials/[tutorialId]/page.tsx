@@ -5,6 +5,9 @@ import UserMeta from "@/components/ui/UserMeta";
 import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, AlertCircle, MessageSquare, Play } from "lucide-react";
+import QuestionCard from "@/components/cards/QuestionCard";
+import { CommentCard } from "@/components/cards/CommentCard";
 
 export default function TutorialDetailPage() {
   const { tutorialId } = useParams();
@@ -31,10 +34,15 @@ export default function TutorialDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-background text-foreground">
         <TopNavBar />
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-gray-500">Loading tutorial...</span>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary-700/20 border-t-primary-700 rounded-full animate-spin"></div>
+            <span className="text-gray-500 font-medium animate-pulse">
+              Loading tutorial...
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -42,11 +50,23 @@ export default function TutorialDetailPage() {
 
   if (!tutorial) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-background text-foreground">
         <TopNavBar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <span className="text-gray-500 text-lg">Tutorial not found.</span>
-          <Link href="/tutorials" className="text-blue-600 hover:underline">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+            <AlertCircle
+              size={40}
+              strokeWidth={1.5}
+              className="text-gray-400"
+            />
+          </div>
+          <span className="text-gray-500 text-xl font-semibold">
+            Tutorial not found.
+          </span>
+          <Link
+            href="/tutorials"
+            className="px-6 py-2 bg-primary-700 text-white rounded-full hover:bg-primary-700 transition-colors shadow-lg shadow-primary-700/20"
+          >
             Back to Tutorials
           </Link>
         </div>
@@ -63,109 +83,168 @@ export default function TutorialDetailPage() {
         : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800";
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div
+      className="flex flex-col min-h-screen bg-gray-50 dark:bg-black text-foreground"
+      id="tutorial-detail-root"
+    >
       <TopNavBar />
 
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-10">
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                {tutorial.title}
-              </h1>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`flex flex-col items-center justify-center w-16 h-10 rounded-xl border text-center ${ratingColor}`}
-                >
-                  <span className="text-xl font-bold leading-none">
-                    {avgRating > 0 ? avgRating.toFixed(1) : "-"}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">
-                    Avg Rating
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {tutorial.total_interactions} interactions
-                  </span>
-                </div>
-              </div>
-
-              <UserMeta
-                name={tutorial.user_name}
-                createdAt={new Date(tutorial.created_at).toLocaleDateString(
-                  "en-US",
-                  {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  },
-                )}
-                avatarUrl={tutorial.profile_url}
+      <main
+        className="flex-1 w-full max-w-4xl mx-auto px-4 py-6"
+        id="tutorial-detail-main"
+      >
+        <div className="flex flex-col gap-4">
+          <div
+            className="flex items-center justify-between px-1"
+            id="tutorial-detail-top-bar"
+          >
+            <button
+              id="back-button"
+              onClick={() => router.back()}
+              className="flex items-center gap-1.5 py-1 text-sm font-medium 
+              text-gray-500 dark:text-gray-400 hover:text-primary-700 dark:hover:text-primary-400 
+              transition-colors group"
+            >
+              <ArrowLeft
+                size={16}
+                strokeWidth={2.5}
+                className="group-hover:-translate-x-0.5 transition-transform"
               />
-            </div>
+              Back
+            </button>
           </div>
 
-          {tutorial.embedded_video_url && (
-            <div className="w-full aspect-video rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black shadow-lg">
-              <iframe
-                src={tutorial.embedded_video_url}
-                className="w-full h-full"
-                allowFullScreen
-                title="Tutorial Video"
-              />
-            </div>
-          )}
+          <div
+            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm flex flex-col gap-6"
+            id="tutorial-header-card"
+          >
+            <div className="flex flex-col gap-4">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-tight">
+                {tutorial.title}
+              </h1>
 
-          {tutorial.linked_questions?.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-                Linked Questions
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {tutorial.linked_questions.map((q: any) => (
-                  <Link
-                    key={q.question_id}
-                    href="/questions"
-                    className="px-4 py-2 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex flex-col items-center justify-center w-14 h-10 rounded-lg border text-center font-bold ${ratingColor}`}
                   >
-                    {q.title}
-                  </Link>
-                ))}
+                    <span className="text-lg leading-none">
+                      {avgRating > 0 ? avgRating.toFixed(1) : "-"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-400 font-semibold">
+                      Avg Rating
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {tutorial.total_interactions} interactions
+                    </span>
+                  </div>
+                </div>
+
+                <UserMeta
+                  name={tutorial.user_name}
+                  createdAt={new Date(tutorial.created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  )}
+                  avatarUrl={tutorial.profile_url}
+                  size="lg"
+                />
               </div>
             </div>
-          )}
 
-          <div className="prose dark:prose-invert max-w-none">
-            <div className="p-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
-              <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+            {tutorial.embedded_video_url && (
+              <div className="w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black shadow-inner">
+                <iframe
+                  src={tutorial.embedded_video_url}
+                  className="w-full h-full"
+                  allowFullScreen
+                  title="Tutorial Video"
+                />
+              </div>
+            )}
+
+            <div className="prose dark:prose-invert max-w-none">
+              <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                 {tutorial.content}
               </p>
             </div>
+
+            <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-center">
+              <FullButton
+                label="Was this helpful?"
+                className="w-full sm:w-fit px-8 py-2.5"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-center pt-6 border-t border-gray-100 dark:border-gray-800">
-            <FullButton label="Was this helpful?" />
+          {tutorial.linked_questions &&
+            tutorial.linked_questions.length > 0 && (
+              <div
+                className="mt-4 flex flex-col gap-4"
+                id="linked-questions-section"
+              >
+                <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-300 px-2">
+                  Based on Question:
+                </h2>
+                <div className="flex flex-col gap-4">
+                  {tutorial.linked_questions.map((q: any) => (
+                    <QuestionCard
+                      key={q.question_id}
+                      id={q.question_id}
+                      questionTitle={q.title}
+                      body={q.content}
+                      author={q.user_name}
+                      profileURL={q.profile_url}
+                      createdAt={q.created_at}
+                      category={q.category}
+                      demandRate={q.demand_score}
+                      mode="preview"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+          <div
+            className="mt-6 flex flex-col gap-6"
+            id="tutorial-comments-section"
+          >
+            <div className="flex items-center gap-2 px-2">
+              <MessageSquare size={16} className="text-gray-400" />
+              <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                Comments
+                <span className="bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full text-xs font-bold">
+                  {tutorial.comments?.length || 0}
+                </span>
+              </h2>
+            </div>
+
+            <div className="flex flex-col gap-2" id="tutorial-comments-list">
+              {tutorial.comments?.map((comment: any) => (
+                <CommentCard
+                  key={comment.comment_id}
+                  authorName={comment.author_name}
+                  createdAt={comment.created_at}
+                  body={comment.content}
+                  avatarUrl={comment.author_profile_url}
+                />
+              ))}
+
+              {(!tutorial.comments || tutorial.comments.length === 0) && (
+                <div className="bg-white dark:bg-gray-900 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-3">
+                  <MessageSquare size={24} className="text-gray-300" />
+                  <p className="text-sm text-gray-500">
+                    No comments yet. Start the conversation!
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

@@ -131,3 +131,16 @@ export async function listCommentsForAnswerDetailed(
   );
   return rows;
 }
+export async function listCommentsForTutorialDetailed(
+  tid: TutorialID,
+): Promise<any[]> {
+  const rows = await q<any>(
+    `SELECT c.*, u.user_name as author_name, u.profile_url as author_profile_url
+     FROM comments c
+     JOIN users u ON c.user_id = u.user_id
+     WHERE c.tutorial_id = $1 
+     ORDER BY c.created_at ASC`,
+    [tid],
+  );
+  return rows;
+}
