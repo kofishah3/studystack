@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { HelpCircle, MessageCircle, Heart, Star, Activity } from "lucide-react";
 import ProfileMetricCard from "./ProfileMetricCard";
 import ProfileTabs from "./ProfileTabs";
-import ProfilePostCard from "./ProfilePostCard";
 import { Metrics } from "@/lib/queries/users";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
+import TutorialCard from "@/components/cards/TutorialCard";
+import QuestionCard from "@/components/cards/QuestionCard";
+import ProfileAnswerCard from "./ProfileAnswerCard";
 
 interface ProfileViewProps {
   username: string;
@@ -69,6 +71,7 @@ export default function ProfileView({
   const fetchPosts = async (signal?: AbortSignal) => {
     if (!username || username === "Loading...") return;
     setIsLoadingPosts(true);
+    setPosts([]);
     try {
       const baseUrl = `/api/users/${username}/posts`;
       const res = await fetch(
@@ -191,14 +194,12 @@ export default function ProfileView({
           value={metrics.rating}
           label="Rating"
           icon={Star}
-          variant="success"
           isLoading={isLoadingMetrics}
         />
         <ProfileMetricCard
           value={metrics.engagement}
           label="Engagement"
           icon={Activity}
-          variant="warning"
           isLoading={isLoadingMetrics}
           className="col-span-2 sm:col-span-1"
         />
@@ -216,26 +217,64 @@ export default function ProfileView({
             <SkeletonList count={3} />
           ) : posts.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
-              {posts.map((post) => (
-                <ProfilePostCard
-                  key={post.tutorial_id || post.question_id || post.answer_id}
-                  title={
-                    post.title ||
-                    post.content ||
-                    `Answered: ${post.question_content}`
-                  }
-                  type={
-                    activeTab === "Tutorials"
-                      ? "Tutorial"
-                      : activeTab === "Questions asked"
-                        ? "Question"
-                        : "Answer"
-                  }
-                  timeAgo={formatTime(post.created_at)}
-                  upvotes={post.demand_score || 0}
-                  comments={post.comment_count || 0}
-                />
-              ))}
+              {posts.map((post, index) => {
+                if (activeTab === "Tutorials") {
+                  return (
+                    <TutorialCard
+                      key={`tutorial-${post.tutorial_id || index}`}
+                      id={post.tutorial_id}
+                      title={post.title}
+                      content={post.content}
+                      author={username}
+                      avatarUrl={userProfile?.profile_url}
+                      createdAt={formatTime(post.created_at)}
+                      avgRating={post.avg_rating ? Number(post.avg_rating) : 0}
+                      totalInteractions={
+                        post.total_interactions
+                          ? Number(post.total_interactions)
+                          : 0
+                      }
+                      videoUrl={post.embedded_video_url}
+                      linkedQuestions={post.linked_questions}
+                    />
+                  );
+                } else if (activeTab === "Questions asked") {
+                  return (
+                    <QuestionCard
+                      key={`question-${post.question_id || index}`}
+                      id={post.question_id}
+                      demandRate={post.demand_score || 0}
+                      questionTitle={post.title}
+                      author={username}
+                      profileURL={userProfile?.profile_url}
+                      createdAt={formatTime(post.created_at)}
+                      body={post.content}
+                      category={post.category}
+                      mode="preview"
+                    />
+                  );
+                } else if (activeTab === "Answers given") {
+                  return (
+                    <ProfileAnswerCard
+                      key={`answer-${post.answer_id || index}`}
+                      id={post.answer_id?.toString() || ""}
+                      credibilityScore={userProfile?.credibility_score || 0}
+                      authorName={username}
+                      body={post.content}
+                      createdAt={post.created_at}
+                      isResolved={post.is_accepted}
+                      totalComments={post.comment_count || 0}
+                      totalUpVotes={post.upvotes || 0}
+                      totalDownVotes={post.downvotes || 0}
+                      userVote={null}
+                      questionId={post.question_id}
+                      questionTitle={post.question_title}
+                      questionAuthorName={post.question_author_name}
+                    />
+                  );
+                }
+                return null;
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 px-4 border border-dashed border-border rounded-2xl bg-surface/50">

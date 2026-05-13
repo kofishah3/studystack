@@ -1,7 +1,9 @@
 import { getUserByUsername } from "@/lib/queries/users";
-import { listTutorials } from "@/lib/queries/tutorials";
-import { listQuestions } from "@/lib/queries/questions";
+import { listTutorialsByUserDetailed } from "@/lib/queries/tutorials";
+import { listQuestionsByUserDetailed } from "@/lib/queries/questions";
 import { listAnswersByUser } from "@/lib/queries/answers";
+import { asTutorialId } from "@/lib/db-brands";
+import { listQuestionsForTutorialDetailed } from "@/lib/queries/questions-tutorials";
 import { errorToResponse } from "@/lib/errors";
 import { NextResponse } from "next/server";
 
@@ -26,9 +28,24 @@ export async function GET(
     let data: any[] = [];
 
     if (type === "Tutorials") {
-      data = await listTutorials(limit, offset, undefined, user.user_id);
+      const tutorials = await listTutorialsByUserDetailed(
+        user.user_id,
+        limit,
+        offset,
+      );
+      data = await Promise.all(
+        tutorials.map(async (t) => {
+          const questions = await listQuestionsForTutorialDetailed(
+            asTutorialId(t.tutorial_id),
+          );
+          return {
+            ...t,
+            linked_questions: questions,
+          };
+        }),
+      );
     } else if (type === "Questions asked") {
-      data = await listQuestions(limit, offset, user.user_id);
+      data = await listQuestionsByUserDetailed(user.user_id, limit, offset);
     } else if (type === "Answers given") {
       data = await listAnswersByUser(user.user_id, limit, offset);
     }

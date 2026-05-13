@@ -10,7 +10,7 @@ import { asQuestionId } from "@/lib/db-brands";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ questionId: string }> }
+  { params }: { params: Promise<{ questionId: string }> },
 ) {
   try {
     const { questionId: rawId } = await params;
@@ -18,7 +18,10 @@ export async function GET(
     const question = await getQuestionByIdDetailed(questionId);
 
     if (!question) {
-      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Question not found" },
+        { status: 404 },
+      );
     }
 
     const answers = await listAnswersForQuestionDetailed(questionId);
@@ -31,7 +34,7 @@ export async function GET(
           ...a,
           comments: answerComments,
         };
-      })
+      }),
     );
 
     return NextResponse.json({

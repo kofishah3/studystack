@@ -25,7 +25,7 @@ export default function ProfilePostCard({
     <div className="flex flex-col p-4 bg-surface/30 border border-border/60 rounded-2xl gap-4 hover:border-primary-500/40 hover:bg-surface/50 transition-all duration-300 group">
       <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center gap-2">
-          <span className="px-2 py-0.5 text-xs font-bold bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-full border border-primary-500/20">
+          <span className="px-2 py-0.5 text-xs font-bold bg-primary-500/10 text-primary-700 dark:text-primary-400 rounded-full border border-primary-500/20">
             {type}
           </span>
           <span className="text-xs font-medium text-muted/60 tracking-tight">

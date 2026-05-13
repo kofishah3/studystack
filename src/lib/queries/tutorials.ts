@@ -166,6 +166,21 @@ export async function listTutorialsDetailed(
   return rows;
 }
 
+export async function listTutorialsByUserDetailed(
+  userId: UserID,
+  limit: number,
+  offset: number,
+): Promise<any[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  const rows = await q<any>(
+    "SELECT * FROM tutorial_stats WHERE user_id = $3 ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [safeLimit, safeOffset, userId],
+  );
+  return rows;
+}
+
 export async function getTutorialDetailedById(
   id: TutorialID,
 ): Promise<any | null> {
