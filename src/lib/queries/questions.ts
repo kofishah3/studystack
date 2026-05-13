@@ -105,3 +105,28 @@ export async function listQuestionsDetailed(
   );
   return rows;
 }
+
+export async function listQuestionsByUserDetailed(
+  userId: UserID,
+  limit: number,
+  offset: number,
+): Promise<any[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  const rows = await q<any>(
+    "SELECT * FROM question_details WHERE user_id = $3 ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [safeLimit, safeOffset, userId],
+  );
+  return rows;
+}
+
+export async function getQuestionByIdDetailed(
+  id: QuestionID,
+): Promise<any | null> {
+  const row = await one<any>(
+    "SELECT * FROM question_details WHERE question_id = $1",
+    [id],
+  );
+  return row || null;
+}

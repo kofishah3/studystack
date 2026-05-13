@@ -11,7 +11,6 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-
   if (process.env.NODE_ENV !== "test") {
     cron.schedule("0 3 * * *", () => {
       runTutorialPurge()

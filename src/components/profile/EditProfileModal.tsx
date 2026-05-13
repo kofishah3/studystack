@@ -153,7 +153,7 @@ export default function EditProfileModal({
                     className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     <Camera className="text-white mb-1" size={24} />
-                    <span className="text-[10px] text-white font-bold uppercase tracking-wider">
+                    <span className="text-xs text-white font-bold uppercase tracking-wider">
                       Change
                     </span>
                   </label>

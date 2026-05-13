@@ -10,6 +10,8 @@ import {
 import {
   listQuestionsForTutorialDetailed,
 } from "@/lib/queries/questions-tutorials";
+import { getQuestionByIdDetailed } from "@/lib/queries/questions";
+import { listCommentsForTutorialDetailed } from "@/lib/queries/comments";
 import {
   parseOrThrow,
   updateTutorialSchema,
@@ -27,12 +29,21 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
     const tutorial = await getTutorialDetailedById(id);
     if (!tutorial) throw new NotFoundError("Tutorial not found");
 
-    const questions = await listQuestionsForTutorialDetailed(id);
+    const questionsRaw = await listQuestionsForTutorialDetailed(id);
+    const questions = await Promise.all(
+      questionsRaw.map(async (q) => {
+        const detailed = await getQuestionByIdDetailed(q.question_id);
+        return detailed || q;
+      }),
+    );
+
+    const comments = await listCommentsForTutorialDetailed(id);
 
     return NextResponse.json({
       data: {
         ...tutorial,
         linked_questions: questions,
+        comments,
       },
     });
   } catch (error) {

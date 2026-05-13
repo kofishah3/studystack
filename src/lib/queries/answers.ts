@@ -64,11 +64,29 @@ export async function listAnswersByUser(
   user_id: UserID,
   limit: number,
   offset: number,
-): Promise<(Answers & { question_content: string })[]> {
-  const rows = await q<AnswerRow & { question_content: string }>(
-    `SELECT a.*, q.content as question_content 
+): Promise<(Answers & { 
+    question_content: string; 
+    question_title: string;
+    question_author_name: string;
+    upvotes: number; 
+    downvotes: number; 
+    comment_count: number 
+  })[]> {
+  const rows = await q<AnswerRow & { 
+    question_content: string;
+    question_title: string;
+    question_author_name: string;
+    upvotes: string;
+    downvotes: string;
+    comment_count: string;
+  }>(
+    `SELECT a.*, q.content as question_content, q.title as question_title, u.user_name as question_author_name,
+        (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value > 0) as upvotes,
+        (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value < 0) as downvotes,
+        (SELECT COUNT(*) FROM comments c WHERE c.answer_id = a.answer_id) as comment_count
      FROM answers a
      JOIN questions q ON a.question_id = q.question_id
+     JOIN users u ON q.user_id = u.user_id
      WHERE a.user_id = $3 
      ORDER BY a.created_at DESC 
      LIMIT $1 OFFSET $2`,
@@ -77,6 +95,11 @@ export async function listAnswersByUser(
   return rows.map((r) => ({
     ...mapAnswer(r),
     question_content: r.question_content,
+    question_title: r.question_title,
+    question_author_name: r.question_author_name,
+    upvotes: Number(r.upvotes),
+    downvotes: Number(r.downvotes),
+    comment_count: Number(r.comment_count),
   }));
 }
 

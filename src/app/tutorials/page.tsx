@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import TopNavBar from "@/components/navigation/topnavbar";
 import TutorialCard from "@/components/cards/TutorialCard";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
+import SearchBar from "@/components/inputs/SearchBar";
 
 const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
 
@@ -58,11 +59,6 @@ export default function TutorialsPage() {
     fetchTutorials(nextPage, true);
   };
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    setSearchQuery(formData.get("search") as string);
-  };
 
   return (
     <div
@@ -81,15 +77,11 @@ export default function TutorialsPage() {
             </h1>
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="w-full">
-              <input
-                type="text"
-                name="search"
-                placeholder="Search tutorials..."
-                defaultValue={searchQuery}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </form>
+            <SearchBar 
+              placeholder="Search tutorials..."
+              initialValue={searchQuery}
+              onSearch={(query) => setSearchQuery(query)}
+            />
 
             {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
