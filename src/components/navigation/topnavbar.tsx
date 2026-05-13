@@ -104,7 +104,7 @@ export default function TopNavBar({}: TopNavBarProps) {
               <p className="text-sm text-text font-bold leading-tight group-hover:text-primary-500 transition-colors duration-200">
                 {userName}
               </p>
-              <p className="text-[10px] font-bold text-muted uppercase tracking-wider group-hover:text-primary-500/70 transition-colors duration-200">
+              <p className="text-xs font-bold text-muted uppercase tracking-wider group-hover:text-primary-500/70 transition-colors duration-200">
                 {education}
               </p>
             </div>

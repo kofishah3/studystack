@@ -51,7 +51,11 @@ export default function ProfileMetricCard({
         <div
           className={`p-1.5 sm:p-2 rounded-xl bg-background border border-border group-hover:border-primary-500/30 transition-colors duration-300 ${iconColor}`}
         >
-          <Icon size={18} strokeWidth={2.5} className="sm:w-[20px] sm:h-[20px]" />
+          <Icon
+            size={18}
+            strokeWidth={2.5}
+            className="sm:w-[20px] sm:h-[20px]"
+          />
         </div>
         <div className="flex flex-col">
           <span
@@ -60,7 +64,7 @@ export default function ProfileMetricCard({
             {value}
           </span>
           <span
-            className={`text-[10px] sm:text-xs font-semibold tracking-tight ${labelColor}`}
+            className={`text-xs sm:text-xs font-semibold tracking-tight ${labelColor}`}
           >
             {label}
           </span>

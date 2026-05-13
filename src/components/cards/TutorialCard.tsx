@@ -54,7 +54,7 @@ export default function TutorialCard({
               {avgRating > 0 ? avgRating.toFixed(1) : "-"}
             </span>
           </div>
-          <span className="text-[10px] mt-1 text-gray-500 uppercase font-bold tracking-wider">
+          <span className="text-xs mt-1 text-gray-500 uppercase font-bold tracking-wider">
             Rating
           </span>
         </div>

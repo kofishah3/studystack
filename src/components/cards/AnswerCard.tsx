@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import VotePanel, { VoteType } from "../inputs/VotePanel";
+import UserMeta from "../ui/UserMeta";
+import ActionMenu from "../ui/ActionMenu";
 
 export interface AnswerProps {
   id: string;
@@ -86,28 +88,39 @@ export default function AnswerCard({
         />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="mb-2 flex items-center gap-2 flex-wrap">
-          <div
-            className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(credibilityScore)}`}
-          >
-            {reliabilityLabel} ({credibilityScore}%)
+      <div className="flex-1 min-w-0 flex flex-col gap-2">
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-2">
+            <UserMeta 
+              name={authorName}
+              createdAt={new Date(createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            />
+            
+            <div className="flex items-center gap-2 flex-wrap">
+              <div
+                className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(credibilityScore)}`}
+              >
+                {reliabilityLabel} ({credibilityScore}%)
+              </div>
+
+              {resolved && (
+                <div className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Resolved
+                </div>
+              )}
+            </div>
           </div>
 
-          {resolved && (
-            <div className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              Resolved
-            </div>
-          )}
+          <div className="shrink-0 -mt-1">
+            <ActionMenu />
+          </div>
         </div>
 
-        {resolved && (
-          <div className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            Resolved
-          </div>
-        )}
-
-        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
           {body}
         </p>
 

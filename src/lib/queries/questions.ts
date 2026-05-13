@@ -105,3 +105,13 @@ export async function listQuestionsDetailed(
   );
   return rows;
 }
+
+export async function getQuestionByIdDetailed(
+  id: QuestionID,
+): Promise<any | null> {
+  const row = await one<any>(
+    "SELECT * FROM question_details WHERE question_id = $1",
+    [id],
+  );
+  return row || null;
+}
