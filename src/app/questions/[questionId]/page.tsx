@@ -1,15 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import TopNavBar from "@/components/navigation/topnavbar";
-import UserMeta from "@/components/ui/UserMeta";
 import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import AnswerCard from "@/components/cards/AnswerCard";
 import { CommentCard } from "@/components/cards/CommentCard";
-import SubjectTag from "@/components/ui/Tag";
-import ActionMenu from "@/components/ui/ActionMenu";
 import QuestionCard from "@/components/cards/QuestionCard";
+import CommentInput from "@/components/inputs/CommentInput";
 import {
   ArrowLeft,
   AlertCircle,
@@ -37,8 +35,92 @@ export default function QuestionDetailPage() {
         setLoading(false);
       }
     }
+
     if (questionId) fetchQuestion();
   }, [questionId]);
+
+  const handlePostComment = async (content: string) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          content,
+          question_id: questionId,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to post comment");
+
+      const resQuestion = await fetch(`/api/questions/${questionId}`);
+      const json = await resQuestion.json();
+      if (json.data) {
+        setQuestion(json.data);
+      }
+    } catch (error) {
+      console.error("Comment submission failed:", error);
+      throw error;
+    }
+  };
+
+  const handlePostReply = async (content: string, parentId: string) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          content,
+          question_id: questionId,
+          parent_comment_id: parseInt(parentId),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to post reply");
+      
+      const resQuestion = await fetch(`/api/questions/${questionId}`);
+      const json = await resQuestion.json();
+      if (json.data) {
+        setQuestion(json.data);
+      }
+    } catch (error) {
+      console.error("Reply submission failed:", error);
+      throw error;
+    }
+  };
+
+  const handlePostCommentForAnswer = async (content: string, answerId: string) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          content,
+          question_id: questionId,
+          answer_id: parseInt(answerId),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to post comment for answer");
+      
+      const resQuestion = await fetch(`/api/questions/${questionId}`);
+      const json = await resQuestion.json();
+      if (json.data) {
+        setQuestion(json.data);
+      }
+    } catch (error) {
+      console.error("Answer comment submission failed:", error);
+      throw error;
+    }
+  };
 
   if (loading) {
     return (
@@ -128,6 +210,14 @@ export default function QuestionDetailPage() {
             mode="full"
           />
 
+          <div id="question-comment-input-container" className="px-1">
+            <CommentInput
+              id="question-comment-input"
+              onSubmit={handlePostComment}
+              placeholder="Add a comment to this question..."
+            />
+          </div>
+
           {question.comments && question.comments.length > 0 && (
             <div
               className="ml-7 sm:ml-12 flex flex-col gap-4 relative"
@@ -149,9 +239,12 @@ export default function QuestionDetailPage() {
                 {question.comments.map((comment: any) => (
                   <CommentCard
                     key={comment.comment_id}
+                    id={comment.comment_id.toString()}
                     authorName={comment.author_name}
                     createdAt={comment.created_at}
                     body={comment.content}
+                    avatarUrl={comment.author_profile_url}
+                    onReply={handlePostReply}
                   />
                 ))}
               </div>
@@ -202,6 +295,9 @@ export default function QuestionDetailPage() {
                     isResolved={answer.is_accepted}
                     userVote={null}
                     mediaURLs={answer.media_urls}
+                    onReply={async (content) => {
+                      await handlePostCommentForAnswer(content, answer.answer_id.toString());
+                    }}
                   />
                   {answer.comments && answer.comments.length > 0 && (
                     <div className="ml-12 sm:ml-14 flex flex-col gap-2 relative">
@@ -220,9 +316,12 @@ export default function QuestionDetailPage() {
                         {answer.comments.map((comment: any) => (
                           <CommentCard
                             key={comment.comment_id}
+                            id={comment.comment_id.toString()}
                             authorName={comment.author_name}
                             createdAt={comment.created_at}
                             body={comment.content}
+                            avatarUrl={comment.author_profile_url}
+                            onReply={handlePostReply}
                           />
                         ))}
                       </div>
