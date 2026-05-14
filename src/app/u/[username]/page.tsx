@@ -1,6 +1,6 @@
 "use client";
 
-import TopNavBar from "@/components/navigation/topnavbar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";

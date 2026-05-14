@@ -1,4 +1,4 @@
-import { one } from "@/lib/db";
+import { one, q } from "@/lib/db";
 import { asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
 import type { User, UserID } from "@/types/database";
@@ -124,4 +124,47 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
     rating,
     engagement,
   };
+}
+
+export async function getTopContributorsThisWeek(limit: number = 5) {
+  const rows = await q<UserRow & { engagement: string }>(
+    `SELECT u.*,
+      (
+        (SELECT COUNT(*) FROM questions q WHERE q.user_id = u.user_id AND q.created_at >= NOW() - INTERVAL '7 days') * 3 +
+        (SELECT COUNT(*) FROM answers a WHERE a.user_id = u.user_id AND a.created_at >= NOW() - INTERVAL '7 days') * 5
+      ) as engagement
+     FROM users u
+     ORDER BY engagement DESC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return rows.map((r) => {
+    const user = mapUser(r);
+    return { ...user, engagement: Number(r.engagement) };
+  });
+}
+
+export async function getHeatmapData(userId: string, days: number = 90) {
+  const rows = await q<{ date: string; count: string }>(
+    `
+    WITH dates AS (
+      SELECT generate_series(CURRENT_DATE - $2::interval, CURRENT_DATE, '1 day'::interval)::date as date
+    ),
+    activity AS (
+      SELECT DATE(created_at) as date, 1 as count FROM questions WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      UNION ALL
+      SELECT DATE(created_at) as date, 1 as count FROM answers WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      UNION ALL
+      SELECT DATE(created_at) as date, 1 as count FROM comments WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+    )
+    SELECT d.date::text, COALESCE(SUM(a.count), 0) as count
+    FROM dates d
+    LEFT JOIN activity a ON d.date = a.date
+    GROUP BY d.date
+    ORDER BY d.date ASC
+    `,
+    [userId, `${days - 1} days`],
+  );
+  return rows.map((r) => ({ date: r.date, count: Number(r.count) }));
 }

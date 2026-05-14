@@ -41,7 +41,7 @@ export default function TutorialCard({
 
   return (
     <div
-      className="flex flex-col group w-full max-w-7xl mx-auto"
+      className="flex flex-col group w-full"
       id={`tutorial-card-wrapper-${id}`}
     >
       <div
