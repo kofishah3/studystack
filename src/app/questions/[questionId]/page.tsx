@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import TopNavBar from "@/components/navigation/topnavbar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

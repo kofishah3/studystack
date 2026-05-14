@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import TopNavBar from "@/components/navigation/topnavbar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import TutorialCard from "@/components/cards/TutorialCard";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
 import SearchBar from "@/components/inputs/SearchBar";

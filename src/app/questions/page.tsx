@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import TopNavBar from "@/components/navigation/topnavbar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import QuestionCard from "@/components/cards/QuestionCard";
 import AskQuestionCard from "@/components/inputs/CreateCards/CreateQuestion";
 import { SkeletonList } from "@/components/ui/SkeletonCard";

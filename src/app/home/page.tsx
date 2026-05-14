@@ -1,9 +1,7 @@
 "use client";
 
-import PromptPopup from "@/components/common/PromptPopup";
-import Sidebar from "@/components/navigation/sidebar";
-import TopNavBar from "@/components/navigation/topnavbar";
-import { Trash2, TrashIcon } from "lucide-react";
+import Sidebar from "@/components/navigation/SideBar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import { useState } from "react";
 
 export default function HomePage() {

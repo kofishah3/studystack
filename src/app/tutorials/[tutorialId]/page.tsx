@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
-import TopNavBar from "@/components/navigation/topnavbar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import UserMeta from "@/components/ui/UserMeta";
 import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle, MessageSquare, Play } from "lucide-react";
 import QuestionCard from "@/components/cards/QuestionCard";
-import { CommentCard, type CommentData, buildCommentTree } from "@/components/cards/CommentCard";
+import {
+  CommentCard,
+  type CommentData,
+  buildCommentTree,
+} from "@/components/cards/CommentCard";
 import CommentInput from "@/components/inputs/CommentInput";
 
 export default function TutorialDetailPage() {
@@ -48,7 +52,7 @@ export default function TutorialDetailPage() {
       });
 
       if (!res.ok) throw new Error("Failed to post comment");
-      
+
       const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
       const json = await resTutorial.json();
       if (json.data) {
@@ -76,7 +80,7 @@ export default function TutorialDetailPage() {
       });
 
       if (!res.ok) throw new Error("Failed to post reply");
-      
+
       const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
       const json = await resTutorial.json();
       if (json.data) {
@@ -98,7 +102,7 @@ export default function TutorialDetailPage() {
       });
 
       if (!res.ok) throw new Error("Failed to delete comment");
-      
+
       const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
       const json = await resTutorial.json();
       if (json.data) {
