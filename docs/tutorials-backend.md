@@ -28,6 +28,23 @@ Reference for the tutorials feature's storage, upload, deletion, and retention p
 
 See [.env.example](../.env.example) for the canonical list.
 
+## Supabase bucket setup (manual)
+
+The code side is already wired (`getStorage()` switch, typed errors, env vars in `.env.example`).
+These steps must be done in the Supabase dashboard — they can't be scripted from the repo:
+
+1. Create a **private** bucket named `tutorial-materials` (or whatever `SUPABASE_STORAGE_BUCKET`
+   is set to). Keep it private — public buckets bypass the signed-URL access model.
+2. Set the bucket's file-size limit to **50 MB** to match `MAX_VIDEO_BYTES`.
+3. Restrict allowed MIME types to the union of `DOCUMENT_MIMES` + `VIDEO_MIMES` from
+   [src/lib/validation/tutorial.ts](../src/lib/validation/tutorial.ts).
+4. No storage RLS policies are required: the server uses the **service-role key**, which bypasses
+   RLS. Access control is the private bucket + short-lived signed URLs.
+5. In `.env.local`, set `STORAGE_BACKEND=supabase`, `SUPABASE_URL`, and
+   `SUPABASE_SERVICE_ROLE_KEY` (from dashboard → Settings → API).
+6. Smoke-test with the `/tutorialTest` harness: create a tutorial, upload a file, confirm the
+   object appears in the bucket and the returned signed URL resolves.
+
 ## Storage backend switching
 
 Keys are scheme-stable (`tutorials/<tutorialId>/<uuid>-<filename>`), so flipping `STORAGE_BACKEND` does not require a migration — but existing objects only live in the backend that wrote them. To migrate, copy objects out of the old backend into the new one preserving keys, then flip the env.
@@ -41,6 +58,16 @@ Keys are scheme-stable (`tutorials/<tutorialId>/<uuid>-<filename>`), so flipping
 5. Stream piped directly to `storage.putStream(...)` — no intermediate buffer. RSS stays flat regardless of file size.
 6. True uploaded byte count goes into `tutorial_materials.size_bytes` (not the client-declared size).
 7. On insert failure, compensating cleanup deletes the just-uploaded object with the `[Orphan Cleanup]` log tag.
+
+## Video strategy
+
+Prefer `embedded_video_url` over uploaded video files. The whitelist in
+[src/lib/validation/tutorial.ts](../src/lib/validation/tutorial.ts) (`validateVideoUrl`) accepts
+YouTube / Vimeo / Loom links — no storage cost, no size ceiling, and the host does the
+transcoding.
+
+Uploaded video files remain supported as a fallback but are capped at `MAX_VIDEO_BYTES = 50 MB`
+to stay under the Supabase free-tier per-object limit. If you need larger video, use an embed.
 
 ## Deletion flow
 
