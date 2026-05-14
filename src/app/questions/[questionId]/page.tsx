@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Sidebar from "@/components/navigation/SideBar";
 import TopNavBar from "@/components/navigation/TopNavBar";
 import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
@@ -13,10 +14,12 @@ import {
 import QuestionCard from "@/components/cards/QuestionCard";
 import CommentInput from "@/components/inputs/CommentInput";
 import { ArrowLeft, AlertCircle, MessageSquare } from "lucide-react";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function QuestionDetailPage() {
   const { questionId } = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const [question, setQuestion] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -127,36 +130,63 @@ export default function QuestionDetailPage() {
 
   const handleDeleteComment = async (commentId: string) => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showToast({
+          type: "error",
+          title: "Not authenticated",
+          message: "Please log in to delete comments.",
+        });
+        return;
+      }
+
       const res = await fetch(`/api/comments/${commentId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!res.ok) throw new Error("Failed to delete comment");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to delete comment");
+      }
 
       const resQuestion = await fetch(`/api/questions/${questionId}`);
       const json = await resQuestion.json();
       if (json.data) {
         setQuestion(json.data);
       }
-    } catch (error) {
+
+      showToast({
+        type: "success",
+        title: "Comment deleted",
+        message: "Your comment has been removed successfully.",
+      });
+    } catch (error: any) {
       console.error("Comment deletion failed:", error);
+      showToast({
+        type: "error",
+        title: "Delete failed",
+        message: error.message || "Something went wrong. Please try again.",
+      });
       throw error;
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
         <TopNavBar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-primary-700/20 border-t-primary-700 rounded-full animate-spin"></div>
-            <span className="text-gray-500 font-medium animate-pulse">
-              Loading question...
-            </span>
+        <div className="flex flex-row flex-1 w-full overflow-hidden">
+          <Sidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary-700/20 border-t-primary-700 rounded-full animate-spin"></div>
+              <span className="text-gray-500 font-medium animate-pulse">
+                Loading question...
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -165,25 +195,28 @@ export default function QuestionDetailPage() {
 
   if (!question) {
     return (
-      <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
         <TopNavBar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-6">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-            <AlertCircle
-              size={40}
-              strokeWidth={1.5}
-              className="text-gray-400"
-            />
+        <div className="flex flex-row flex-1 w-full overflow-hidden">
+          <Sidebar />
+          <div className="flex-1 flex flex-col items-center justify-center gap-6">
+            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <AlertCircle
+                size={40}
+                strokeWidth={1.5}
+                className="text-gray-400"
+              />
+            </div>
+            <span className="text-gray-500 text-xl font-semibold">
+              Question not found.
+            </span>
+            <Link
+              href="/questions"
+              className="px-6 py-2 bg-primary-700 text-white rounded-full hover:bg-primary-700 transition-colors shadow-lg shadow-primary-700/20"
+            >
+              Back to Questions
+            </Link>
           </div>
-          <span className="text-gray-500 text-xl font-semibold">
-            Question not found.
-          </span>
-          <Link
-            href="/questions"
-            className="px-6 py-2 bg-primary-700 text-white rounded-full hover:bg-primary-700 transition-colors shadow-lg shadow-primary-700/20"
-          >
-            Back to Questions
-          </Link>
         </div>
       </div>
     );
@@ -193,22 +226,23 @@ export default function QuestionDetailPage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen bg-gray-50 dark:bg-black text-foreground"
+      className="flex flex-col h-screen bg-background text-foreground overflow-hidden"
       id="question-detail-root"
     >
       <TopNavBar />
-
-      <main
-        className="flex-1 w-full max-w-4xl mx-auto px-4 py-6"
-        id="question-detail-main"
-      >
-        <div className="flex flex-col gap-4">
-          <div
-            className="flex items-center justify-between px-1"
-            id="question-detail-top-bar"
-          >
-            <button
-              id="back-button"
+      <div className="flex flex-row flex-1 w-full overflow-hidden">
+        <Sidebar />
+        <main
+          className="flex-1 py-6 px-4 sm:px-8 overflow-y-auto"
+          id="question-detail-main"
+        >
+          <div className="flex flex-col gap-4">
+            <div
+              className="flex items-center justify-between px-1"
+              id="question-detail-top-bar"
+            >
+              <button
+                id="back-button"
               onClick={() => router.back()}
               className="flex items-center gap-1.5 py-1 text-sm font-medium 
               text-gray-500 dark:text-gray-400 hover:text-primary-700 dark:hover:text-primary-400 
@@ -281,7 +315,7 @@ export default function QuestionDetailPage() {
 
           <div className="mt-4 flex flex-col gap-4" id="answers-section">
             <div className="flex items-center justify-between px-2">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 Answers
                 <span
                   className="bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 
@@ -290,22 +324,6 @@ export default function QuestionDetailPage() {
                   {question.answers?.length || 0}
                 </span>
               </h2>
-              <div
-                className="flex items-center gap-2"
-                id="answers-sort-container"
-              >
-                <span className="text-xs text-gray-400 font-semibold">
-                  Sort by:
-                </span>
-                <select
-                  id="answers-sort-select"
-                  className="bg-transparent text-xs font-bold text-gray-700 dark:text-gray-300 border-none focus:ring-0 cursor-pointer p-0"
-                >
-                  <option>Top</option>
-                  <option>Newest</option>
-                  <option>Oldest</option>
-                </select>
-              </div>
             </div>
 
             <div className="flex flex-col gap-5">
@@ -361,7 +379,8 @@ export default function QuestionDetailPage() {
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

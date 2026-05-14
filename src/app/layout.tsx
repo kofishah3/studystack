@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { PromptProvider } from "@/contexts/PromptContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -47,7 +48,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#6366f1" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-text">
-        <PromptProvider>{children}</PromptProvider>
+        <PromptProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </PromptProvider>
       </body>
     </html>
   );

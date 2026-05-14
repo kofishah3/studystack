@@ -11,13 +11,19 @@ export const DELETE = withAuth(
   ) => {
     try {
       const { commentId } = await params;
+      if (!commentId || isNaN(parseInt(commentId))) {
+        return NextResponse.json(
+          { error: "Invalid comment ID" },
+          { status: 400 },
+        );
+      }
       const success = await deleteComment(
         asCommentId(parseInt(commentId)),
         req.userId,
       );
       if (!success) {
         return NextResponse.json(
-          { error: "Comment not found or unauthorized" },
+          { error: "Comment not found or you are not authorized to delete it" },
           { status: 403 },
         );
       }

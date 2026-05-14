@@ -57,7 +57,7 @@ export default function QuestionCard({
   return (
     <div
       className={`
-      w-full max-w-7xl mx-auto p-3.5
+      w-full p-3.5 px-5
       bg-white dark:bg-gray-900 
       border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm 
       ${mode === "preview" ? "hover:shadow-md transition-shadow" : ""}
@@ -65,20 +65,6 @@ export default function QuestionCard({
       id={`question-card-${id}`}
     >
       <div className="flex gap-4">
-        <div
-          className="shrink-0 flex flex-col items-center justify-center"
-          id={`demand-container-${id}`}
-        >
-          <div
-            className={`flex flex-col items-center justify-center w-10 h-8 sm:w-14 sm:h-10 rounded-lg border text-center font-bold ${demandColor}`}
-            id={`demand-badge-${id}`}
-          >
-            <span className="text-sm sm:text-lg leading-none">
-              {demandRate}
-            </span>
-          </div>
-        </div>
-
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-3">
             <Link

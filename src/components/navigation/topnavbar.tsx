@@ -49,7 +49,7 @@ export default function TopNavBar({}: TopNavBarProps) {
     <div id="navbar-container" className="fixed bottom-0 sm:sticky sm:top-0 z-50 w-full">
       <div
         id="navbar-content-container"
-        className="w-full bg-surface px-6 py-2 sm:py-5 border-t sm:border-t-0 sm:border-b border-border/50 
+        className="w-full bg-surface px-4 py-2 sm:py-5 border-t sm:border-t-0 sm:border-b border-border/50 
       justify-between items-center flex flex-row relative shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sm:shadow-sm"
       >
         <div id="logo-container" className="hidden sm:flex">

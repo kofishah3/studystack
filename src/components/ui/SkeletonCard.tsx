@@ -6,7 +6,7 @@ export default function SkeletonCard() {
   return (
     <div
       className="
-      w-full max-w-7xl mx-auto p-3.5
+      w-full p-3.5
       bg-white dark:bg-gray-900 
       border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm
       animate-pulse"
