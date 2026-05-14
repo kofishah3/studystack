@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle, MessageSquare, Play } from "lucide-react";
 import QuestionCard from "@/components/cards/QuestionCard";
-import { CommentCard } from "@/components/cards/CommentCard";
+import { CommentCard, type CommentData, buildCommentTree } from "@/components/cards/CommentCard";
+import CommentInput from "@/components/inputs/CommentInput";
 
 export default function TutorialDetailPage() {
   const { tutorialId } = useParams();
@@ -31,6 +32,83 @@ export default function TutorialDetailPage() {
     }
     if (tutorialId) fetchTutorial();
   }, [tutorialId]);
+
+  const handlePostComment = async (content: string) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          content,
+          tutorial_id: tutorialId,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to post comment");
+      
+      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
+      const json = await resTutorial.json();
+      if (json.data) {
+        setTutorial(json.data);
+      }
+    } catch (error) {
+      console.error("Comment submission failed:", error);
+      throw error;
+    }
+  };
+
+  const handlePostReply = async (content: string, parentId: string) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          content,
+          tutorial_id: tutorialId,
+          parent_comment_id: parseInt(parentId),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to post reply");
+      
+      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
+      const json = await resTutorial.json();
+      if (json.data) {
+        setTutorial(json.data);
+      }
+    } catch (error) {
+      console.error("Reply submission failed:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete comment");
+      
+      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
+      const json = await resTutorial.json();
+      if (json.data) {
+        setTutorial(json.data);
+      }
+    } catch (error) {
+      console.error("Comment deletion failed:", error);
+      throw error;
+    }
+  };
 
   if (loading) {
     return (
@@ -225,14 +303,27 @@ export default function TutorialDetailPage() {
               </h2>
             </div>
 
-            <div className="flex flex-col gap-2" id="tutorial-comments-list">
-              {tutorial.comments?.map((comment: any) => (
+            <div id="tutorial-comment-input-container" className="px-2">
+              <CommentInput
+                id="tutorial-comment-input"
+                onSubmit={handlePostComment}
+                placeholder="Add a comment to this tutorial..."
+              />
+            </div>
+
+            <div className="flex flex-col gap-3" id="tutorial-comments-list">
+              {buildCommentTree(tutorial.comments ?? []).map((comment) => (
                 <CommentCard
                   key={comment.comment_id}
+                  id={comment.comment_id.toString()}
+                  authorId={comment.user_id}
                   authorName={comment.author_name}
                   createdAt={comment.created_at}
                   body={comment.content}
                   avatarUrl={comment.author_profile_url}
+                  replies={comment.replies}
+                  onReply={handlePostReply}
+                  onDelete={handleDeleteComment}
                 />
               ))}
 

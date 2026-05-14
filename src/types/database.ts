@@ -54,7 +54,7 @@ export interface Comments {
   user_id: UserID;
   content: string;
   parent_comment_id: CommentID | null;
-  question_id: QuestionID;
+  question_id: QuestionID | null;
   answer_id: AnswerID | null;
   tutorial_id: TutorialID | null;
   created_at: Date;

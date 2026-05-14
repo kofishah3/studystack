@@ -109,12 +109,16 @@ export default function TopNavBar({}: TopNavBarProps) {
               </p>
             </div>
             <div id="profile-container" className="items-center flex relative">
-              <div className="absolute -inset-0.5 bg-primary-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <div
+                className="absolute -inset-0.5 bg-primary-500 rounded-full opacity-0 group-hover:opacity-20 
+              transition-opacity duration-300"
+              ></div>
               {profileUrl && (
                 <img
                   src={profileUrl}
                   alt="Profile"
-                  className="w-9 h-9 rounded-full border border-border group-hover:border-primary-500/50 transition-colors duration-300 relative"
+                  className="w-9 h-9 rounded-full border border-border group-hover:border-primary-500/50
+                  transition-colors duration-300 relative object-cover shrink-0"
                 />
               )}
             </div>

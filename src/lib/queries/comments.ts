@@ -144,3 +144,14 @@ export async function listCommentsForTutorialDetailed(
   );
   return rows;
 }
+
+export async function deleteComment(
+  id: CommentID,
+  userId: string,
+): Promise<boolean> {
+  const row = await one<{ comment_id: number }>(
+    "DELETE FROM comments WHERE comment_id = $1 AND user_id = $2 RETURNING comment_id",
+    [id, userId],
+  );
+  return !!row;
+}
