@@ -1,16 +1,28 @@
+import SidebarQuickAction from "./sidebar-widgets/SidebarQuickAction";
+import SidebarHeatmap from "./sidebar-widgets/SidebarHeatmap";
+import SidebarLeaderboard from "./sidebar-widgets/SidebarLeaderboard";
+
 interface SidebarProps {
   isCollapsed?: boolean;
 }
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
   return (
-    <div
+    <aside
       id="sidebar-container"
-      className="flex-1 w-xs bg-surface p-3 rounded-bl-xl border-r border-border"
+      className="w-xs bg-surface p-4 border-r border-border h-full overflow-y-auto flex flex-col gap-6"
     >
-      <div id="category-container" className="h-fit w-full">
-        s
+      <div id="quick-actions-section" className="w-full">
+        <SidebarQuickAction />
       </div>
-    </div>
+
+      <div id="heatmap-section" className="w-full">
+        <SidebarHeatmap />
+      </div>
+
+      <div id="leaderboard-section" className="w-full">
+        <SidebarLeaderboard />
+      </div>
+    </aside>
   );
 }

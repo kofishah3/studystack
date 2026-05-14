@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
+import { SelectInputwLabel } from "@/components/inputs/SelectInput";
 import FullButton from "@/components/inputs/FullButton";
 
 export default function OnboardingPage() {
@@ -32,11 +33,7 @@ export default function OnboardingPage() {
     }
   }, [router]);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
-  ) => {
+  const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -250,24 +247,20 @@ export default function OnboardingPage() {
                     type="number"
                   />
                 </div>
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <label className="font-medium text-text text-sm">
-                    Gender
-                  </label>
-                  <div className="w-full h-fit p-1 border border-border rounded-xl bg-surface">
-                    <select
-                      id="onboarding-gender"
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      className="w-full bg-transparent outline-none border-none text-text rounded-lg p-2.5 cursor-pointer text-sm"
-                    >
-                      <option value="">Select...</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
+                <div className="flex-1">
+                  <SelectInputwLabel
+                    id="onboarding-gender"
+                    label="Gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    placeholder="Select..."
+                    options={[
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                      { value: "other", label: "Other" },
+                    ]}
+                  />
                 </div>
               </div>
 

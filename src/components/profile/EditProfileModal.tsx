@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
+import { SelectInputwLabel } from "@/components/inputs/SelectInput";
 import FullButton from "@/components/inputs/FullButton";
+import { useToast } from "@/contexts/ToastContext";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export default function EditProfileModal({
   user,
   onUpdate,
 }: EditProfileModalProps) {
+  const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -62,9 +65,7 @@ export default function EditProfileModal({
   if (!isOpen) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    e: { target: { name: string; value: string } }
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -105,9 +106,20 @@ export default function EditProfileModal({
         localStorage.setItem("user", JSON.stringify(updatedUser));
         onUpdate(updatedUser);
         onClose();
+        showToast({
+          type: "success",
+          title: "Profile updated",
+          message: "Your profile information has been saved.",
+        });
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update profile");
+      const errorMsg = err.response?.data?.error || "Failed to update profile";
+      setError(errorMsg);
+      showToast({
+        type: "error",
+        title: "Update failed",
+        message: errorMsg,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -119,11 +131,18 @@ export default function EditProfileModal({
         className="bg-surface w-full max-w-xl rounded-3xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-8 py-6 border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-10">
-          <h2 className="text-xl font-bold font-sora text-text">
+        <div
+          id="edit-profile-header"
+          className="flex items-center justify-between px-8 py-6 border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-10"
+        >
+          <h2
+            id="edit-profile-title"
+            className="text-xl font-bold font-sora text-text"
+          >
             Edit Profile
           </h2>
           <button
+            id="close-edit-profile"
             onClick={onClose}
             className="p-2 hover:bg-muted/10 rounded-full transition-colors cursor-pointer"
           >
@@ -131,24 +150,42 @@ export default function EditProfileModal({
           </button>
         </div>
 
-        <div className="overflow-y-auto p-8 custom-scrollbar">
-          <form onSubmit={handleSubmit} className="space-y-8">
+        <div
+          id="edit-profile-body"
+          className="overflow-y-auto p-8 custom-scrollbar"
+        >
+          <form
+            id="edit-profile-form"
+            onSubmit={handleSubmit}
+            className="space-y-8"
+          >
             {error && (
-              <div className="p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm font-medium animate-shake">
+              <div
+                id="edit-profile-error"
+                className="p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm font-medium animate-shake"
+              >
                 {error}
               </div>
             )}
 
-            <div className="flex flex-col items-center gap-4">
+            <div
+              id="profile-image-section"
+              className="flex flex-col items-center gap-4"
+            >
               <div className="relative group">
                 <div className="absolute -inset-1 bg-linear-to-r from-primary-500 to-primary-600 rounded-full opacity-20 blur-sm group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-background shadow-xl">
+                <div
+                  id="profile-image-container"
+                  className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-background shadow-xl"
+                >
                   <img
+                    id="profile-preview-image"
                     src={previewUrl}
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
                   />
                   <label
+                    id="profile-image-label"
                     htmlFor="profile-upload"
                     className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
@@ -166,7 +203,10 @@ export default function EditProfileModal({
                   />
                 </div>
               </div>
-              <p className="text-xs text-muted font-medium">
+              <p
+                id="profile-image-hint"
+                className="text-xs text-muted font-medium"
+              >
                 Click to change profile picture
               </p>
             </div>
@@ -196,76 +236,38 @@ export default function EditProfileModal({
                 />
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-text flex items-center gap-2">
-                  <GraduationCap size={16} className="text-muted" />
-                  Education Level
-                </label>
-                <div className="relative">
-                  <select
-                    name="education_level"
-                    value={formData.education_level}
-                    onChange={handleChange}
-                    className="w-full h-12 bg-surface border border-border rounded-2xl px-4 text-sm text-text outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="high_school">High School</option>
-                    <option value="bachelor">Bachelor</option>
-                    <option value="master">Master</option>
-                    <option value="doctorate">Doctorate</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
+              <SelectInputwLabel
+                id="edit-education-level"
+                label="Education Level"
+                name="education_level"
+                value={formData.education_level}
+                onChange={handleChange}
+                icon={<GraduationCap size={16} className="text-muted" />}
+                options={[
+                  { value: "high_school", label: "High School" },
+                  { value: "bachelor", label: "Bachelor" },
+                  { value: "master", label: "Master" },
+                  { value: "doctorate", label: "Doctorate" },
+                  { value: "other", label: "Other" },
+                ]}
+              />
 
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-text flex items-center gap-2">
-                  <Users size={16} className="text-muted" />
-                  Gender
-                </label>
-                <div className="relative">
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    className="w-full h-12 bg-surface border border-border rounded-2xl px-4 text-sm text-text outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="">Select...</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
+              <SelectInputwLabel
+                id="edit-gender"
+                label="Gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                icon={<Users size={16} className="text-muted" />}
+                placeholder="Select..."
+                options={[
+                  { value: "male", label: "Male" },
+                  { value: "female", label: "Female" },
+                  { value: "other", label: "Other" },
+                ]}
+              />
 
-              <div className="md:col-span-2">
+              <div id="age-input-container" className="md:col-span-2">
                 <TextInputwLabel
                   id="edit-age"
                   label="Age"
@@ -279,8 +281,9 @@ export default function EditProfileModal({
               </div>
             </div>
 
-            <div className="pt-4 flex gap-4">
+            <div id="modal-footer-buttons" className="pt-4 flex gap-4">
               <FullButton
+                id="cancel-profile-edit"
                 label="Cancel"
                 variant="secondary"
                 onClick={onClose}

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import TopNavBar from "@/components/navigation/topnavbar";
+import Sidebar from "@/components/navigation/SideBar";
+import TopNavBar from "@/components/navigation/TopNavBar";
 import TutorialCard from "@/components/cards/TutorialCard";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
 import SearchBar from "@/components/inputs/SearchBar";
@@ -59,31 +60,30 @@ export default function TutorialsPage() {
     fetchTutorials(nextPage, true);
   };
 
-
   return (
     <div
       id="tutorials-container"
-      className="flex min-h-screen bg-background flex-col relative"
+      className="flex h-screen bg-background flex-col overflow-hidden"
     >
       <TopNavBar />
-      <div
-        id="tutorials-content-container"
-        className="flex flex-col px-4 sm:px-8 py-8 gap-6 w-full max-w-5xl mx-auto flex-1 overflow-y-auto"
-      >
+      <div className="flex flex-row flex-1 w-full overflow-hidden">
+        <Sidebar />
+        <div
+          id="tutorials-content-container"
+          className="flex flex-col px-4 sm:px-8 py-8 gap-6 flex-1 overflow-y-auto"
+        >
         <div className="w-full flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Tutorials
             </h1>
 
-            {/* Search Bar */}
-            <SearchBar 
+            <SearchBar
               placeholder="Search tutorials..."
               initialValue={searchQuery}
               onSearch={(query) => setSearchQuery(query)}
             />
 
-            {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((category) => (
                 <button
@@ -117,11 +117,14 @@ export default function TutorialsPage() {
                   content={t.content}
                   author={t.user_name}
                   avatarUrl={t.profile_url}
-                  createdAt={new Date(t.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  createdAt={new Date(t.created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  )}
                   avgRating={Number(t.avg_rating) || 0}
                   totalInteractions={Number(t.total_interactions) || 0}
                   videoUrl={t.embedded_video_url}
@@ -145,5 +148,6 @@ export default function TutorialsPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
