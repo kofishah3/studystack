@@ -9,7 +9,7 @@ export const JWT_SECRET =
 const SALT_ROUNDS = 10;
 
 export type AuthedRequest = NextRequest & { userId: UserID };
-type RouteHandler = (req: AuthedRequest, context: any) => Promise<NextResponse>;
+type RouteHandler = (req: AuthedRequest, context?: unknown) => Promise<NextResponse>;
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);
@@ -27,7 +27,7 @@ export function generateToken(userId: UserID): string {
 }
 
 export function withAuth(handler: RouteHandler) {
-  return async (req: NextRequest, context: any): Promise<NextResponse> => {
+  return async (req: NextRequest, context?: unknown): Promise<NextResponse> => {
     const authHeader = req.headers.get("authorization");
 
     if (!authHeader?.startsWith("Bearer ")) {

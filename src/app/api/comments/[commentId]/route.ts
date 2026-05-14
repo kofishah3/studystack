@@ -4,7 +4,8 @@ import { deleteComment } from "@/lib/queries/comments";
 import { NextResponse } from "next/server";
 import { asCommentId } from "@/lib/db-brands";
 
-export const DELETE = withAuth(async (req: AuthedRequest, { params }: { params: { commentId: string } }) => {
+export const DELETE = withAuth(async (req: AuthedRequest, ctx?: unknown) => {
+  const { params } = ctx as { params: { commentId: string } };
   try {
     const success = await deleteComment(asCommentId(parseInt(params.commentId)), req.userId);
     if (!success) {
