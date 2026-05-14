@@ -5,7 +5,7 @@ import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import AnswerCard from "@/components/cards/AnswerCard";
-import { CommentCard } from "@/components/cards/CommentCard";
+import { CommentCard, type CommentData, buildCommentTree } from "@/components/cards/CommentCard";
 import QuestionCard from "@/components/cards/QuestionCard";
 import CommentInput from "@/components/inputs/CommentInput";
 import {
@@ -118,6 +118,28 @@ export default function QuestionDetailPage() {
       }
     } catch (error) {
       console.error("Answer comment submission failed:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete comment");
+      
+      const resQuestion = await fetch(`/api/questions/${questionId}`);
+      const json = await resQuestion.json();
+      if (json.data) {
+        setQuestion(json.data);
+      }
+    } catch (error) {
+      console.error("Comment deletion failed:", error);
       throw error;
     }
   };
@@ -235,16 +257,19 @@ export default function QuestionDetailPage() {
                 </h3>
               </div>
 
-              <div className="flex flex-col gap-1" id="question-comments-list">
-                {question.comments.map((comment: any) => (
+              <div className="flex flex-col gap-2" id="question-comments-list">
+                {buildCommentTree(question.comments ?? []).map((comment) => (
                   <CommentCard
                     key={comment.comment_id}
                     id={comment.comment_id.toString()}
+                    authorId={comment.user_id}
                     authorName={comment.author_name}
                     createdAt={comment.created_at}
                     body={comment.content}
                     avatarUrl={comment.author_profile_url}
+                    replies={comment.replies}
                     onReply={handlePostReply}
+                    onDelete={handleDeleteComment}
                   />
                 ))}
               </div>
@@ -317,11 +342,13 @@ export default function QuestionDetailPage() {
                           <CommentCard
                             key={comment.comment_id}
                             id={comment.comment_id.toString()}
+                            authorId={comment.user_id}
                             authorName={comment.author_name}
                             createdAt={comment.created_at}
                             body={comment.content}
                             avatarUrl={comment.author_profile_url}
                             onReply={handlePostReply}
+                            onDelete={handleDeleteComment}
                           />
                         ))}
                       </div>

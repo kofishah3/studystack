@@ -85,7 +85,7 @@ export default function CommentInput({
             "https://api.dicebear.com/7.x/avataaars/svg?seed=default"
           }
           alt="User avatar"
-          className="w-10 h-10 rounded-full border border-border square"
+          className="w-10 h-10 rounded-full border border-border object-cover"
         />
       </div>
 
