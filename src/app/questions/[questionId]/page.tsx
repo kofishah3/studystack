@@ -5,15 +5,14 @@ import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import AnswerCard from "@/components/cards/AnswerCard";
-import { CommentCard, type CommentData, buildCommentTree } from "@/components/cards/CommentCard";
+import {
+  CommentCard,
+  type CommentData,
+  buildCommentTree,
+} from "@/components/cards/CommentCard";
 import QuestionCard from "@/components/cards/QuestionCard";
 import CommentInput from "@/components/inputs/CommentInput";
-import {
-  ArrowLeft,
-  AlertCircle,
-  MessageSquare,
-  CornerDownRight,
-} from "lucide-react";
+import { ArrowLeft, AlertCircle, MessageSquare } from "lucide-react";
 
 export default function QuestionDetailPage() {
   const { questionId } = useParams();
@@ -82,7 +81,7 @@ export default function QuestionDetailPage() {
       });
 
       if (!res.ok) throw new Error("Failed to post reply");
-      
+
       const resQuestion = await fetch(`/api/questions/${questionId}`);
       const json = await resQuestion.json();
       if (json.data) {
@@ -94,7 +93,11 @@ export default function QuestionDetailPage() {
     }
   };
 
-  const handlePostCommentForAnswer = async (content: string, answerId: string) => {
+  const handlePostCommentForAnswer = async (
+    content: string,
+    answerId: string,
+    parentId?: string,
+  ) => {
     try {
       const res = await fetch("/api/comments", {
         method: "POST",
@@ -104,13 +107,13 @@ export default function QuestionDetailPage() {
         },
         body: JSON.stringify({
           content,
-          question_id: questionId,
           answer_id: parseInt(answerId),
+          ...(parentId ? { parent_comment_id: parseInt(parentId) } : {}),
         }),
       });
 
       if (!res.ok) throw new Error("Failed to post comment for answer");
-      
+
       const resQuestion = await fetch(`/api/questions/${questionId}`);
       const json = await resQuestion.json();
       if (json.data) {
@@ -132,7 +135,7 @@ export default function QuestionDetailPage() {
       });
 
       if (!res.ok) throw new Error("Failed to delete comment");
-      
+
       const resQuestion = await fetch(`/api/questions/${questionId}`);
       const json = await resQuestion.json();
       if (json.data) {
@@ -307,54 +310,29 @@ export default function QuestionDetailPage() {
 
             <div className="flex flex-col gap-5">
               {question.answers?.map((answer: any) => (
-                <div key={answer.answer_id} className="flex flex-col gap-3">
-                  <AnswerCard
-                    id={answer.answer_id.toString()}
-                    credibilityScore={answer.author_credibility_score || 50}
-                    authorName={answer.author_name}
-                    body={answer.content}
-                    createdAt={answer.created_at}
-                    totalComments={answer.comments?.length || 0}
-                    totalUpVotes={0}
-                    totalDownVotes={0}
-                    isResolved={answer.is_accepted}
-                    userVote={null}
-                    mediaURLs={answer.media_urls}
-                    onReply={async (content) => {
-                      await handlePostCommentForAnswer(content, answer.answer_id.toString());
-                    }}
-                  />
-                  {answer.comments && answer.comments.length > 0 && (
-                    <div className="ml-12 sm:ml-14 flex flex-col gap-2 relative">
-                      <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800"></div>
-                      <div className="flex items-center gap-1.5 px-1">
-                        <CornerDownRight
-                          size={12}
-                          strokeWidth={2.5}
-                          className="text-gray-400"
-                        />
-                        <span className="text-xs font-semibold text-gray-400 uppercase">
-                          Replies
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {answer.comments.map((comment: any) => (
-                          <CommentCard
-                            key={comment.comment_id}
-                            id={comment.comment_id.toString()}
-                            authorId={comment.user_id}
-                            authorName={comment.author_name}
-                            createdAt={comment.created_at}
-                            body={comment.content}
-                            avatarUrl={comment.author_profile_url}
-                            onReply={handlePostReply}
-                            onDelete={handleDeleteComment}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <AnswerCard
+                  key={answer.answer_id}
+                  id={answer.answer_id.toString()}
+                  credibilityScore={answer.author_credibility_score || 50}
+                  authorName={answer.author_name}
+                  body={answer.content}
+                  createdAt={answer.created_at}
+                  totalComments={answer.comments?.length || 0}
+                  totalUpVotes={0}
+                  totalDownVotes={0}
+                  isResolved={answer.is_accepted}
+                  userVote={null}
+                  mediaURLs={answer.media_urls}
+                  replies={answer.comments ?? []}
+                  onReply={async (content, parentId) => {
+                    await handlePostCommentForAnswer(
+                      content,
+                      answer.answer_id.toString(),
+                      parentId ?? undefined,
+                    );
+                  }}
+                  onDeleteComment={handleDeleteComment}
+                />
               ))}
 
               {(!question.answers || question.answers.length === 0) && (

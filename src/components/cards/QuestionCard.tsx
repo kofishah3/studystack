@@ -73,7 +73,9 @@ export default function QuestionCard({
             className={`flex flex-col items-center justify-center w-10 h-8 sm:w-14 sm:h-10 rounded-lg border text-center font-bold ${demandColor}`}
             id={`demand-badge-${id}`}
           >
-            <span className="text-sm sm:text-lg leading-none">{demandRate}</span>
+            <span className="text-sm sm:text-lg leading-none">
+              {demandRate}
+            </span>
           </div>
         </div>
 
@@ -88,7 +90,7 @@ export default function QuestionCard({
                 className={`font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight transition-colors ${
                   mode === "full"
                     ? "text-lg leading-tight"
-                    : "text-sm group-hover:text-primary-700"
+                    : "text-md group-hover:text-primary-700"
                 }`}
               >
                 {questionTitle}
@@ -131,7 +133,9 @@ export default function QuestionCard({
               updatedAt={updatedAt}
               avatarUrl={profileURL}
             />
-            <span className="hidden sm:inline text-gray-300 dark:text-gray-700 text-xs">|</span>
+            <span className="hidden sm:inline text-gray-300 dark:text-gray-700 text-xs">
+              |
+            </span>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
                 <SubjectTag key={tag} label={tag} />

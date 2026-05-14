@@ -29,7 +29,7 @@ export default function FullButton({
 
   const variantStyles = {
     primary:
-      "bg-primary-500 text-white hover:bg-primary-600 shadow-lg shadow-primary-500/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none",
+      "bg-primary-500 text-white hover:bg-primary-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none",
     secondary:
       "bg-transparent ring-1 ring-inset ring-primary-500 text-primary-500 hover:bg-primary-50 disabled:ring-gray-200 disabled:text-gray-400",
   };

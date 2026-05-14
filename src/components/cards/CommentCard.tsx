@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import ActionMenu from "../ui/ActionMenu";
 import UserMeta from "../ui/UserMeta";
 import CommentInput from "../inputs/CommentInput";
-import { Trash2 } from "lucide-react";
+import { Trash, Trash2 } from "lucide-react";
+import { usePrompt } from "@/contexts/PromptContext";
 
 export interface CommentData {
   comment_id: number;
@@ -70,6 +71,8 @@ export function CommentCard({
   const [showReplies, setShowReplies] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  const { showPrompt } = usePrompt();
+
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     if (userStr) {
@@ -79,6 +82,21 @@ export function CommentCard({
       } catch (e) {}
     }
   }, []);
+
+  const handleDeleteClick = () => {
+    showPrompt({
+      title: "Delete Comment?",
+      description:
+        "Are you sure you want to delete this comment? This cannot be undone.",
+      icon: Trash,
+      type: "confirmation",
+      onAccept: async () => {
+        if (onDelete) {
+          onDelete(id);
+        }
+      },
+    });
+  };
 
   return (
     <div
@@ -104,7 +122,7 @@ export function CommentCard({
             <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
               {currentUserId === authorId && onDelete && (
                 <button
-                  onClick={() => onDelete(id)}
+                  onClick={handleDeleteClick}
                   className="p-1.5 rounded hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 text-gray-400 transition-colors"
                   title="Delete comment"
                 >

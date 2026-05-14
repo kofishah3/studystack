@@ -59,7 +59,6 @@ export default function TutorialsPage() {
     fetchTutorials(nextPage, true);
   };
 
-
   return (
     <div
       id="tutorials-container"
@@ -76,14 +75,12 @@ export default function TutorialsPage() {
               Tutorials
             </h1>
 
-            {/* Search Bar */}
-            <SearchBar 
+            <SearchBar
               placeholder="Search tutorials..."
               initialValue={searchQuery}
               onSearch={(query) => setSearchQuery(query)}
             />
 
-            {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((category) => (
                 <button
@@ -117,11 +114,14 @@ export default function TutorialsPage() {
                   content={t.content}
                   author={t.user_name}
                   avatarUrl={t.profile_url}
-                  createdAt={new Date(t.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  createdAt={new Date(t.created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  )}
                   avgRating={Number(t.avg_rating) || 0}
                   totalInteractions={Number(t.total_interactions) || 0}
                   videoUrl={t.embedded_video_url}
