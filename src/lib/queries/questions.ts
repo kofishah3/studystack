@@ -95,14 +95,32 @@ export async function markResolved(id: QuestionID): Promise<Questions | null> {
 export async function listQuestionsDetailed(
   limit: number,
   offset: number,
+  category?: string,
+  search?: string,
 ): Promise<any[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
   const safeOffset = Math.max(offset, 0);
 
-  const rows = await q<any>(
-    "SELECT * FROM question_details ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-    [safeLimit, safeOffset],
-  );
+  let query = "SELECT * FROM question_details WHERE 1=1";
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (category && category !== "All") {
+    query += ` AND category ILIKE $${paramIndex}`;
+    params.push(`%${category}%`);
+    paramIndex++;
+  }
+
+  if (search && search.trim()) {
+    query += ` AND (title ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`;
+    params.push(`%${search.trim()}%`);
+    paramIndex++;
+  }
+
+  query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  params.push(safeLimit, safeOffset);
+
+  const rows = await q<any>(query, params);
   return rows;
 }
 
