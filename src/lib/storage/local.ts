@@ -3,7 +3,7 @@ import path from "path";
 import { pipeline } from "stream/promises";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@/lib/auth";
-import { AuthError } from "@/lib/errors";
+import { AuthError, ValidationError } from "@/lib/errors";
 import {
   DEFAULT_URL_TTL_SECONDS,
   type StorageDriver,
@@ -31,7 +31,7 @@ function resolveSafe(key: string): string {
   const target = path.resolve(UPLOADS_ROOT, key);
   const root = path.resolve(UPLOADS_ROOT);
   if (target !== root && !target.startsWith(root + path.sep)) {
-    throw new Error("Invalid storage key (path traversal)");
+    throw new ValidationError("Invalid storage key");
   }
   return target;
 }
