@@ -88,8 +88,13 @@ export default function AskQuestionCard() {
       </div>
 
       <TextInput
+        name="title"
+        placeholder="Question title (e.g. How do I sort a list in Python?)"
+      />
+
+      <TextInput
         name="question"
-        placeholder="What would you like to ask?"
+        placeholder="Elaborate your question..."
         multiline
         rows={6}
       />

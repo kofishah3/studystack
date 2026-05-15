@@ -192,6 +192,7 @@ export default function QuestionDetailPage() {
                 <div key={answer.answer_id} className="flex flex-col gap-3">
                   <AnswerCard
                     id={answer.answer_id.toString()}
+                    questionId={answer.questionId}
                     credibilityScore={answer.author_credibility_score || 50}
                     authorName={answer.author_name}
                     body={answer.content}
