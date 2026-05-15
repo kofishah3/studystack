@@ -104,7 +104,6 @@ export default function QuestionsPage() {
                     title={q.title}
                     content={q.content}
                     category={q.category ?? ""}
-                    demand_score={q.demand_score}
                     created_at={q.created_at}
                     resolved_at={q.resolved_at ?? null}
                     user_name={q.user_name}

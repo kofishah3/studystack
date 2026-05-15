@@ -242,13 +242,13 @@ export default function ProfileView({
                   return (
                     <QuestionCard
                       key={`question-${post.question_id || index}`}
-                      id={post.question_id}
-                      demandRate={post.demand_score || 0}
-                      questionTitle={post.title}
-                      author={username}
-                      profileURL={userProfile?.profile_url}
-                      createdAt={formatTime(post.created_at)}
-                      body={post.content}
+                      question_id={post.question_id}
+                      user_id={post.user_id}
+                      title={post.title}
+                      user_name={username}
+                      profile_url={userProfile?.profile_url}
+                      created_at={post.created_at}
+                      content={post.content}
                       category={post.category}
                       mode="preview"
                     />
@@ -257,17 +257,18 @@ export default function ProfileView({
                   return (
                     <ProfileAnswerCard
                       key={`answer-${post.answer_id || index}`}
-                      id={post.answer_id?.toString() || ""}
-                      credibilityScore={userProfile?.credibility_score || 0}
-                      authorName={username}
-                      body={post.content}
-                      createdAt={post.created_at}
-                      isResolved={post.is_accepted}
-                      totalComments={post.comment_count || 0}
-                      totalUpVotes={post.upvotes || 0}
-                      totalDownVotes={post.downvotes || 0}
+                      answer_id={post.answer_id}
+                      user_id={post.user_id}
+                      question_id={post.question_id}
+                      author_credibility_score={userProfile?.credibility_score || 0}
+                      author_name={username}
+                      author_profile_url={userProfile?.profile_url}
+                      content={post.content}
+                      created_at={post.created_at}
+                      is_accepted={post.is_accepted}
+                      media_urls={[]}
                       userVote={null}
-                      questionId={post.question_id}
+                      questionId={post.question_id?.toString() || ""}
                       questionTitle={post.question_title}
                       questionAuthorName={post.question_author_name}
                     />

@@ -7,10 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle, MessageSquare } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import QuestionCard from "@/components/cards/QuestionCard";
-import {
-  CommentCard,
-  buildCommentTree,
-} from "@/components/cards/CommentCard";
+import { CommentCard, buildCommentTree } from "@/components/cards/CommentCard";
 import CommentInput from "@/components/inputs/CommentInput";
 
 export default function TutorialDetailPage() {
@@ -285,14 +282,14 @@ export default function TutorialDetailPage() {
               {tutorial.linked_questions.map((q: any) => (
                 <QuestionCard
                   key={q.question_id}
-                  id={q.question_id}
-                  questionTitle={q.title}
-                  body={q.content}
-                  author={q.user_name}
-                  profileURL={q.profile_url}
-                  createdAt={q.created_at}
+                  question_id={q.question_id}
+                  user_id={q.user_id}
+                  title={q.title}
+                  content={q.content}
+                  user_name={q.user_name}
+                  profile_url={q.profile_url}
+                  created_at={q.created_at}
                   category={q.category}
-                  demandRate={q.demand_score}
                   mode="preview"
                 />
               ))}
@@ -326,13 +323,7 @@ export default function TutorialDetailPage() {
             {buildCommentTree(tutorial.comments ?? []).map((comment) => (
               <CommentCard
                 key={comment.comment_id}
-                id={comment.comment_id.toString()}
-                authorId={comment.user_id}
-                authorName={comment.author_name}
-                createdAt={comment.created_at}
-                body={comment.content}
-                avatarUrl={comment.author_profile_url}
-                replies={comment.replies}
+                {...comment}
                 onReply={handlePostReply}
                 onDelete={handleDeleteComment}
               />
