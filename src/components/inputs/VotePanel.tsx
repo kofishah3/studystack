@@ -30,12 +30,9 @@ export default function VotePanel({
     if (!targetID) return;
 
     const token = localStorage.getItem("token");
-    fetch(
-      `/api/interactions?target_type=${targetType}&target_id=${targetID}`,
-      {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      }
-    )
+    fetch(`/api/interactions?target_type=${targetType}&target_id=${targetID}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then((r) => r.json())
       .then((data) => {
         if (typeof data.upvotes === "number") setVoteUp(data.upvotes);
@@ -47,9 +44,7 @@ export default function VotePanel({
           setUserVote(null);
         }
       })
-      .catch(() => {
-        // silently keep initial values on error
-      });
+      .catch(() => {});
   }, [targetID, targetType]);
 
   const submitVote = async (value: 1 | -1 | 0) => {

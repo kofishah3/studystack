@@ -163,5 +163,26 @@ export async function getQuestionByIdDetailed(
 }
 
 export async function deleteQuestion(id: QuestionID): Promise<void> {
+  const { listMaterialsForQuestion } = await import("./question-materials");
+  const { listAnswersForQuestionDetailed } = await import("./answers");
+  const { listMaterialsForAnswer } = await import("./answer-materials");
+  const { getStorage } = await import("@/lib/storage");
+
+  try {
+    const qMaterials = await listMaterialsForQuestion(id);
+    const answers = await listAnswersForQuestionDetailed(id);
+    const aMaterials = (
+      await Promise.all(answers.map((a) => listMaterialsForAnswer(a.answer_id)))
+    ).flat();
+
+    const storage = getStorage();
+    const allKeys = [...qMaterials, ...aMaterials].map((m) => m.storage_key);
+
+    // Delete in background
+    Promise.all(allKeys.map((key) => storage.delete(key).catch(() => {})));
+  } catch (err) {
+    console.error("[deleteQuestion] failed to cleanup media", err);
+  }
+
   await q("DELETE FROM questions WHERE question_id = $1", [id]);
 }

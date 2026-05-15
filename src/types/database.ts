@@ -7,6 +7,9 @@ export type InteractionID = number & { readonly _brand: "InteractionID" };
 export type TutorialMaterialID = string & {
   readonly _brand: "TutorialMaterialID";
 };
+export type QuestionMaterialID = string & {
+  readonly _brand: "QuestionMaterialID";
+};
 
 export interface User {
   user_id: UserID;
@@ -118,6 +121,16 @@ export interface Tutorials {
 export interface TutorialMaterial {
   material_id: TutorialMaterialID;
   tutorial_id: TutorialID;
+  file_name: string;
+  storage_key: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_at: Date;
+}
+
+export interface QuestionMaterial {
+  material_id: QuestionMaterialID;
+  question_id: QuestionID;
   file_name: string;
   storage_key: string;
   mime_type: string;

@@ -26,6 +26,18 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       tutorial_id: parsed.tutorial_id ? asTutorialId(parsed.tutorial_id) : null,
     });
 
+    try {
+      const { getIO } = await import("@/lib/socket");
+      const io = getIO();
+      io.emit(`user:metrics_update:${req.userId}`);
+      io.emit("leaderboard:update");
+      if (parsed.question_id) {
+        io.to(`question:${parsed.question_id}`).emit("new:comment");
+      }
+    } catch (e) {
+      console.error("Socket emission failed", e);
+    }
+
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
     return errorToResponse(error);

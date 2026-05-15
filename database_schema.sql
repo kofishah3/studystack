@@ -176,6 +176,34 @@ CREATE UNIQUE INDEX unique_user_tutorial_interaction ON interactions(user_id, tu
 -- Tutorial materials indexes
 CREATE INDEX idx_tutorial_materials_tutorial_id ON tutorial_materials(tutorial_id);
 
+-- Question materials table
+CREATE TABLE question_materials (
+  material_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  question_id  UUID NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
+  file_name    VARCHAR(255) NOT NULL,
+  storage_key  VARCHAR(1000) NOT NULL,
+  mime_type    VARCHAR(100) NOT NULL,
+  size_bytes   BIGINT NOT NULL,
+  uploaded_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Question materials indexes
+CREATE INDEX idx_question_materials_question_id ON question_materials(question_id);
+
+-- Answer materials table
+CREATE TABLE answer_materials (
+  material_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  answer_id    INTEGER NOT NULL REFERENCES answers(answer_id) ON DELETE CASCADE,
+  file_name    VARCHAR(255) NOT NULL,
+  storage_key  VARCHAR(1000) NOT NULL,
+  mime_type    VARCHAR(100) NOT NULL,
+  size_bytes   BIGINT NOT NULL,
+  uploaded_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Answer materials indexes
+CREATE INDEX idx_answer_materials_answer_id ON answer_materials(answer_id);
+
 -- ============================================
 -- VIEWS
 -- ============================================

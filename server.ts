@@ -21,6 +21,17 @@ app.prepare().then(() => {
         )
         .catch((err: any) => console.error("[purge-tutorials cron]", err));
     });
+
+    cron.schedule("0 */3 * * *", () => {
+      import("./src/lib/cron/demand-decay")
+        .then(({ runDemandDecay }) => runDemandDecay())
+        .then((result) => {
+          console.log(`[demand-decay cron] updated=${result.updated}`);
+          const io = (global as any).io as Server;
+          if (io) io.to("feed").emit("update:demand", { batch: true });
+        })
+        .catch((err: any) => console.error("[demand-decay cron]", err));
+    });
   }
 
   const httpServer = createServer((req, res) => {
@@ -94,4 +105,14 @@ export function emitDemandUpdate(questionId: string, demandScore: number) {
 export function emitTutorialLinked(questionId: string, tutorial: object) {
   const io = (global as any).io as Server;
   io.to(`question:${questionId}`).emit("linked:tutorial", tutorial);
+}
+
+export function emitLeaderboardUpdate() {
+  const io = (global as any).io as Server;
+  io.emit("leaderboard:update");
+}
+
+export function emitUserMetricsUpdate(userId: string) {
+  const io = (global as any).io as Server;
+  io.emit(`user:metrics_update:${userId}`);
 }

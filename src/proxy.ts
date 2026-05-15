@@ -3,7 +3,7 @@ import { RateLimitError, errorToResponse } from "@/lib/errors";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
-const RATE_LIMIT = 60;
+const RATE_LIMIT = 120;
 const WINDOW_MS = 60_000;
 
 export default function proxy(req: NextRequest) {

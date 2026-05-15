@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Award, User as UserIcon, Zap } from "lucide-react";
 import type { User } from "@/types/database";
+import { useSocket } from "@/contexts/SocketContext";
 
 type LeaderboardUser = User & { weekly_acts: number };
 
@@ -62,23 +63,35 @@ function LeaderboardRow({
 export default function SidebarLeaderboard() {
   const [topUsers, setTopUsers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const { socket } = useSocket();
+
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await fetch("/api/leaderboard");
+      if (res.ok) {
+        const { data } = await res.json();
+        setTopUsers(data);
+      }
+    } catch (e) {
+      console.error("Failed to load leaderboard", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const res = await fetch("/api/leaderboard");
-        if (res.ok) {
-          const { data } = await res.json();
-          setTopUsers(data);
-        }
-      } catch (e) {
-        console.error("Failed to load leaderboard", e);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLeaderboard();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    socket.on("leaderboard:update", fetchLeaderboard);
+    
+    return () => {
+      socket.off("leaderboard:update", fetchLeaderboard);
+    };
+  }, [socket]);
 
   return (
     <div

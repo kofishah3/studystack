@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/purge-tutorials",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/demand-decay",
+      "schedule": "0 */3 * * *"
+    }
+  ]
+}

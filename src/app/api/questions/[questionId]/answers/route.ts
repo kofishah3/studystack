@@ -43,6 +43,16 @@ export const POST = withAuth(
         [req.userId],
       );
 
+      try {
+        const { getIO } = await import("@/lib/socket");
+        const io = getIO();
+        io.emit(`user:metrics_update:${req.userId}`);
+        io.emit("leaderboard:update");
+        io.to(`question:${questionId}`).emit("new:answer");
+      } catch (e) {
+        console.error("Socket emission failed", e);
+      }
+
       return NextResponse.json(
         {
           answer: {

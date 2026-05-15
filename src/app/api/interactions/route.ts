@@ -86,6 +86,15 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
         [req.userId, fkValue, interaction_type],
       );
 
+      try {
+        const { getIO } = await import("@/lib/socket");
+        const io = getIO();
+        if (targetRow?.user_id) {
+          io.emit(`user:metrics_update:${targetRow.user_id}`);
+        }
+        io.emit("leaderboard:update");
+      } catch (e) {}
+
       return NextResponse.json({ success: true, removed: true });
     }
 
@@ -116,6 +125,15 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
         { status: 500 },
       );
     }
+
+    try {
+      const { getIO } = await import("@/lib/socket");
+      const io = getIO();
+      if (targetRow?.user_id) {
+        io.emit(`user:metrics_update:${targetRow.user_id}`);
+      }
+      io.emit("leaderboard:update");
+    } catch (e) {}
 
     return NextResponse.json(
       { interaction: rowToInteraction(row) },

@@ -14,6 +14,7 @@ import {
 } from "@/components/cards/CommentCard";
 import FullButton from "@/components/inputs/FullButton";
 import { useToast } from "@/contexts/ToastContext";
+import { useSocket } from "@/contexts/SocketContext";
 
 import { useQuestionActions } from "@/hooks/useQuestionActions";
 
@@ -61,6 +62,28 @@ export default function QuestionDetailPage() {
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket || !questionId) return;
+
+    socket.emit("join:question", questionId);
+
+    const handleNewActivity = () => {
+      // Small delay to ensure DB transaction finishes before fetching
+      setTimeout(loadQuestion, 500);
+    };
+
+    socket.on("new:answer", handleNewActivity);
+    socket.on("new:comment", handleNewActivity);
+
+    return () => {
+      socket.emit("leave:question", questionId);
+      socket.off("new:answer", handleNewActivity);
+      socket.off("new:comment", handleNewActivity);
+    };
+  }, [socket, questionId, loadQuestion]);
 
   const handleAnswerPosted = useCallback(
     (raw: any) => {

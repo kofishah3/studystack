@@ -13,6 +13,9 @@ import { JWT_SECRET } from "@/lib/auth";
 import { getUserById } from "@/lib/queries/users";
 import { UserID } from "@/types/database";
 import { FeedSettingsState } from "@/components/feed/FeedSettings";
+import { listMaterialsForQuestion } from "@/lib/queries/question-materials";
+import { listMaterialsForAnswer } from "@/lib/queries/answer-materials";
+import { getStorage, DEFAULT_URL_TTL_SECONDS } from "@/lib/storage";
 
 export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
@@ -41,14 +44,7 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       `INSERT INTO questions (title, content, user_id, popped, demand_score, created_at, category) 
        VALUES ($1, $2, $3, $4, $5, NOW(), $6) 
        RETURNING question_id`,
-      [
-        title,
-        questionBody || "",
-        userId,
-        false,
-        initialDemandScore,
-        category,
-      ],
+      [title, questionBody || "", userId, false, initialDemandScore, category],
     );
 
     const newQuestionId = result[0]?.question_id;
@@ -70,6 +66,15 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       finalDemandScore,
       newQuestionId,
     ]);
+
+    try {
+      const { getIO } = await import("@/lib/socket");
+      const io = getIO();
+      io.emit(`user:metrics_update:${userId}`);
+      io.emit("leaderboard:update");
+    } catch (e) {
+      console.error("Socket emission failed", e);
+    }
 
     return NextResponse.json(
       {
@@ -155,11 +160,11 @@ export async function GET(req: Request) {
     }
 
     if (search && search.trim()) {
-      query += ` AND (q.title ILIKE $${paramIndex} OR q.content ILIKE $${paramIndex})`;
+      query += ` AND (q.title ILIKE $${paramIndex} OR q.content ILIKE $${paramIndex} OR q.category ILIKE $${paramIndex})`;
       params.push(`%${search.trim()}%`);
       paramIndex++;
 
-      countQuery += ` AND (q.title ILIKE $${countParamIndex} OR q.content ILIKE $${countParamIndex})`;
+      countQuery += ` AND (q.title ILIKE $${countParamIndex} OR q.content ILIKE $${countParamIndex} OR q.category ILIKE $${countParamIndex})`;
       countParams.push(`%${search.trim()}%`);
       countParamIndex++;
     }
@@ -206,23 +211,58 @@ export async function GET(req: Request) {
 
     const detailedQuestions = await Promise.all(
       questions.map(async (question: any) => {
+        const storage = getStorage();
         const answers = await listAnswersForQuestionDetailed(
           asQuestionId(question.question_id),
         );
-        
-        // Ensure answers have their upvotes formatted correctly too
-        answers.forEach(ans => {
-           ans.upvotes = Number(ans.upvotes || 0);
-           ans.downvotes = Number(ans.downvotes || 0);
-           // listAnswersForQuestionDetailed might not map user_vote string, but let's leave it for now since we just fixed Question
-        });
+
+        const answersWithMaterials = await Promise.all(
+          answers.map(async (ans) => {
+            const rawAM = await listMaterialsForAnswer(ans.answer_id);
+            const media_urls = await Promise.all(
+              rawAM.map(async (m) => {
+                const url = await storage
+                  .getUrl(m.storage_key, { expiresIn: DEFAULT_URL_TTL_SECONDS })
+                  .catch(() => null);
+                return {
+                  type: m.mime_type.startsWith("video/") ? "video" : "image",
+                  url,
+                };
+              }),
+            );
+            return {
+              ...ans,
+              upvotes: Number(ans.upvotes || 0),
+              downvotes: Number(ans.downvotes || 0),
+              media_urls,
+            };
+          }),
+        );
+
+        const materialsRaw = await listMaterialsForQuestion(
+          asQuestionId(question.question_id),
+        );
+        const materials = await Promise.all(
+          materialsRaw.map(async (m) => {
+            const url = await storage
+              .getUrl(m.storage_key, { expiresIn: DEFAULT_URL_TTL_SECONDS })
+              .catch(() => null);
+            return { ...m, url };
+          }),
+        );
 
         return {
           ...question,
           upvotes: Number(question.upvotes || 0),
           downvotes: Number(question.downvotes || 0),
-          user_vote: question.user_vote === 1 ? "up" : (question.user_vote === -1 ? "down" : null),
-          answers,
+          user_vote:
+            question.user_vote === 1
+              ? "up"
+              : question.user_vote === -1
+                ? "down"
+                : null,
+          answers: answersWithMaterials,
+          materials,
         };
       }),
     );

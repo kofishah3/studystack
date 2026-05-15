@@ -7,6 +7,9 @@ import {
 import { errorToResponse } from "@/lib/errors";
 import { NextResponse } from "next/server";
 import { asQuestionId } from "@/lib/db-brands";
+import { listMaterialsForQuestion } from "@/lib/queries/question-materials";
+import { listMaterialsForAnswer } from "@/lib/queries/answer-materials";
+import { getStorage, DEFAULT_URL_TTL_SECONDS } from "@/lib/storage";
 
 export async function GET(
   req: import("next/server").NextRequest,
@@ -38,6 +41,7 @@ export async function GET(
       );
     }
 
+    const storage = getStorage();
     const answers = await listAnswersForQuestionDetailed(questionId);
     const comments = await listCommentsForQuestionDetailed(questionId);
 
@@ -57,10 +61,24 @@ export async function GET(
           }
         }
 
+        const rawAM = await listMaterialsForAnswer(a.answer_id);
+        const media_urls = await Promise.all(
+          rawAM.map(async (m) => {
+            const url = await storage
+              .getUrl(m.storage_key, { expiresIn: DEFAULT_URL_TTL_SECONDS })
+              .catch(() => null);
+            return {
+              type: m.mime_type.startsWith("video/") ? "video" : "image",
+              url,
+            };
+          }),
+        );
+
         return {
           ...a,
           comments: answerComments,
           userVote,
+          media_urls,
         };
       }),
     );
@@ -77,6 +95,16 @@ export async function GET(
       }
     }
 
+    const rawMaterials = await listMaterialsForQuestion(questionId);
+    const materials = await Promise.all(
+      rawMaterials.map(async (m) => {
+        const url = await storage
+          .getUrl(m.storage_key, { expiresIn: DEFAULT_URL_TTL_SECONDS })
+          .catch(() => null);
+        return { ...m, url };
+      }),
+    );
+
     return NextResponse.json({
       data: {
         ...question,
@@ -84,6 +112,7 @@ export async function GET(
         downvotes: Number(question.downvotes || 0),
         answers: answersWithComments,
         comments,
+        materials,
         user_vote,
       },
     });

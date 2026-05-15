@@ -31,3 +31,8 @@ export const DEGREE_PROGRAMS = [
   "MS Computer Science",
   "MS Biology and Environmental Sciences",
 ];
+
+export const TUTORIAL_ELIGIBILITY = {
+  MIN_RATING: 35,
+  MIN_ENGAGEMENT: 10,
+} as const;

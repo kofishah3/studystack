@@ -3,12 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { Activity } from "lucide-react";
 import { useTooltip } from "@/contexts/TooltipContext";
+import { useSocket } from "@/contexts/SocketContext";
 
 const DAYS = 91;
 const COLS = 13;
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -29,30 +31,53 @@ export default function SidebarHeatmap() {
   >([]);
   const [loading, setLoading] = useState(true);
   const { showTooltip, hideTooltip } = useTooltip();
+  const { socket } = useSocket();
+
+  const fetchHeatmap = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/user/heatmap", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const { data } = await res.json();
+        setHeatmapData(data);
+      }
+    } catch (e) {
+      console.error("Failed to load heatmap", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHeatmap = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch("/api/user/heatmap", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const { data } = await res.json();
-          setHeatmapData(data);
-        }
-      } catch (e) {
-        console.error("Failed to load heatmap", e);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchHeatmap();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    try {
+      // Basic jwt decode without library to get sub (user_id)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.sub;
+      if (userId) {
+        const eventName = `user:metrics_update:${userId}`;
+        socket.on(eventName, fetchHeatmap);
+        return () => {
+          socket.off(eventName, fetchHeatmap);
+        };
+      }
+    } catch (e) {
+      console.error("Failed to decode token for socket", e);
+    }
+  }, [socket]);
 
   if (loading || heatmapData.length === 0) return null;
   const padded: { date: string; count: number }[] = [];
@@ -60,7 +85,7 @@ export default function SidebarHeatmap() {
   for (let i = DAYS - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const iso = d.toISOString().split("T")[0];
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const found = heatmapData.find((h) => h.date === iso);
     padded.push({ date: iso, count: found?.count ?? 0 });
   }
