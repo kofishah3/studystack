@@ -13,6 +13,10 @@ export const pool: Pool =
     user: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "",
     max: 10,
+    ssl:
+      process.env.DB_HOST && process.env.DB_HOST !== "localhost"
+        ? { rejectUnauthorized: false }
+        : false,
   });
 
 if (process.env.NODE_ENV !== "production") globalThis.__pgPool = pool;

@@ -2,8 +2,6 @@
 -- Password for all accounts: password123
 -- Hash: $2b$10$0D8jY/64AvKiUut6CD/sLehZSJAEJL1f1mP.YMymlaPGhM5MW8x0y
 
-
-
 -- =========================
 -- 1. USERS
 -- =========================
@@ -77,7 +75,7 @@ true
 (
 (SELECT user_id FROM users WHERE user_name='john_carlo'),
 (SELECT question_id FROM questions WHERE title='REST vs GraphQL'),
-'REST uses fixed endpoints; GraphQL lets clients query flexible data.',
+'REST uses fixed endpoints GraphQL lets clients query flexible data.',
 '[]'::jsonb,
 false
 ),

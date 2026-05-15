@@ -10,6 +10,7 @@
     "init-db": "ts-node -r tsconfig-paths/register scripts/init-db.ts"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@types/busboy": "^1.5.4",
     "@types/node-cron": "^3.0.11",

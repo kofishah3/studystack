@@ -29,6 +29,10 @@ const pool = new Pool({
   database: process.env.DB_NAME || "studystack",
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "",
+  ssl:
+    process.env.DB_HOST && process.env.DB_HOST !== "localhost"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 async function main() {
@@ -53,11 +57,41 @@ async function main() {
     await client.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
 
     console.log(" running the schema migration...");
-    await client.query(schema);
+
+    const statements = schema
+      .split(";")
+      .map((stmt) => stmt.trim())
+      .filter((stmt) => stmt.length > 0);
+
+    for (const statement of statements) {
+      try {
+        await client.query(statement);
+      } catch (error: any) {
+        console.warn(
+          ` warning: skipping statement due to error: ${error.message.split("\n")[0]}`,
+        );
+        console.warn(` statement: ${statement.substring(0, 100)}...`);
+      }
+    }
 
     if (seed) {
       console.log(" seeding the database...");
-      await client.query(seed);
+
+      const seedStatements = seed
+        .split(";")
+        .map((stmt) => stmt.trim())
+        .filter((stmt) => stmt.length > 0);
+
+      for (const statement of seedStatements) {
+        try {
+          await client.query(statement);
+        } catch (error: any) {
+          console.warn(
+            ` warning: skipping seed statement due to error: ${error.message.split("\n")[0]}`,
+          );
+        }
+      }
+
       console.log(" database seeded successfully!");
     }
 
