@@ -6,9 +6,10 @@ import { NextResponse } from "next/server";
 export const POST = withAuth(async (req) => {
   try {
     const body = await req.json();
-    const { user_name, institution, education_level, age, gender } = body;
+    const { user_name, institution, education_level, degree_program, age, gender } = body;
+    const isCollegeLevel = ["bachelor", "master", "doctorate"].includes(education_level);
 
-    if (!user_name || !institution || !education_level) {
+    if (!user_name || !institution || !education_level || (isCollegeLevel && !degree_program)) {
       throw new ValidationError("Required fields are missing");
     }
 
@@ -21,6 +22,7 @@ export const POST = withAuth(async (req) => {
       user_name,
       institution,
       education_level,
+      degree_program: degree_program || null,
       age: age ? parseInt(age) : null,
       gender: gender || null,
     });

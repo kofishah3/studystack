@@ -12,6 +12,7 @@ CREATE TABLE users (
   age INTEGER CHECK (age >= 13 AND age <= 120),
   gender VARCHAR(10) CHECK (gender IN ('male', 'female', 'other')),
   institution VARCHAR(255),
+  degree_program VARCHAR(255),
   education_level VARCHAR(20) CHECK (education_level IN ('high_school', 'bachelor', 'master', 'doctorate', 'other')),
   profile_url VARCHAR(1000),
   credibility_score INTEGER DEFAULT 0,
@@ -194,6 +195,7 @@ SELECT
   q.resolved_at,
   u.user_name,
   u.institution,
+  u.degree_program,
   u.profile_url,
   u.credibility_score,
   COUNT(DISTINCT a.answer_id) as answer_count,
@@ -203,7 +205,7 @@ FROM questions q
 JOIN users u ON q.user_id = u.user_id
 LEFT JOIN answers a ON q.question_id = a.question_id
 LEFT JOIN comments c ON q.question_id = c.question_id
-GROUP BY q.question_id, q.user_id, q.title, q.body, q.content, q.category, q.demand_score, q.popped, q.created_at, q.resolved_at, u.user_name, u.institution, u.profile_url, u.credibility_score;
+GROUP BY q.question_id, q.user_id, q.title, q.body, q.content, q.category, q.demand_score, q.popped, q.created_at, q.resolved_at, u.user_name, u.institution, u.degree_program, u.profile_url, u.credibility_score;
 
 -- Tutorials with popularity
 CREATE VIEW tutorial_stats AS
@@ -216,6 +218,8 @@ SELECT
   t.created_at,
   u.user_name,
   u.profile_url,
+  u.institution,
+  u.degree_program,
   COUNT(DISTINCT i.interaction_id) as total_interactions,
   COUNT(DISTINCT CASE WHEN i.interaction_type = 'rating' THEN i.interaction_id END) as rating_count,
   AVG(CASE WHEN i.interaction_type = 'rating' THEN i.value END) as avg_rating
@@ -223,4 +227,4 @@ FROM tutorials t
 JOIN users u ON t.user_id = u.user_id
 LEFT JOIN interactions i ON t.tutorial_id = i.tutorial_id
 WHERE t.deleted_at IS NULL
-GROUP BY t.tutorial_id, t.user_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name, u.profile_url;
+GROUP BY t.tutorial_id, t.user_id, t.title, t.content, t.embedded_video_url, t.created_at, u.user_name, u.profile_url, u.institution, u.degree_program;

@@ -8,6 +8,11 @@ import { NextResponse } from "next/server";
 import { q } from "@/lib/db";
 import { listAnswersForQuestionDetailed } from "@/lib/queries/answers";
 import { asQuestionId } from "@/lib/db-brands";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "@/lib/auth";
+import { getUserById } from "@/lib/queries/users";
+import { UserID } from "@/types/database";
+import { FeedSettingsState } from "@/components/feed/FeedSettings";
 
 export const POST = withAuth(async (req: AuthedRequest) => {
   try {
@@ -96,6 +101,32 @@ export async function GET(req: Request) {
     const category = searchParams.get("category") || undefined;
     const search = searchParams.get("search") || undefined;
 
+    const settings: FeedSettingsState = {
+      sort: (searchParams.get("sort") as any) || "demand",
+      schoolFilter: (searchParams.get("schoolFilter") as any) || "all",
+      degreeFilter: (searchParams.get("degreeFilter") as any) || "all",
+      timeFilter: (searchParams.get("timeFilter") as any) || "all",
+    };
+
+    const authHeader = req.headers.get("authorization");
+    let userInfo = undefined;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      try {
+        const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+        const user = await getUserById(payload.userId as UserID);
+        if (user) {
+          userInfo = {
+            institution: user.institution || undefined,
+            degree_program: user.degree_program || undefined,
+          };
+        }
+      } catch (e) {
+        // Ignore
+      }
+    }
+
     let query = `
       SELECT 
         q.question_id,
@@ -115,7 +146,7 @@ export async function GET(req: Request) {
     const params: any[] = [];
     let paramIndex = 1;
 
-    let countQuery = `SELECT COUNT(*) as count FROM questions q WHERE 1=1`;
+    let countQuery = `SELECT COUNT(*) as count FROM questions q JOIN users u ON q.user_id = u.user_id WHERE 1=1`;
     const countParams: any[] = [];
     let countParamIndex = 1;
 
@@ -139,7 +170,42 @@ export async function GET(req: Request) {
       countParamIndex++;
     }
 
-    query += ` ORDER BY q.demand_score DESC, q.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    if (settings) {
+      if (settings.schoolFilter === "mine" && userInfo?.institution) {
+        query += ` AND u.institution = $${paramIndex}`;
+        params.push(userInfo.institution);
+        paramIndex++;
+
+        countQuery += ` AND u.institution = $${countParamIndex}`;
+        countParams.push(userInfo.institution);
+        countParamIndex++;
+      }
+      if (settings.degreeFilter === "mine" && userInfo?.degree_program) {
+        query += ` AND u.degree_program = $${paramIndex}`;
+        params.push(userInfo.degree_program);
+        paramIndex++;
+
+        countQuery += ` AND u.degree_program = $${countParamIndex}`;
+        countParams.push(userInfo.degree_program);
+        countParamIndex++;
+      }
+      if (settings.timeFilter === "week") {
+        query += ` AND q.created_at >= NOW() - INTERVAL '7 days'`;
+        countQuery += ` AND q.created_at >= NOW() - INTERVAL '7 days'`;
+      } else if (settings.timeFilter === "month") {
+        query += ` AND q.created_at >= NOW() - INTERVAL '30 days'`;
+        countQuery += ` AND q.created_at >= NOW() - INTERVAL '30 days'`;
+      }
+    }
+
+    let orderBy = "q.demand_score DESC, q.created_at DESC";
+    if (settings?.sort === "latest") {
+      orderBy = "q.created_at DESC";
+    } else if (settings?.sort === "oldest") {
+      orderBy = "q.created_at ASC";
+    }
+
+    query += ` ORDER BY ${orderBy} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const questions = await q(query, params);

@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import TutorialCard from "@/components/cards/TutorialCard";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
 import SearchBar from "@/components/inputs/SearchBar";
+import FeedSettings, { FeedSettingsState } from "@/components/feed/FeedSettings";
 
 const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
 
@@ -14,8 +15,14 @@ export default function TutorialsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [settings, setSettings] = useState<FeedSettingsState>({
+    sort: "latest",
+    schoolFilter: "all",
+    degreeFilter: "all",
+    timeFilter: "all",
+  });
 
-  async function fetchTutorials(pageNum: number, append = false) {
+  const fetchTutorials = useCallback(async (pageNum: number, append = false, currentSettings: FeedSettingsState) => {
     try {
       if (!append) setLoading(true);
       else setLoadingMore(true);
@@ -23,6 +30,10 @@ export default function TutorialsPage() {
       const params = new URLSearchParams({
         page: String(pageNum),
         limit: "20",
+        sort: currentSettings.sort,
+        schoolFilter: currentSettings.schoolFilter,
+        degreeFilter: currentSettings.degreeFilter,
+        timeFilter: currentSettings.timeFilter,
       });
 
       if (selectedCategory !== "All") {
@@ -32,7 +43,11 @@ export default function TutorialsPage() {
         params.append("search", searchQuery.trim());
       }
 
-      const res = await fetch(`/api/tutorial?${params}`);
+      const token = localStorage.getItem("token");
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/tutorial?${params}`, { headers });
       const json = await res.json();
 
       if (json.data) {
@@ -45,17 +60,17 @@ export default function TutorialsPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }
+  }, [selectedCategory, searchQuery]);
 
   useEffect(() => {
     setPage(1);
-    fetchTutorials(1);
-  }, [selectedCategory, searchQuery]);
+    fetchTutorials(1, false, settings);
+  }, [fetchTutorials, settings]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchTutorials(nextPage, true);
+    fetchTutorials(nextPage, true, settings);
   };
 
   return (
@@ -65,9 +80,15 @@ export default function TutorialsPage() {
     >
       <div className="w-full flex flex-col gap-6">
         <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Tutorials
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Tutorials
+            </h1>
+            <FeedSettings 
+              initialSettings={settings} 
+              onSettingsChange={setSettings} 
+            />
+          </div>
 
           <SearchBar
             placeholder="Search tutorials..."
@@ -125,7 +146,7 @@ export default function TutorialsPage() {
                 <button
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loadingMore ? "Loading..." : "Load More"}
                 </button>

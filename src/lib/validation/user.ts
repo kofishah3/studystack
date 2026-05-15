@@ -7,6 +7,7 @@ export const updateProfileSchema = z.object({
   education_level: z
     .enum(["high_school", "bachelor", "master", "doctorate", "other"])
     .optional(),
+  degree_program: z.string().max(255).optional(),
   age: z.coerce.number().min(13).max(120).optional(),
   gender: z.enum(["male", "female", "other"]).optional(),
 });

@@ -153,32 +153,66 @@ export async function hardDeleteExpiredTutorials(
   return rows.length;
 }
 
+import { FeedSettingsState } from "@/components/feed/FeedSettings";
+
 export async function listTutorialsDetailed(
   limit: number,
   offset: number,
   category?: string,
   search?: string,
+  settings?: FeedSettingsState,
+  userInfo?: { institution?: string; degree_program?: string },
 ): Promise<any[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
   const safeOffset = Math.max(offset, 0);
 
-  let query = "SELECT * FROM tutorial_stats WHERE 1=1";
+  let query = `
+    SELECT ts.*, u.institution, u.degree_program 
+    FROM tutorial_stats ts
+    JOIN users u ON ts.user_id = u.user_id
+    WHERE 1=1
+  `;
   const params: any[] = [];
   let paramIndex = 1;
 
   if (category && category !== "All") {
-    query += ` AND category ILIKE $${paramIndex}`;
+    query += ` AND ts.category ILIKE $${paramIndex}`;
     params.push(`%${category}%`);
     paramIndex++;
   }
 
   if (search && search.trim()) {
-    query += ` AND (title ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`;
+    query += ` AND (ts.title ILIKE $${paramIndex} OR ts.content ILIKE $${paramIndex})`;
     params.push(`%${search.trim()}%`);
     paramIndex++;
   }
 
-  query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  if (settings) {
+    if (settings.schoolFilter === "mine" && userInfo?.institution) {
+      query += ` AND u.institution = $${paramIndex}`;
+      params.push(userInfo.institution);
+      paramIndex++;
+    }
+    if (settings.degreeFilter === "mine" && userInfo?.degree_program) {
+      query += ` AND u.degree_program = $${paramIndex}`;
+      params.push(userInfo.degree_program);
+      paramIndex++;
+    }
+    if (settings.timeFilter === "week") {
+      query += ` AND ts.created_at >= NOW() - INTERVAL '7 days'`;
+    } else if (settings.timeFilter === "month") {
+      query += ` AND ts.created_at >= NOW() - INTERVAL '30 days'`;
+    }
+  }
+
+  let orderBy = "ts.created_at DESC";
+  if (settings?.sort === "demand") {
+    orderBy = "ts.demand_score DESC, ts.created_at DESC";
+  } else if (settings?.sort === "oldest") {
+    orderBy = "ts.created_at ASC";
+  }
+
+  query += ` ORDER BY ${orderBy} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
   params.push(safeLimit, safeOffset);
 
   const rows = await q<any>(query, params);

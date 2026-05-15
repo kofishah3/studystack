@@ -22,6 +22,7 @@ export interface User {
     | "master"
     | "doctorate"
     | "other";
+  degree_program: string | null;
   profile_url: string | null;
   credibility_score: number;
   created_at: Date;

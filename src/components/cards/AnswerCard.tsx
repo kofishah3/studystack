@@ -360,7 +360,7 @@ export default function AnswerCard({
                 <button
                   id={`answer-toggle-replies-btn-${idStr}`}
                   onClick={() => setShowReplies((v) => !v)}
-                  className="text-[10px] font-semibold text-primary-500 hover:text-primary-600 transition-colors"
+                  className="text-[10px] font-semibold text-primary-500 hover:text-primary-500 transition-colors"
                 >
                   {showReplies
                     ? `▲ Hide replies`

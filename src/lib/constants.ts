@@ -1,0 +1,33 @@
+export const CEBU_SCHOOLS = [
+  "University of the Philippines Cebu",
+  "University of San Jose Recoletos",
+  "University of Cebu",
+  "University of San Carlos",
+  "Cebu Institute of Technology - University",
+  "Southwestern University PHINMA",
+  "Velez College",
+  "Cebu Normal University",
+  "Cebu Doctors' University",
+  "Benedicto College",
+];
+
+export const DEGREE_PROGRAMS = [
+  "BS Computer Science",
+  "BS Math",
+  "BS Statistics",
+  "BS Biology",
+  "BS Information Technology",
+  "BS Accountancy",
+  "BS Management Accounting",
+  "BS Business Administration",
+  "BS Civil Engineering",
+  "BS Mechanical Engineering",
+  "BS Electrical Engineering",
+  "BS Nursing",
+  "BA Communication",
+  "BA Psychology",
+  "BA Political Science",
+  "BA Literature",
+  "MS Computer Science",
+  "MS Biology and Environmental Sciences",
+];

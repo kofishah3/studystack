@@ -58,7 +58,13 @@ export default function ProfilePage() {
     const eduFormatted =
       edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " ");
     const inst = updatedUser.institution || "University";
-    setSubtitle(`${eduFormatted} @ ${inst}`);
+    const program = updatedUser.degree_program;
+
+    if (program) {
+      setSubtitle(`${program} @ ${inst} (${eduFormatted})`);
+    } else {
+      setSubtitle(`${eduFormatted} @ ${inst}`);
+    }
   };
 
   const actions = (
