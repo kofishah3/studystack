@@ -188,11 +188,11 @@ export function SearchableSelectwLabel({
       id={`${id || name}-field-group`}
       className="flex flex-col gap-1 w-full"
     >
-      <p id={`${id || name}-label`} className="font-medium text-text text-sm">
+      <label htmlFor={id || name} id={`${id || name}-label`} className="font-medium text-text text-sm">
         {label}
-      </p>
+      </label>
       <SearchableSelect
-        id={id}
+        id={id || name}
         name={name}
         value={value}
         onChange={onChange}

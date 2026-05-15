@@ -119,7 +119,7 @@ export default function QuestionsPage() {
 
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-text">Questions</h2>
+            <h1 className="text-xl font-bold text-text">Questions</h1>
             <FeedSettings
               initialSettings={settings}
               onSettingsChange={setSettings}

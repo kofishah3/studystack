@@ -206,7 +206,7 @@ export default function OnboardingPage() {
                         className={`py-3 px-4 rounded-xl border transition-all duration-200 text-sm ${
                           formData.education_level === level
                             ? "border-primary-500 bg-primary-50 text-primary-700 font-semibold"
-                            : "border-border bg-white text-text hover:border-primary-300"
+                            : "border-border bg-transparent text-text hover:bg-surface hover:border-primary-300"
                         }`}
                       >
                         {level.replace("_", " ").charAt(0).toUpperCase() +
@@ -304,7 +304,7 @@ export default function OnboardingPage() {
 
               <div
                 id="onboarding-profile-info"
-                className="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200"
+                className="p-4 bg-surface rounded-2xl border border-dashed border-border"
               >
                 <p className="text-center text-sm text-slate-500">
                   You can upload a profile picture later in your settings.

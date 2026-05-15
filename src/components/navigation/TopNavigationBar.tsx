@@ -47,7 +47,7 @@ export default function TopNavBar({}: TopNavBarProps) {
     pathname === prefix || pathname.startsWith(prefix + "/");
 
   return (
-    <div id="navbar-container" className="fixed bottom-0 sm:sticky sm:top-0 z-50 w-full">
+    <nav id="navbar-container" aria-label="Main Navigation" className="fixed bottom-0 sm:sticky sm:top-0 z-50 w-full">
       <div
         id="navbar-content-container"
         className="w-full bg-surface px-4 py-2 sm:py-5 border-t sm:border-t-0 sm:border-b border-border/50 
@@ -74,28 +74,28 @@ export default function TopNavBar({}: TopNavBarProps) {
           id="navbuttons-container"
           className="flex flex-row gap-2 w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 items-center justify-around sm:justify-center"
         >
-          <Link href="/home" id="link-home">
+          <Link href="/home" id="link-home" aria-current={isActive("/home") ? "page" : undefined}>
             <NavBarButton
               label="Home"
               icon={Home}
               isSelected={isActive("/home")}
             />
           </Link>
-          <Link href="/tutorials" id="link-tutorials">
+          <Link href="/tutorials" id="link-tutorials" aria-current={isActive("/tutorials") ? "page" : undefined}>
             <NavBarButton
               label="Tutorials"
               icon={BookOpen}
               isSelected={isActive("/tutorials")}
             />
           </Link>
-          <Link href="/questions" id="link-questions">
+          <Link href="/questions" id="link-questions" aria-current={isActive("/questions") ? "page" : undefined}>
             <NavBarButton
               label="Questions"
               icon={MessageCircleQuestionMark}
               isSelected={isActive("/questions")}
             />
           </Link>
-          <Link href="/profile" id="link-profile-mobile" className="sm:hidden">
+          <Link href="/profile" id="link-profile-mobile" className="sm:hidden" aria-current={isActive("/profile") ? "page" : undefined}>
             <NavBarButton
               label="Profile"
               icon={User}
@@ -146,6 +146,6 @@ export default function TopNavBar({}: TopNavBarProps) {
           </Link>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }

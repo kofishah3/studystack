@@ -17,9 +17,45 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "StudyStack",
+  title: "StudyStack - The Community-Driven Learning Platform",
   description:
     "A community-driven learning platform designed for students to collaborate through interactive Q&A and comprehensive tutorials",
+  keywords: [
+    "education",
+    "learning platform",
+    "student collaboration",
+    "Q&A",
+    "tutorials",
+  ],
+  authors: [{ name: "StudyStack Team" }],
+  creator: "StudyStack",
+  openGraph: {
+    title: "StudyStack",
+    description:
+      "A community-driven learning platform designed for students to collaborate through interactive Q&A and comprehensive tutorials",
+    url: "studystack-jet.vercel.app",
+    siteName: "StudyStack",
+    images: [
+      {
+        url: "/logos/studystack-logo.png",
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StudyStack",
+    description:
+      "A community-driven learning platform designed for students to collaborate through interactive Q&A and comprehensive tutorials",
+    images: ["/logos/studystack-logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: "/logos/studystack-logo.png",
     apple: "/logos/studystack-logo.png",

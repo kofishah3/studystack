@@ -88,7 +88,19 @@ export default function SelectInput({
       className="relative w-full"
     >
       <div
+        id={id || name}
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-labelledby={`${id || name}-label`}
         className={`
           group w-full h-fit p-1 cursor-pointer
           border border-border rounded-xl bg-surface/50
@@ -171,11 +183,11 @@ export function SelectInputwLabel({
       id={`${id || name}-field-group`}
       className="flex flex-col gap-1 w-full"
     >
-      <p id={`${id || name}-label`} className="font-medium text-text text-sm">
+      <label htmlFor={id || name} id={`${id || name}-label`} className="font-medium text-text text-sm">
         {label}
-      </p>
+      </label>
       <SelectInput
-        id={id}
+        id={id || name}
         name={name}
         value={value}
         onChange={onChange}

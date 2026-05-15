@@ -20,10 +20,16 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Only connect on the client side
-    const socketInstance = io(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000", {
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000");
+
+    const socketInstance = io(siteUrl, {
       path: "/socket.io",
       addTrailingSlash: false,
+      reconnectionAttempts: 5,
     });
 
     socketInstance.on("connect", () => {

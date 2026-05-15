@@ -67,7 +67,7 @@ export default function HomePage() {
     <main className="flex-1 p-6 overflow-y-auto scrollbar-hide">
       <div className="w-full flex flex-col gap-6 pb-12">
         <div id="home-feed-header" className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-text">Community Feed</h2>
+          <h1 className="text-xl font-bold text-text">Community Feed</h1>
           <FeedSettings 
             initialSettings={settings} 
             onSettingsChange={setSettings} 

@@ -116,10 +116,10 @@ export function TextInputwLabel({
 }: TextInputwLabelProps) {
   return (
     <div id={`${id || name}-field-group`} className="flex flex-col gap-1 w-full">
-      <p id={`${id || name}-label`} className="font-medium text-text text-sm">{label}</p>
+      <label htmlFor={id || name} id={`${id || name}-label`} className="font-medium text-text text-sm">{label}</label>
 
       <TextInput
-        id={id}
+        id={id || name}
         name={name}
         placeholder={placeholder}
         type={type}
