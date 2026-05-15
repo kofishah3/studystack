@@ -17,6 +17,11 @@ const MAX_VIDEOS = 3;
 
 export default function AskQuestionCard() {
   const [uploads, setUploads] = useState<UploadFile[]>([]);
+  const [title, setTitle] = useState("");
+  const [questionBody, setQuestionBody] = useState("");
+  const [category, setCategory] = useState("general");
+  const [isPosting, setIsPosting] = useState(false);
+  const [error, setError] = useState("");
 
   const imageCount = useMemo(
     () => uploads.filter((u) => u.type === "image").length,
@@ -70,6 +75,50 @@ export default function AskQuestionCard() {
     setUploads((prev) => prev.filter((_, i) => i !== index));
   }
 
+  async function handlePost() {
+    if (!title.trim()) {
+      setError("Please enter a question title");
+      return;
+    }
+
+    setIsPosting(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      
+      const response = await fetch("/api/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          body: questionBody.trim() || null,
+          category,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to post question");
+      }
+
+      setTitle("");
+      setQuestionBody("");
+      setCategory("general");
+      setUploads([]);
+      
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.message || "Failed to post question");
+    } finally {
+      setIsPosting(false);
+    }
+  }
+
   return (
     <div
       className="
@@ -87,9 +136,17 @@ export default function AskQuestionCard() {
         </p>
       </div>
 
+      {error && (
+        <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       <TextInput
         name="title"
         placeholder="Question title (e.g. How do I sort a list in Python?)"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
       />
 
       <TextInput
@@ -97,6 +154,8 @@ export default function AskQuestionCard() {
         placeholder="Elaborate your question..."
         multiline
         rows={6}
+        value={questionBody}
+        onChange={(e) => setQuestionBody(e.target.value)}
       />
 
       {uploads.length > 0 && (
@@ -139,7 +198,6 @@ export default function AskQuestionCard() {
       )}
 
       <div className="flex items-center justify-between">
-        {/* UPLOAD BUTTON */}
         <label
           className="
             flex items-center gap-2
@@ -163,9 +221,10 @@ export default function AskQuestionCard() {
 
         <div className="w-fit min-w-[100px]">
           <FullButton
-            label="Post"
+            label={isPosting ? "Posting..." : "Post"}
             className="py-2 px-6 text-sm"
-            onClick={() => console.log("Post Question")}
+            onClick={handlePost}
+            disabled={isPosting}
           />
         </div>
       </div>
