@@ -134,11 +134,12 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
   const acceptedCount = Number(accepted_answers_row?.count || 0);
   const avgTutorialRating = Number(tutorials_rating_row?.avg || 0);
 
-  const rating = Math.max(0, 
-    (likesCount * 10) - 
-    (downvotesCount * 5) + 
-    (acceptedCount * 50) + 
-    (avgTutorialRating > 0 ? Math.round((avgTutorialRating - 3) * 20) : 0)
+  const rating = Math.max(
+    0,
+    likesCount * 10 -
+      downvotesCount * 5 +
+      acceptedCount * 50 +
+      (avgTutorialRating > 0 ? Math.round((avgTutorialRating - 3) * 20) : 0),
   );
 
   const engagement = Math.min(
@@ -184,14 +185,18 @@ export async function getHeatmapData(userId: string, days: number = 90) {
   const rows = await q<{ date: string; count: string }>(
     `
     WITH dates AS (
-      SELECT generate_series(CURRENT_DATE - $2::interval, CURRENT_DATE, '1 day'::interval)::date as date
+      SELECT generate_series(
+        (NOW() AT TIME ZONE 'Asia/Manila')::date - $2::interval,
+        (NOW() AT TIME ZONE 'Asia/Manila')::date,
+        '1 day'::interval
+      )::date as date
     ),
     activity AS (
-      SELECT DATE(created_at) as date, 1 as count FROM questions WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      SELECT DATE(created_at AT TIME ZONE 'Asia/Manila') as date, 1 as count FROM questions WHERE user_id = $1 AND created_at >= (NOW() AT TIME ZONE 'Asia/Manila')::date - $2::interval
       UNION ALL
-      SELECT DATE(created_at) as date, 1 as count FROM answers WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      SELECT DATE(created_at AT TIME ZONE 'Asia/Manila') as date, 1 as count FROM answers WHERE user_id = $1 AND created_at >= (NOW() AT TIME ZONE 'Asia/Manila')::date - $2::interval
       UNION ALL
-      SELECT DATE(created_at) as date, 1 as count FROM comments WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      SELECT DATE(created_at AT TIME ZONE 'Asia/Manila') as date, 1 as count FROM comments WHERE user_id = $1 AND created_at >= (NOW() AT TIME ZONE 'Asia/Manila')::date - $2::interval
     )
     SELECT d.date::text, COALESCE(SUM(a.count), 0) as count
     FROM dates d
