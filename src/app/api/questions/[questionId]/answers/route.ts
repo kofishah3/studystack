@@ -1,18 +1,11 @@
-// PATH: src/app/api/questions/[questionId]/answers/route.ts  (new file)
-
-/**
- *
- * POST /api/questions/:questionId/answers
- * — Creates a new answer for the given question.
- * — Requires authentication (Bearer token).
- */
+// PATH: src/app/api/questions/[questionId]/answers/route.ts
 
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { insertAnswer } from "@/lib/queries/answers";
-import { listCommentsForAnswerDetailed } from "@/lib/queries/comments";
+import { insertAnswer, listAnswersForQuestionDetailed } from "@/lib/queries/answers";
 import { asQuestionId } from "@/lib/db-brands";
 import { errorToResponse } from "@/lib/errors";
+import { one } from "@/lib/db";
 
 export const POST = withAuth(
   async (
@@ -35,12 +28,28 @@ export const POST = withAuth(
 
       const answer = await insertAnswer(req.userId, questionId, content.trim());
 
-      // Return the answer enriched with an empty comments array so the
-      // AnswerCard component receives the shape it expects immediately.
+      // Enrich with author fields so AnswerCard receives the full shape.
+      // We do a single targeted lookup — no need to re-fetch all answers.
+      const enriched = await one<{
+        author_name: string;
+        author_profile_url: string | null;
+        author_credibility_score: number;
+      }>(
+        `SELECT u.user_name         AS author_name,
+                u.profile_url       AS author_profile_url,
+                u.credibility_score AS author_credibility_score
+         FROM users u
+         WHERE u.user_id = $1`,
+        [req.userId],
+      );
+
       return NextResponse.json(
         {
           answer: {
             ...answer,
+            author_name: enriched?.author_name ?? "Unknown",
+            author_profile_url: enriched?.author_profile_url ?? null,
+            author_credibility_score: enriched?.author_credibility_score ?? 0,
             comments: [],
             userVote: null,
           },

@@ -45,12 +45,19 @@ export default function UserMeta({
             src={avatarUrl}
             alt={name}
             className={`${currentSize.avatar} rounded-full object-cover`}
+            onError={(e) => {
+              // Hide broken image and show the gray fallback instead
+              (e.target as HTMLImageElement).style.display = "none";
+              (e.target as HTMLImageElement).nextElementSibling?.removeAttribute("style");
+            }}
           />
-        ) : (
-          <div
-            className={`${currentSize.avatar} rounded-full bg-gray-300 dark:bg-gray-700`}
-          />
-        )}
+        ) : null}
+        <div
+          className={`${currentSize.avatar} rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400`}
+          style={avatarUrl ? { display: "none" } : undefined}
+        >
+          {name?.[0]?.toUpperCase() ?? "?"}
+        </div>
       </Link>
 
       <div className="flex items-center gap-1 flex-wrap">
