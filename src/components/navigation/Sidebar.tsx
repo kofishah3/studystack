@@ -2,11 +2,7 @@ import SidebarQuickAction from "./sidebar-widgets/SidebarQuickAction";
 import SidebarHeatmap from "./sidebar-widgets/SidebarHeatmap";
 import SidebarLeaderboard from "./sidebar-widgets/SidebarLeaderboard";
 
-interface SidebarProps {
-  isCollapsed?: boolean;
-}
-
-export default function Sidebar({ isCollapsed }: SidebarProps) {
+export default function Sidebar() {
   return (
     <aside
       id="sidebar-container"
