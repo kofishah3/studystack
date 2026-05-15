@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/navigation/SideBar";
-import TopNavBar from "@/components/navigation/TopNavBar";
+import Sidebar from "@/components/navigation/Sidebar";
+import TopNavBar from "@/components/navigation/TopNavigationBar";
 import QuestionCard from "@/components/cards/QuestionCard";
 import AskQuestionCard from "@/components/inputs/CreateCards/CreateQuestion";
 import { SkeletonList } from "@/components/ui/SkeletonCard";

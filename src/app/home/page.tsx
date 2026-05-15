@@ -1,7 +1,7 @@
 "use client";
 
-import Sidebar from "@/components/navigation/SideBar";
-import TopNavBar from "@/components/navigation/TopNavBar";
+import Sidebar from "@/components/navigation/Sidebar";
+import TopNavBar from "@/components/navigation/TopNavigationBar";
 import { useState } from "react";
 
 export default function HomePage() {

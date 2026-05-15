@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/navigation/SideBar";
-import TopNavBar from "@/components/navigation/TopNavBar";
+import Sidebar from "@/components/navigation/Sidebar";
+import TopNavBar from "@/components/navigation/TopNavigationBar";
 import UserMeta from "@/components/ui/UserMeta";
 import FullButton from "@/components/inputs/FullButton";
 import Link from "next/link";

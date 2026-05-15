@@ -1,6 +1,6 @@
 "use client";
 
-import TopNavBar from "@/components/navigation/TopNavBar";
+import TopNavBar from "@/components/navigation/TopNavigationBar";
 import { useEffect, useState, useRef } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
