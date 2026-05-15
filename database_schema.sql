@@ -27,7 +27,7 @@ CREATE TABLE questions (
   title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
   category VARCHAR(100) NOT NULL,
-  demand_score INTEGER DEFAULT 0,
+  demand_score NUMERIC(10,4) DEFAULT 0,
   popped BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   resolved_at TIMESTAMP WITH TIME ZONE
@@ -258,16 +258,4 @@ WHERE table_schema = 'public'
   AND table_type = 'BASE TABLE'
 ORDER BY table_name;
 
--- ============================================
--- questions table changes
--- ============================================
-ALTER TABLE questions ADD COLUMN title TEXT NOT NULL DEFAULT '';
-
--- If you want to keep existing content as title temporarily
-UPDATE questions SET title = content WHERE title = '';
-
--- Then you can keep body as optional (allow NULL)
-ALTER TABLE questions ADD COLUMN body TEXT;
-
-ALTER TABLE questions 
-ALTER COLUMN demand_score TYPE NUMERIC(10,4);
+
