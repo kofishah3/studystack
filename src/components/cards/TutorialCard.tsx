@@ -2,6 +2,8 @@ import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import Link from "next/link";
 import { HelpCircle, User, ArrowRight } from "lucide-react";
+import { useMemo } from "react";
+
 
 export type TutorialCardProps = {
   id: string;
@@ -40,7 +42,22 @@ export default function TutorialCard({
   institution,
   degreeProgram,
 }: TutorialCardProps) {
+  const formattedDate = useMemo(() => {
+    try {
+      const date = new Date(createdAt);
+      if (isNaN(date.getTime())) return createdAt;
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return createdAt;
+    }
+  }, [createdAt]);
+
   const ratingColor =
+
     avgRating >= 4
       ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
       : avgRating >= 2.5
@@ -104,9 +121,10 @@ export default function TutorialCard({
             >
               <UserMeta
                 name={author}
-                createdAt={createdAt}
+                createdAt={formattedDate}
                 avatarUrl={avatarUrl}
                 institution={institution}
+
                 degreeProgram={degreeProgram}
               />
               <span className="hidden sm:inline text-gray-300 dark:text-gray-700 text-xs">

@@ -8,10 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 type RouteCtx = { params: Promise<{ tutorialId: string }> };
 
-export const GET = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+export const GET = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { tutorialId } = await ctx.params;
+      const { tutorialId } = await params;
       const tid = asTutorialId(tutorialId);
 
       const tutorial = await getTutorialById(tid);
@@ -43,4 +43,5 @@ export const GET = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req);
+  },
+);

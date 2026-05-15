@@ -84,10 +84,10 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
   }
 }
 
-export const PUT = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest, _ctx: RouteCtx) => {
+export const PUT = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { tutorialId } = await ctx.params;
+      const { tutorialId } = await params;
       const id = asTutorialId(tutorialId);
 
       const existing = await getTutorialById(id);
@@ -110,12 +110,13 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req, ctx);
+  },
+);
 
-export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest, _ctx: RouteCtx) => {
+export const DELETE = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { tutorialId } = await ctx.params;
+      const { tutorialId } = await params;
       const id = asTutorialId(tutorialId);
 
       const existing = await getTutorialById(id);
@@ -129,4 +130,5 @@ export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req, ctx);
+  },
+);

@@ -8,7 +8,7 @@ import { errorToResponse } from "@/lib/errors";
 export const POST = withAuth(
   async (
     req: AuthedRequest,
-    { params }: { params: Promise<{ questionId: string; answerId: string }> },
+    { params }: { params: Promise<{ answerId: string }> },
   ) => {
     try {
       const { answerId: rawAnswerId } = await params;

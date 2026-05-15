@@ -1,10 +1,11 @@
-import { getQuestionByIdDetailed } from "@/lib/queries/questions";
+import { getQuestionByIdDetailed, deleteQuestion, getQuestionById } from "@/lib/queries/questions";
 import { listAnswersForQuestionDetailed } from "@/lib/queries/answers";
 import {
   listCommentsForQuestionDetailed,
   listCommentsForAnswerDetailed,
 } from "@/lib/queries/comments";
-import { errorToResponse } from "@/lib/errors";
+import { errorToResponse, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { asQuestionId } from "@/lib/db-brands";
 import { listMaterialsForQuestion } from "@/lib/queries/question-materials";
@@ -121,30 +122,23 @@ export async function GET(
   }
 }
 
-export const DELETE = (
-  req: import("next/server").NextRequest,
-  { params }: { params: Promise<{ questionId: string }> },
-) =>
-  import("@/lib/auth").then(({ withAuth }) =>
-    withAuth(async (authedReq: any, _ctx: any) => {
-      try {
-        const { questionId: rawId } = await params;
-        const questionId = asQuestionId(rawId);
+export const DELETE = withAuth(
+  async (authedReq: AuthedRequest, { params }: { params: Promise<{ questionId: string }> }) => {
+    try {
+      const { questionId: rawId } = await params;
+      const questionId = asQuestionId(rawId);
 
-        const { getQuestionById, deleteQuestion } = await import("@/lib/queries/questions");
-        const { ForbiddenError, NotFoundError } = await import("@/lib/errors");
+      const question = await getQuestionById(questionId);
+      if (!question) throw new NotFoundError("Question not found");
 
-        const question = await getQuestionById(questionId);
-        if (!question) throw new NotFoundError("Question not found");
-
-        if (question.user_id !== authedReq.userId) {
-          throw new ForbiddenError("Only the author can delete this question");
-        }
-
-        await deleteQuestion(questionId);
-        return NextResponse.json({ success: true });
-      } catch (error) {
-        return errorToResponse(error);
+      if (question.user_id !== authedReq.userId) {
+        throw new ForbiddenError("Only the author can delete this question");
       }
-    })(req, { params }),
-  );
+
+      await deleteQuestion(questionId);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      return errorToResponse(error);
+    }
+  },
+);

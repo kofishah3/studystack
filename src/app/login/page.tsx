@@ -40,10 +40,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen bg-background text-sm">
       <div
         id="login-form"
-        className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-16"
+        className="w-full flex flex-col items-center justify-center p-8 lg:p-16"
       >
         <div className="w-full max-w-md">
-          <div className="mb-10 text-center lg:text-left flex flex-col items-center lg:items-start gap-4">
+          <div className="mb-10 text-center flex flex-col items-center gap-4">
             <Image
               src="/logos/studystack-logo.png"
               alt="StudyStack Logo"
@@ -137,11 +137,6 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-
-      <div
-        id="rightside-graphic"
-        className="hidden lg:block lg:w-1/2 bg-white h-screen"
-      ></div>
     </div>
   );
 }

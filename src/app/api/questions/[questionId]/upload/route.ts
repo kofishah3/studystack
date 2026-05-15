@@ -140,10 +140,10 @@ async function streamUploadToStorage(
   });
 }
 
-export const PUT = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+export const PUT = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { questionId } = await ctx.params;
+      const { questionId } = await params;
       const qid = asQuestionId(questionId);
 
       const question = await getQuestionById(qid);
@@ -185,4 +185,5 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req, ctx);
+  },
+);

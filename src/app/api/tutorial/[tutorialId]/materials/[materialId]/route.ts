@@ -13,10 +13,10 @@ type RouteCtx = {
   params: Promise<{ tutorialId: string; materialId: string }>;
 };
 
-export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+export const DELETE = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { tutorialId, materialId } = await ctx.params;
+      const { tutorialId, materialId } = await params;
       const tid = asTutorialId(tutorialId);
       const mid = asTutorialMaterialId(materialId);
 
@@ -42,4 +42,5 @@ export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req);
+  },
+);

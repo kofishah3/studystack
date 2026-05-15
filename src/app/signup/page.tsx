@@ -51,18 +51,13 @@ export default function SignupPage() {
     <div className="flex min-h-screen bg-background text-sm">
       <div id="signup-page-layout" className="flex w-full min-h-screen">
         <div
-          id="leftside-graphic-container"
-          className="hidden lg:block lg:w-1/2 bg-white h-screen sticky top-0"
-        ></div>
-
-        <div
           id="signup-form-container"
-          className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-16 overflow-y-auto"
+          className="w-full flex flex-col items-center justify-center p-8 lg:p-16 overflow-y-auto"
         >
           <div id="signup-content-wrapper" className="w-full max-w-md my-auto">
             <div
               id="signup-header"
-              className="mb-10 text-center lg:text-left flex flex-col items-center lg:items-start gap-4"
+              className="mb-10 text-center flex flex-col items-center gap-4"
             >
               <Image
                 src="/logos/studystack-logo.png"

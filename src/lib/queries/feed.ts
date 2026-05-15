@@ -125,10 +125,11 @@ export async function getUnifiedFeed(
     aData.forEach((ans) => {
       if (!answersByQuestion[ans.question_id])
         answersByQuestion[ans.question_id] = [];
-      
+
       ans.upvotes = Number(ans.upvotes || 0);
       ans.downvotes = Number(ans.downvotes || 0);
-      ans.userVote = ans.user_vote === 1 ? "up" : (ans.user_vote === -1 ? "down" : null);
+      ans.userVote =
+        ans.user_vote === 1 ? "up" : ans.user_vote === -1 ? "down" : null;
       answersByQuestion[ans.question_id].push(ans);
     });
 
@@ -137,7 +138,8 @@ export async function getUnifiedFeed(
         ...qd,
         upvotes: Number(qd.upvotes || 0),
         downvotes: Number(qd.downvotes || 0),
-        user_vote: qd.user_vote === 1 ? "up" : (qd.user_vote === -1 ? "down" : null),
+        user_vote:
+          qd.user_vote === 1 ? "up" : qd.user_vote === -1 ? "down" : null,
         answers: answersByQuestion[qd.question_id] || [],
       };
     });
@@ -175,10 +177,18 @@ export async function getUnifiedFeed(
     tData.forEach((td) => {
       tutorialsMap[td.tutorial_id] = {
         ...td,
+        id: td.tutorial_id,
+        author: td.user_name,
+        avatarUrl: td.profile_url,
+        createdAt: td.created_at,
+        avgRating: Number(td.avg_rating) || 0,
+        totalInteractions: Number(td.total_interactions) || 0,
+        videoUrl: td.embedded_video_url,
         upvotes: Number(td.upvotes || 0),
         downvotes: Number(td.downvotes || 0),
-        user_vote: td.user_vote === 1 ? "up" : (td.user_vote === -1 ? "down" : null),
-        id: td.tutorial_id,
+        user_vote:
+          td.user_vote === 1 ? "up" : td.user_vote === -1 ? "down" : null,
+        degreeProgram: td.degree_program,
         linkedQuestions: lqByTutorial[td.tutorial_id] || [],
       };
     });

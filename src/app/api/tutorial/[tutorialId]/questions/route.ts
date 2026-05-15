@@ -27,10 +27,10 @@ async function loadOwnedTutorial(tid: string, userId: string) {
   return tutorial;
 }
 
-export const POST = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+export const POST = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { tutorialId } = await ctx.params;
+      const { tutorialId } = await params;
       const tutorial = await loadOwnedTutorial(tutorialId, authedReq.userId);
 
       const body = await authedReq.json();
@@ -55,12 +55,13 @@ export const POST = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req);
+  },
+);
 
-export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+export const DELETE = withAuth(
+  async (authedReq: AuthedRequest, { params }: RouteCtx) => {
     try {
-      const { tutorialId } = await ctx.params;
+      const { tutorialId } = await params;
       const tutorial = await loadOwnedTutorial(tutorialId, authedReq.userId);
 
       const body = await authedReq.json();
@@ -79,4 +80,5 @@ export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req);
+  },
+);
