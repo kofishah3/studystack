@@ -5,6 +5,8 @@ type UserMetaProps = {
   createdAt: string;
   updatedAt?: string;
   avatarUrl?: string;
+  institution?: string;
+  degreeProgram?: string;
   size?: "sm" | "md" | "lg";
 };
 
@@ -13,12 +15,14 @@ export default function UserMeta({
   createdAt,
   updatedAt,
   avatarUrl,
+  institution,
+  degreeProgram,
   size = "md",
 }: UserMetaProps) {
   const sizeClasses = {
     sm: {
       avatar: "w-6 h-6",
-      text: "text-xs",
+      text: "text-[10px]",
       gap: "gap-1.5",
     },
     md: {
@@ -37,14 +41,17 @@ export default function UserMeta({
 
   return (
     <div
-      className={`flex items-center ${currentSize.gap} ${currentSize.text} text-gray-500`}
+      className={`flex items-center ${currentSize.gap} ${currentSize.text} text-muted`}
     >
-      <Link href={`/${name}`} className="hover:opacity-80 transition-opacity shrink-0">
+      <Link
+        href={`/${name}`}
+        className="hover:opacity-80 transition-opacity shrink-0"
+      >
         {avatarUrl ? (
           <img
             src={avatarUrl}
             alt={name}
-            className={`${currentSize.avatar} rounded-full object-cover`}
+            className={`${currentSize.avatar} rounded-full object-cover border border-border/50`}
             onError={(e) => {
               // Hide broken image and show the gray fallback instead
               (e.target as HTMLImageElement).style.display = "none";
@@ -53,24 +60,36 @@ export default function UserMeta({
           />
         ) : null}
         <div
-          className={`${currentSize.avatar} rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400`}
+          className={`${currentSize.avatar} rounded-full bg-gray-300 dark:bg-gray-700 border border-border/50 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400`}
           style={avatarUrl ? { display: "none" } : undefined}
         >
           {name?.[0]?.toUpperCase() ?? "?"}
         </div>
       </Link>
 
-      <div className="flex items-center gap-1 flex-wrap">
-        <Link
-          href={`/${name}`}
-          className="font-semibold text-text hover:text-primary-500 transition-colors cursor-pointer"
-        >
-          {name}
-        </Link>
-
-        <span>•</span>
-
-        <span>{updatedAt ? `edited ${updatedAt}` : createdAt}</span>
+      <div className="flex flex-col justify-center leading-tight">
+        <div className="flex items-center gap-1 flex-wrap">
+          <Link
+            href={`/${name}`}
+            className="font-bold text-text hover:text-primary-600 transition-colors cursor-pointer"
+          >
+            {name}
+          </Link>
+          {(institution || degreeProgram) && (
+            <span className="text-muted/60 font-medium italic">
+              at {institution || "Unknown Institution"}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 text-muted/80 font-medium">
+          {degreeProgram && (
+            <>
+              <span>{degreeProgram}</span>
+              <span>•</span>
+            </>
+          )}
+          <span>{updatedAt ? `edited ${updatedAt}` : createdAt}</span>
+        </div>
       </div>
     </div>
   );

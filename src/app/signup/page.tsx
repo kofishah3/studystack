@@ -4,6 +4,7 @@ import FullButton from "@/components/inputs/FullButton";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -48,28 +49,39 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen bg-background text-sm">
-      <div
-        id="signup-page-layout"
-        className="flex w-full min-h-screen"
-      >
+      <div id="signup-page-layout" className="flex w-full min-h-screen">
         <div
           id="leftside-graphic-container"
           className="hidden lg:block lg:w-1/2 bg-white h-screen sticky top-0"
-        >
-        </div>
+        ></div>
 
         <div
           id="signup-form-container"
           className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-16 overflow-y-auto"
         >
           <div id="signup-content-wrapper" className="w-full max-w-md my-auto">
-            <div id="signup-header" className="mb-10 text-center lg:text-left">
-              <h1 id="signup-title" className="text-3xl font-sora font-bold text-text mb-2">
-                Create Account
-              </h1>
-              <p id="signup-subtitle" className="text-muted text-sm">
-                Join your very own learning community!
-              </p>
+            <div
+              id="signup-header"
+              className="mb-10 text-center lg:text-left flex flex-col items-center lg:items-start gap-4"
+            >
+              <Image
+                src="/logos/studystack-logo.png"
+                alt="StudyStack Logo"
+                width={48}
+                height={48}
+                className="object-contain"
+              />
+              <div>
+                <h1
+                  id="signup-title"
+                  className="text-3xl font-sora font-bold text-text mb-2"
+                >
+                  Create Account
+                </h1>
+                <p id="signup-subtitle" className="text-muted text-sm">
+                  Join your very own learning community!
+                </p>
+              </div>
             </div>
 
             <form
@@ -78,7 +90,10 @@ export default function SignupPage() {
               className="flex flex-col gap-5"
             >
               {error && (
-                <div id="signup-error-message" className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-center animate-shake">
+                <div
+                  id="signup-error-message"
+                  className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-center animate-shake"
+                >
                   {error}
                 </div>
               )}
@@ -99,7 +114,7 @@ export default function SignupPage() {
                   placeholder="••••••••"
                   type="password"
                 />
-                
+
                 <TextInputwLabel
                   id="signup-confirm-password-input"
                   label="Confirm Password"
@@ -131,7 +146,10 @@ export default function SignupPage() {
                 <GoogleAuthButton id="signup-google-button" />
               </div>
 
-              <p id="signup-terms" className="text-xs text-muted text-center px-4">
+              <p
+                id="signup-terms"
+                className="text-xs text-muted text-center px-4"
+              >
                 By signing up, you agree to our{" "}
                 <Link href="#" className="text-primary-500 underline">
                   Terms of Service

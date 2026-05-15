@@ -9,12 +9,26 @@ import { NextResponse } from "next/server";
 import { asQuestionId } from "@/lib/db-brands";
 
 export async function GET(
-  req: Request,
+  req: import("next/server").NextRequest,
   { params }: { params: Promise<{ questionId: string }> },
 ) {
   try {
     const { questionId: rawId } = await params;
     const questionId = asQuestionId(rawId);
+
+    let userId = null;
+    const authHeader = req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.slice(7);
+        const jwt = await import("jsonwebtoken");
+        const { JWT_SECRET } = await import("@/lib/auth");
+        const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+        userId = payload.userId;
+      } catch (e) {
+      }
+    }
+
     const question = await getQuestionByIdDetailed(questionId);
 
     if (!question) {
@@ -30,21 +44,78 @@ export async function GET(
     const answersWithComments = await Promise.all(
       answers.map(async (a) => {
         const answerComments = await listCommentsForAnswerDetailed(a.answer_id);
+        
+        let userVote = null;
+        if (userId) {
+          const { one } = await import("@/lib/db");
+          const voteRow = await one(
+            `SELECT value FROM interactions WHERE user_id = $1 AND answer_id = $2 AND interaction_type = 'react'`,
+            [userId, a.answer_id]
+          );
+          if (voteRow) {
+            userVote = voteRow.value === 1 ? "up" : (voteRow.value === -1 ? "down" : null);
+          }
+        }
+
         return {
           ...a,
           comments: answerComments,
+          userVote,
         };
       }),
     );
 
+    let user_vote = null;
+    if (userId) {
+      const { one } = await import("@/lib/db");
+      const voteRow = await one(
+        `SELECT value FROM interactions WHERE user_id = $1 AND question_id = $2 AND interaction_type = 'react'`,
+        [userId, questionId]
+      );
+      if (voteRow) {
+        user_vote = voteRow.value === 1 ? "up" : (voteRow.value === -1 ? "down" : null);
+      }
+    }
+
     return NextResponse.json({
       data: {
         ...question,
+        upvotes: Number(question.upvotes || 0),
+        downvotes: Number(question.downvotes || 0),
         answers: answersWithComments,
         comments,
+        user_vote,
       },
     });
   } catch (error) {
     return errorToResponse(error);
   }
 }
+
+export const DELETE = (
+  req: import("next/server").NextRequest,
+  { params }: { params: Promise<{ questionId: string }> },
+) =>
+  import("@/lib/auth").then(({ withAuth }) =>
+    withAuth(async (authedReq: any, _ctx: any) => {
+      try {
+        const { questionId: rawId } = await params;
+        const questionId = asQuestionId(rawId);
+
+        const { getQuestionById, deleteQuestion } = await import("@/lib/queries/questions");
+        const { ForbiddenError, NotFoundError } = await import("@/lib/errors");
+
+        const question = await getQuestionById(questionId);
+        if (!question) throw new NotFoundError("Question not found");
+
+        if (question.user_id !== authedReq.userId) {
+          throw new ForbiddenError("Only the author can delete this question");
+        }
+
+        await deleteQuestion(questionId);
+        return NextResponse.json({ success: true });
+      } catch (error) {
+        return errorToResponse(error);
+      }
+    })(req, { params }),
+  );

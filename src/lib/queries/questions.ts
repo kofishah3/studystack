@@ -161,3 +161,7 @@ export async function getQuestionByIdDetailed(
     profile_url: row.profile_url || row.profileURL,
   };
 }
+
+export async function deleteQuestion(id: QuestionID): Promise<void> {
+  await q("DELETE FROM questions WHERE question_id = $1", [id]);
+}

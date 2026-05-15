@@ -4,6 +4,7 @@ import FullButton from "@/components/inputs/FullButton";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -42,13 +43,22 @@ export default function LoginPage() {
         className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-16"
       >
         <div className="w-full max-w-md">
-          <div className="mb-10 text-center lg:text-left">
-            <h1 className="text-3xl font-sora font-bold text-text mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-muted text-sm">
-              Please enter your details to sign in.
-            </p>
+          <div className="mb-10 text-center lg:text-left flex flex-col items-center lg:items-start gap-4">
+            <Image
+              src="/logos/studystack-logo.png"
+              alt="StudyStack Logo"
+              width={48}
+              height={48}
+              className="object-contain"
+            />
+            <div>
+              <h1 className="text-3xl font-sora font-bold text-text mb-2">
+                Welcome Back
+              </h1>
+              <p className="text-muted text-sm">
+                Please enter your details to sign in.
+              </p>
+            </div>
           </div>
 
           <form

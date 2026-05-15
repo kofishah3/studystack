@@ -3,7 +3,9 @@ import { useEffect, useState, useCallback } from "react";
 import TutorialCard from "@/components/cards/TutorialCard";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
 import SearchBar from "@/components/inputs/SearchBar";
-import FeedSettings, { FeedSettingsState } from "@/components/feed/FeedSettings";
+import FeedSettings, {
+  FeedSettingsState,
+} from "@/components/feed/FeedSettings";
 
 const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
 
@@ -22,45 +24,54 @@ export default function TutorialsPage() {
     timeFilter: "all",
   });
 
-  const fetchTutorials = useCallback(async (pageNum: number, append = false, currentSettings: FeedSettingsState) => {
-    try {
-      if (!append) setLoading(true);
-      else setLoadingMore(true);
+  const fetchTutorials = useCallback(
+    async (
+      pageNum: number,
+      append = false,
+      currentSettings: FeedSettingsState,
+    ) => {
+      try {
+        if (!append) setLoading(true);
+        else setLoadingMore(true);
 
-      const params = new URLSearchParams({
-        page: String(pageNum),
-        limit: "20",
-        sort: currentSettings.sort,
-        schoolFilter: currentSettings.schoolFilter,
-        degreeFilter: currentSettings.degreeFilter,
-        timeFilter: currentSettings.timeFilter,
-      });
+        const params = new URLSearchParams({
+          page: String(pageNum),
+          limit: "20",
+          sort: currentSettings.sort,
+          schoolFilter: currentSettings.schoolFilter,
+          degreeFilter: currentSettings.degreeFilter,
+          timeFilter: currentSettings.timeFilter,
+        });
 
-      if (selectedCategory !== "All") {
-        params.append("category", selectedCategory);
+        if (selectedCategory !== "All") {
+          params.append("category", selectedCategory);
+        }
+        if (searchQuery.trim()) {
+          params.append("search", searchQuery.trim());
+        }
+
+        const token = localStorage.getItem("token");
+        const headers: any = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`/api/tutorial?${params}`, { headers });
+        const json = await res.json();
+
+        if (json.data) {
+          setTutorials((prev) =>
+            append ? [...prev, ...json.data] : json.data,
+          );
+          setHasMore(json.hasMore ?? false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tutorials:", error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-      if (searchQuery.trim()) {
-        params.append("search", searchQuery.trim());
-      }
-
-      const token = localStorage.getItem("token");
-      const headers: any = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(`/api/tutorial?${params}`, { headers });
-      const json = await res.json();
-
-      if (json.data) {
-        setTutorials((prev) => (append ? [...prev, ...json.data] : json.data));
-        setHasMore(json.hasMore ?? false);
-      }
-    } catch (error) {
-      console.error("Failed to fetch tutorials:", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [selectedCategory, searchQuery]);
+    },
+    [selectedCategory, searchQuery],
+  );
 
   useEffect(() => {
     setPage(1);
@@ -84,9 +95,9 @@ export default function TutorialsPage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Tutorials
             </h1>
-            <FeedSettings 
-              initialSettings={settings} 
-              onSettingsChange={setSettings} 
+            <FeedSettings
+              initialSettings={settings}
+              onSettingsChange={setSettings}
             />
           </div>
 
@@ -138,6 +149,10 @@ export default function TutorialsPage() {
                 totalInteractions={Number(t.total_interactions) || 0}
                 videoUrl={t.embedded_video_url}
                 linkedQuestions={t.linked_questions}
+                upvotes={t.upvotes}
+                downvotes={t.downvotes}
+                institution={t.institution}
+                degreeProgram={t.degree_program}
               />
             ))}
 

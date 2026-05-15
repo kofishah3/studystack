@@ -15,6 +15,8 @@ import {
 import FullButton from "@/components/inputs/FullButton";
 import { useToast } from "@/contexts/ToastContext";
 
+import { useQuestionActions } from "@/hooks/useQuestionActions";
+
 function authHeaders(): HeadersInit {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -34,10 +36,14 @@ export default function QuestionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { currentUserId, deleteQuestion } = useQuestionActions();
+
   const loadQuestion = useCallback(async () => {
     if (!questionId) return;
     try {
-      const res = await fetch(`/api/questions/${questionId}`);
+      const res = await fetch(`/api/questions/${questionId}`, {
+        headers: authHeaders(),
+      });
       if (!res.ok) throw new Error("Failed to load question");
       const json = await res.json();
       const d = json.data;
@@ -100,38 +106,116 @@ export default function QuestionDetailPage() {
       );
     };
 
-  const handleDeleteComment = async (commentId: string) => {
-    try {
-      const res = await fetch(
-        `/api/questions/${questionId}/comments/${commentId}`,
-        {
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token)
+          return showToast({
+            type: "error",
+            title: "Error",
+            message: "You must be logged in to delete comments",
+          });
+
+        const res = await fetch(`/api/comments/${commentId}`, {
           method: "DELETE",
-          headers: authHeaders(),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to delete");
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setComments((prev) =>
-        prev.filter((c) => String(c.comment_id) !== commentId),
-      );
-      setAnswers((prev) =>
-        prev.map((a) => ({
-          ...a,
-          comments: (a.comments ?? []).filter(
-            (c) => String(c.comment_id) !== commentId,
-          ),
-        })),
-      );
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error || "Failed to delete comment");
+        }
 
-      showToast({
-        type: "success",
-        title: "Deleted",
-        message: "Comment removed.",
+        showToast({
+          type: "success",
+          title: "Deleted",
+          message: "Comment deleted successfully",
+        });
+        loadQuestion();
+      } catch (error: any) {
+        showToast({ type: "error", title: "Error", message: error.message });
+      }
+    },
+    [loadQuestion, showToast],
+  );
+
+  const handleDeleteAnswer = useCallback(
+    async (answerId: number) => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token)
+          return showToast({
+            type: "error",
+            title: "Error",
+            message: "You must be logged in to delete answers",
+          });
+
+        const res = await fetch(`/api/answers/${answerId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error || "Failed to delete answer");
+        }
+
+        showToast({
+          type: "success",
+          title: "Deleted",
+          message: "Answer deleted successfully",
+        });
+        loadQuestion();
+      } catch (error: any) {
+        showToast({ type: "error", title: "Error", message: error.message });
+      }
+    },
+    [loadQuestion, showToast],
+  );
+
+  const handleDeleteQuestion = useCallback(
+    (id: string) => {
+      deleteQuestion(id, () => {
+        router.push("/questions");
       });
-    } catch (err: any) {
-      showToast({ type: "error", title: "Error", message: err.message });
-    }
-  };
+    },
+    [deleteQuestion, router],
+  );
+
+  const handleAcceptAnswer = useCallback(
+    async (answerId: number) => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token)
+          return showToast({
+            type: "error",
+            title: "Error",
+            message: "You must be logged in",
+          });
+
+        const res = await fetch(`/api/answers/${answerId}/accept`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json.error || "Failed to accept answer");
+        }
+
+        showToast({
+          type: "success",
+          title: "Success",
+          message: "Answer marked as resolved",
+        });
+        loadQuestion();
+      } catch (error: any) {
+        showToast({ type: "error", title: "Error", message: error.message });
+      }
+    },
+    [loadQuestion, showToast],
+  );
 
   if (loading)
     return (
@@ -144,9 +228,7 @@ export default function QuestionDetailPage() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         <AlertCircle size={48} className="text-red-500" />
-        <h2 className="text-xl font-bold">
-          {error || "Question not found"}
-        </h2>
+        <h2 className="text-xl font-bold">{error || "Question not found"}</h2>
         <Link href="/questions" className="text-primary-700 hover:underline">
           Back to List
         </Link>
@@ -155,97 +237,115 @@ export default function QuestionDetailPage() {
 
   return (
     <main className="flex-1 py-6 px-4 sm:px-8 overflow-y-auto">
-          <div className="max-w-4xl mx-auto flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary-700 transition-colors group"
-              >
-                <ArrowLeft
-                  size={16}
-                  className="group-hover:-translate-x-1 transition-transform"
-                />
-                Back
-              </button>
-            </div>
-
-            <QuestionCard
-              {...data}
-              answers={answers}
-              mode="full"
-              onAnswerPosted={handleAnswerPosted}
-              onCommentPosted={handleQuestionCommentPosted}
+      <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary-700 transition-colors group"
+          >
+            <ArrowLeft
+              size={16}
+              className="group-hover:-translate-x-1 transition-transform"
             />
+            Back
+          </button>
+        </div>
 
-            {comments.length > 0 && (
-              <div className="ml-7 sm:ml-12 flex flex-col gap-4 relative">
-                <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800" />
-                <div className="flex items-center gap-2 px-1">
-                  <MessageSquare size={14} className="text-gray-400" />
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Comments
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {buildCommentTree(comments).map((comment) => (
-                    <CommentCard
-                      key={comment.comment_id}
-                      {...comment}
-                      onReply={async (content, parentId) => {
-                        // Handle question-level replies
-                        const res = await fetch(
-                          `/api/questions/${questionId}/comments`,
-                          {
-                            method: "POST",
-                            headers: authHeaders(),
-                            body: JSON.stringify({
-                              content,
-                              parent_comment_id: parentId,
-                            }),
-                          },
-                        );
-                        if (res.ok) {
-                          const d = await res.json();
-                          setComments((prev) => [...prev, d.comment]);
-                        }
-                      }}
-                      onDelete={handleDeleteComment}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        <QuestionCard
+          {...data}
+          answers={answers}
+          mode="full"
+          currentUserId={currentUserId}
+          onDelete={handleDeleteQuestion}
+          onAnswerPosted={handleAnswerPosted}
+          onCommentPosted={handleQuestionCommentPosted}
+        />
 
-            <div className="mt-4 flex flex-col gap-4">
-              <h2 className="text-lg font-bold flex items-center gap-2 px-2">
-                Answers
-                <span className="bg-primary-100 dark:bg-primary-900/30 text-primary-700 px-2.5 py-0.5 rounded-full text-xs">
-                  {answers.length}
-                </span>
-              </h2>
-
-              <div className="flex flex-col gap-5">
-                {answers.map((answer) => (
-                  <AnswerCard
-                    key={answer.answer_id}
-                    {...answer}
-                    hideComments={false}
-                    onReply={handleAnswerReply(Number(answer.answer_id))}
-                    onDeleteComment={handleDeleteComment}
-                  />
-                ))}
-
-                {answers.length === 0 && (
-                  <div className="border border-dashed border-gray-200 dark:border-gray-800 rounded-xl p-10 text-center flex flex-col items-center gap-2">
-                    <MessageSquare size={32} className="text-gray-300" />
-                    <p className="text-gray-400 italic text-sm">
-                      No answers yet. Be the first to help!
-                    </p>
-                  </div>
-                )}
-              </div>
+        {comments.length > 0 && (
+          <div className="ml-7 sm:ml-12 flex flex-col gap-4 relative">
+            <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800" />
+            <div className="flex items-center gap-2 px-1">
+              <MessageSquare size={14} className="text-gray-400" />
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Comments
+              </h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              {buildCommentTree(comments).map((comment) => (
+                <CommentCard
+                  key={comment.comment_id}
+                  {...comment}
+                  onReply={async (content, parentId) => {
+                    const res = await fetch(
+                      `/api/questions/${questionId}/comments`,
+                      {
+                        method: "POST",
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                          content,
+                          parent_comment_id: parentId,
+                        }),
+                      },
+                    );
+                    if (res.ok) {
+                      const d = await res.json();
+                      setComments((prev) => [...prev, d.comment]);
+                    }
+                  }}
+                  onDelete={handleDeleteComment}
+                />
+              ))}
             </div>
           </div>
+        )}
+
+        <div className="mt-4 flex flex-col gap-4">
+          <h2 className="text-lg font-bold flex items-center gap-2 px-2">
+            Answers
+            <span className="bg-primary-100 dark:bg-primary-900/30 text-primary-700 px-2.5 py-0.5 rounded-full text-xs">
+              {answers.length}
+            </span>
+          </h2>
+
+          <div className="flex flex-col gap-5">
+            {(() => {
+              const topAnswerId = answers.reduce(
+                (max, a) => {
+                  const score = (a.upvotes || 0) - (a.downvotes || 0);
+                  if (score > 0 && score > max.score) {
+                    return { id: a.answer_id, score };
+                  }
+                  return max;
+                },
+                { id: null as any, score: 0 },
+              ).id;
+
+              return answers.map((answer) => (
+                <AnswerCard
+                  key={answer.answer_id}
+                  {...answer}
+                  isTopAnswer={answer.answer_id === topAnswerId}
+                  hideComments={false}
+                  isQuestionAuthor={data?.user_id === currentUserId}
+                  onAcceptAnswer={handleAcceptAnswer}
+                  onReply={handleAnswerReply(Number(answer.answer_id))}
+                  onDeleteComment={handleDeleteComment}
+                  onDelete={handleDeleteAnswer}
+                />
+              ));
+            })()}
+
+            {answers.length === 0 && (
+              <div className="border border-dashed border-gray-200 dark:border-gray-800 rounded-xl p-10 text-center flex flex-col items-center gap-2">
+                <MessageSquare size={32} className="text-gray-300" />
+                <p className="text-gray-400 italic text-sm">
+                  No answers yet. Be the first to help!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

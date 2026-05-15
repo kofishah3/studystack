@@ -25,12 +25,14 @@ export async function GET(request: Request) {
 
     const authHeader = request.headers.get("authorization");
     let userInfo = undefined;
+    let currentUserId: string | undefined = undefined;
     
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
       try {
         const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
-        const user = await getUserById(payload.userId as UserID);
+        currentUserId = payload.userId;
+        const user = await getUserById(currentUserId as UserID);
         if (user) {
           userInfo = { 
             institution: user.institution || undefined, 
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const items = await getUnifiedFeed(limit, offset, settings, userInfo);
+    const items = await getUnifiedFeed(limit, offset, settings, userInfo, currentUserId);
 
     return NextResponse.json({
       data: items,

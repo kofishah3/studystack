@@ -9,6 +9,8 @@ import { useToast } from "@/contexts/ToastContext";
 import QuestionCard from "@/components/cards/QuestionCard";
 import { CommentCard, buildCommentTree } from "@/components/cards/CommentCard";
 import CommentInput from "@/components/inputs/CommentInput";
+import VotePanel from "@/components/inputs/VotePanel";
+import { Star, ThumbsUp, ThumbsDown } from "lucide-react";
 
 export default function TutorialDetailPage() {
   const { tutorialId } = useParams();
@@ -20,7 +22,11 @@ export default function TutorialDetailPage() {
   useEffect(() => {
     async function fetchTutorial() {
       try {
-        const res = await fetch(`/api/tutorial/${tutorialId}`);
+        const token = localStorage.getItem("token");
+        const headers: HeadersInit = token
+          ? { Authorization: `Bearer ${token}` }
+          : {};
+        const res = await fetch(`/api/tutorial/${tutorialId}`, { headers });
         const json = await res.json();
         if (json.data) {
           setTutorial(json.data);
@@ -50,7 +56,13 @@ export default function TutorialDetailPage() {
 
       if (!res.ok) throw new Error("Failed to post comment");
 
-      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`);
+      const token = localStorage.getItem("token");
+      const headers: HeadersInit = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`, {
+        headers,
+      });
       const json = await resTutorial.json();
       if (json.data) {
         setTutorial(json.data);
@@ -132,6 +144,53 @@ export default function TutorialDetailPage() {
         message: error.message || "Something went wrong. Please try again.",
       });
       throw error;
+    }
+  };
+
+  const handleRate = async (value: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/interactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          interaction_type: "rating",
+          value,
+          target_type: "tutorial",
+          target_id: tutorialId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to rate");
+      }
+
+      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const json = await resTutorial.json();
+      if (json.data) {
+        setTutorial(json.data);
+      }
+
+      showToast({
+        type: "success",
+        title: "Rating saved",
+        message: `You rated this tutorial ${value} stars!`,
+      });
+    } catch (error: any) {
+      console.error("Rating failed:", error);
+      showToast({
+        type: "error",
+        title: "Rating failed",
+        message: error.message || "Something went wrong. Please try again.",
+      });
     }
   };
 
@@ -262,11 +321,63 @@ export default function TutorialDetailPage() {
             </p>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-center">
-            <FullButton
-              label="Was this helpful?"
-              className="w-full sm:w-fit px-8 py-2.5"
-            />
+          <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-3">
+              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                How would you rate this tutorial?
+              </span>
+              <div className="flex items-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const userRating = tutorial.userInteractions?.find(
+                    (i: any) => i.interaction_type === "rating",
+                  )?.value;
+                  return (
+                    <button
+                      key={star}
+                      onClick={() => handleRate(star)}
+                      className="p-1 group transition-transform active:scale-90"
+                    >
+                      <Star
+                        size={28}
+                        className={
+                          star <= (userRating || 0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300 dark:text-gray-600 group-hover:text-yellow-400 transition-colors"
+                        }
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-8 py-2 px-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Helpful?
+                </span>
+                {(() => {
+                  const userReact = tutorial.userInteractions?.find(
+                    (i: any) => i.interaction_type === "react",
+                  )?.value;
+                  return (
+                    <VotePanel
+                      targetID={tutorialId as string}
+                      targetType="tutorial"
+                      voteUpCount={tutorial.upvotes || 0}
+                      voteDownCount={tutorial.downvotes || 0}
+                      initialUserVote={
+                        userReact === 1
+                          ? "up"
+                          : userReact === -1
+                            ? "down"
+                            : null
+                      }
+                    />
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         </div>
 
