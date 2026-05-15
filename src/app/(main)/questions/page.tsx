@@ -135,6 +135,11 @@ export default function QuestionsPage() {
                 resolved_at={q.resolved_at ?? null}
                 user_name={q.user_name}
                 profile_url={q.profile_url ?? null}
+                institution={q.institution}
+                degree_program={q.degree_program}
+                upvotes={q.upvotes}
+                downvotes={q.downvotes}
+                user_vote={q.user_vote}
                 answers={q.answers ?? []}
                 mode="preview"
                 onCreateTutorial={(id) =>

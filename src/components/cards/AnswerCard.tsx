@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, Trash2 } from "lucide-react";
+import { usePrompt } from "@/contexts/PromptContext";
 import VotePanel, { VoteType } from "../inputs/VotePanel";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
@@ -10,34 +11,32 @@ import { CommentCard, type CommentData, buildCommentTree } from "./CommentCard";
 import { CornerDownRight } from "lucide-react";
 import type { AnswerID, QuestionID, UserID } from "@/types/database";
 
-// ── AnswerProps ───────────────────────────────────────────────────────────────
-// Mirrors the Answers table columns exactly, plus join fields from the
-// users table (author_*) and UI-only extras (userVote, hideComments, callbacks).
 export interface AnswerProps {
-  // Answers table columns
   answer_id: AnswerID;
   user_id: UserID;
   question_id: QuestionID;
   content: string;
   media_urls: { type: "image" | "video"; url: string }[];
   is_accepted: boolean;
-  created_at: string; // ISO string from JSON — Date on the DB side
+  created_at: string;
 
-  // Join fields from users table
   author_name: string;
   author_profile_url?: string | null;
+  author_institution?: string;
+  author_degree_program?: string;
   author_credibility_score: number;
 
-  // Nested join — comments on this answer
+  upvotes?: number;
+  downvotes?: number;
+
   comments?: CommentData[];
 
-  // UI-only
   userVote: VoteType;
   hideComments?: boolean;
 
-  // Callbacks
   onReply?: (content: string, parentCommentId?: string) => Promise<void>;
   onDeleteComment?: (commentId: string) => Promise<void>;
+  onDelete?: (answerId: number) => Promise<void>;
 }
 
 function getCredibilityStyles(score: number) {
@@ -48,7 +47,6 @@ function getCredibilityStyles(score: number) {
   return "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800";
 }
 
-// ── Lightbox ──────────────────────────────────────────────────────────────────
 function Lightbox({
   media,
   index,
@@ -136,7 +134,6 @@ function Lightbox({
   );
 }
 
-// ── MediaCarousel ─────────────────────────────────────────────────────────────
 function MediaCarousel({
   mediaURLs,
 }: {
@@ -155,7 +152,7 @@ function MediaCarousel({
         <div
           className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 group"
           onClick={
-            item.type === "image" ? () => setLightboxOpen(true) : undefined
+            item.type === "image" ? (e) => { e.preventDefault(); e.stopPropagation(); setLightboxOpen(true); } : undefined
           }
         >
           {item.type === "image" ? (
@@ -248,24 +245,56 @@ function MediaCarousel({
   );
 }
 
-// ── AnswerCard ────────────────────────────────────────────────────────────────
 export default function AnswerCard({
   answer_id,
+  user_id,
   content,
   media_urls = [],
   is_accepted,
   created_at,
   author_name,
+  author_profile_url,
+  author_institution,
+  author_degree_program,
   author_credibility_score,
   comments = [],
   userVote,
   hideComments = false,
   onReply,
   onDeleteComment,
+  onDelete,
+  upvotes = 0,
+  downvotes = 0,
 }: AnswerProps) {
   const [resolved] = useState(is_accepted);
   const [isReplying, setIsReplying] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const { showPrompt } = usePrompt();
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUserId(user.user_id);
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleDeleteClick = () => {
+    showPrompt({
+      title: "Delete Answer?",
+      description:
+        "Are you sure you want to delete this answer? This cannot be undone.",
+      icon: Trash2,
+      type: "confirmation",
+      onAccept: async () => {
+        onDelete?.(answer_id);
+      },
+    });
+  };
 
   const builtReplies = buildCommentTree(comments);
   const replyCount = builtReplies.length;
@@ -296,8 +325,8 @@ export default function AnswerCard({
           id={`answer-vote-panel-${idStr}`}
         >
           <VotePanel
-            voteUpCount={0}
-            voteDownCount={0}
+            voteUpCount={upvotes}
+            voteDownCount={downvotes}
             targetID={idStr}
             targetType="answer"
             initialUserVote={userVote}
@@ -309,6 +338,9 @@ export default function AnswerCard({
             <div className="flex flex-col gap-2">
               <UserMeta
                 name={author_name}
+                avatarUrl={author_profile_url ?? undefined}
+                institution={author_institution}
+                degreeProgram={author_degree_program}
                 createdAt={new Date(created_at).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -331,7 +363,16 @@ export default function AnswerCard({
               </div>
             </div>
 
-            <div className="shrink-0 -mt-1" id={`answer-actions-${idStr}`}>
+            <div className="shrink-0 -mt-1 flex items-center gap-1" id={`answer-actions-${idStr}`}>
+              {currentUserId === user_id && onDelete && (
+                <button
+                  onClick={handleDeleteClick}
+                  className="p-1.5 rounded hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 text-gray-400 transition-colors"
+                  title="Delete answer"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
               <ActionMenu />
             </div>
           </div>

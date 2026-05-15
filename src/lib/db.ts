@@ -13,8 +13,8 @@ export const pool: Pool =
     user: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "",
     max: 10,
-    connectionTimeoutMillis: 10000, // 10 seconds
-    idleTimeoutMillis: 30000, // 30 seconds
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
     allowExitOnIdle: true,
     ssl:
       process.env.DB_HOST && process.env.DB_HOST !== "localhost"
@@ -71,7 +71,6 @@ export async function withTransaction<T>(
     try {
       await client.query("ROLLBACK");
     } catch {
-      // ignore rollback errors; surface the original
     }
     throw err;
   } finally {

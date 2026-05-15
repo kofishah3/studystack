@@ -14,6 +14,7 @@ export async function getUnifiedFeed(
   offset: number = 0,
   settings?: FeedSettingsState,
   userInfo?: { institution?: string; degree_program?: string },
+  currentUserId?: string,
 ): Promise<FeedItem[]> {
   let whereClauses: string[] = ["1=1"];
   const params: any[] = [limit, offset];
@@ -93,35 +94,50 @@ export async function getUnifiedFeed(
   if (questionIds.length > 0) {
     const qData = await q<any>(
       `
-      SELECT q.*, u.user_name, u.profile_url
-      FROM questions q 
-      JOIN users u ON q.user_id = u.user_id 
+      SELECT q.*,
+             (SELECT value FROM interactions i WHERE i.question_id = q.question_id AND i.user_id = $2 AND i.interaction_type = 'react') as user_vote
+      FROM question_details q 
       WHERE q.question_id = ANY($1)
     `,
-      [questionIds],
+      [questionIds, currentUserId],
     );
 
     const aData = await q<any>(
       `
-      SELECT a.*, u.user_name, u.profile_url
+      SELECT a.*, 
+             u.user_name as author_name, 
+             u.profile_url as author_profile_url,
+             u.institution as author_institution,
+             u.degree_program as author_degree_program,
+             u.credibility_score as author_credibility_score,
+             (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value > 0) as upvotes,
+             (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value < 0) as downvotes,
+             (SELECT value FROM interactions i WHERE i.answer_id = a.answer_id AND i.user_id = $2 AND i.interaction_type = 'react') as user_vote
       FROM answers a
       JOIN users u ON a.user_id = u.user_id
       WHERE a.question_id = ANY($1)
       ORDER BY a.created_at ASC
     `,
-      [questionIds],
+      [questionIds, currentUserId],
     );
 
     const answersByQuestion: Record<string, any[]> = {};
     aData.forEach((ans) => {
       if (!answersByQuestion[ans.question_id])
         answersByQuestion[ans.question_id] = [];
+      
+      ans.upvotes = Number(ans.upvotes || 0);
+      ans.downvotes = Number(ans.downvotes || 0);
+      ans.userVote = ans.user_vote === 1 ? "up" : (ans.user_vote === -1 ? "down" : null);
       answersByQuestion[ans.question_id].push(ans);
     });
 
     qData.forEach((qd) => {
       questionsMap[qd.question_id] = {
         ...qd,
+        upvotes: Number(qd.upvotes || 0),
+        downvotes: Number(qd.downvotes || 0),
+        user_vote: qd.user_vote === 1 ? "up" : (qd.user_vote === -1 ? "down" : null),
         answers: answersByQuestion[qd.question_id] || [],
       };
     });
@@ -131,12 +147,12 @@ export async function getUnifiedFeed(
   if (tutorialIds.length > 0) {
     const tData = await q<any>(
       `
-      SELECT t.*, u.user_name as author, u.profile_url as avatarUrl
-      FROM tutorials t
-      JOIN users u ON t.user_id = u.user_id
-      WHERE t.tutorial_id = ANY($1)
+      SELECT ts.*, ts.user_name as author, ts.profile_url as avatarUrl,
+             (SELECT value FROM interactions i WHERE i.tutorial_id = ts.tutorial_id AND i.user_id = $2 AND i.interaction_type = 'react') as user_vote
+      FROM tutorial_stats ts
+      WHERE ts.tutorial_id = ANY($1)
     `,
-      [tutorialIds],
+      [tutorialIds, currentUserId],
     );
 
     const lqData = await q<any>(
@@ -159,6 +175,9 @@ export async function getUnifiedFeed(
     tData.forEach((td) => {
       tutorialsMap[td.tutorial_id] = {
         ...td,
+        upvotes: Number(td.upvotes || 0),
+        downvotes: Number(td.downvotes || 0),
+        user_vote: td.user_vote === 1 ? "up" : (td.user_vote === -1 ? "down" : null),
         id: td.tutorial_id,
         linkedQuestions: lqByTutorial[td.tutorial_id] || [],
       };

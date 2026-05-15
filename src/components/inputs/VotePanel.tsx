@@ -51,7 +51,9 @@ export default function VotePanel({
         }
     };
 
-    const handleUpvote = () => {
+    const handleUpvote = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (userVote === "up") {
             setVoteUp((v) => v - 1);
             setUserVote(null);
@@ -68,7 +70,9 @@ export default function VotePanel({
         }
     };
 
-    const handleDownvote = () => {
+    const handleDownvote = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (userVote === "down") {
             setVoteDown((v) => v - 1);
             setUserVote(null);

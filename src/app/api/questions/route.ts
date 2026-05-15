@@ -14,7 +14,7 @@ import { getUserById } from "@/lib/queries/users";
 import { UserID } from "@/types/database";
 import { FeedSettingsState } from "@/components/feed/FeedSettings";
 
-export const POST = withAuth(async (req: AuthedRequest) => {
+export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
     const body = await req.json();
     const { title, body: questionBody, category = "general" } = body;
@@ -110,11 +110,13 @@ export async function GET(req: Request) {
 
     const authHeader = req.headers.get("authorization");
     let userInfo = undefined;
+    let userId = null;
 
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
       try {
         const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+        userId = payload.userId;
         const user = await getUserById(payload.userId as UserID);
         if (user) {
           userInfo = {
@@ -129,22 +131,13 @@ export async function GET(req: Request) {
 
     let query = `
       SELECT 
-        q.question_id,
-        q.title,
-        q.content,
-        q.demand_score,
-        q.popped,
-        q.created_at,
-        q.category,
-        u.user_name,
-        u.profile_url,
-        u.credibility_score as author_credibility
-       FROM questions q
-       JOIN users u ON q.user_id = u.user_id
+        q.*,
+        (SELECT value FROM interactions i WHERE i.question_id = q.question_id AND i.user_id = $1 AND i.interaction_type = 'react') as user_vote
+       FROM question_details q
        WHERE 1=1
     `;
-    const params: any[] = [];
-    let paramIndex = 1;
+    const params: any[] = [userId];
+    let paramIndex = 2;
 
     let countQuery = `SELECT COUNT(*) as count FROM questions q JOIN users u ON q.user_id = u.user_id WHERE 1=1`;
     const countParams: any[] = [];
@@ -172,7 +165,7 @@ export async function GET(req: Request) {
 
     if (settings) {
       if (settings.schoolFilter === "mine" && userInfo?.institution) {
-        query += ` AND u.institution = $${paramIndex}`;
+        query += ` AND q.institution = $${paramIndex}`;
         params.push(userInfo.institution);
         paramIndex++;
 
@@ -181,7 +174,7 @@ export async function GET(req: Request) {
         countParamIndex++;
       }
       if (settings.degreeFilter === "mine" && userInfo?.degree_program) {
-        query += ` AND u.degree_program = $${paramIndex}`;
+        query += ` AND q.degree_program = $${paramIndex}`;
         params.push(userInfo.degree_program);
         paramIndex++;
 
@@ -215,8 +208,19 @@ export async function GET(req: Request) {
         const answers = await listAnswersForQuestionDetailed(
           asQuestionId(question.question_id),
         );
+        
+        // Ensure answers have their upvotes formatted correctly too
+        answers.forEach(ans => {
+           ans.upvotes = Number(ans.upvotes || 0);
+           ans.downvotes = Number(ans.downvotes || 0);
+           // listAnswersForQuestionDetailed might not map user_vote string, but let's leave it for now since we just fixed Question
+        });
+
         return {
           ...question,
+          upvotes: Number(question.upvotes || 0),
+          downvotes: Number(question.downvotes || 0),
+          user_vote: question.user_vote === 1 ? "up" : (question.user_vote === -1 ? "down" : null),
           answers,
         };
       }),

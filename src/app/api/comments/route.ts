@@ -10,7 +10,7 @@ import {
   asTutorialId,
 } from "@/lib/db-brands";
 
-export const POST = withAuth(async (req: AuthedRequest) => {
+export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
     const body = await req.json();
     const parsed = parseOrThrow(createCommentSchema, body);

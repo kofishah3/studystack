@@ -18,6 +18,10 @@ export type TutorialCardProps = {
     title: string;
     author_name: string;
   }[];
+  upvotes?: number;
+  downvotes?: number;
+  institution?: string;
+  degreeProgram?: string;
 };
 
 export default function TutorialCard({
@@ -27,10 +31,14 @@ export default function TutorialCard({
   author,
   avatarUrl,
   createdAt,
-  avgRating = 0,
-  totalInteractions = 0,
   videoUrl,
   linkedQuestions = [],
+  upvotes = 0,
+  downvotes = 0,
+  avgRating = 0,
+  totalInteractions = 0,
+  institution,
+  degreeProgram,
 }: TutorialCardProps) {
   const ratingColor =
     avgRating >= 4
@@ -98,6 +106,8 @@ export default function TutorialCard({
                 name={author}
                 createdAt={createdAt}
                 avatarUrl={avatarUrl}
+                institution={institution}
+                degreeProgram={degreeProgram}
               />
               <span className="hidden sm:inline text-gray-300 dark:text-gray-700 text-xs">
                 |
@@ -106,6 +116,12 @@ export default function TutorialCard({
                 {totalInteractions} interaction
                 {totalInteractions !== 1 ? "s" : ""}
               </span>
+              {(upvotes > 0 || downvotes > 0) && (
+                <div className="flex items-center gap-2 ml-1 pl-2 border-l border-gray-200 dark:border-gray-700">
+                  <span className="text-[10px] font-bold text-emerald-600">+{upvotes}</span>
+                  <span className="text-[10px] font-bold text-red-500">-{downvotes}</span>
+                </div>
+              )}
             </div>
 
             <p

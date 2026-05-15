@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import Image from "next/image";
 import { Home, BookOpen, MessageCircleQuestionMark, User } from "lucide-react";
 import NavBarButton from "./NavBarButton";
 
@@ -52,7 +53,15 @@ export default function TopNavBar({}: TopNavBarProps) {
         className="w-full bg-surface px-4 py-2 sm:py-5 border-t sm:border-t-0 sm:border-b border-border/50 
       justify-between items-center flex flex-row relative shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sm:shadow-sm"
       >
-        <div id="logo-container" className="hidden sm:flex">
+        <div id="logo-container" className="hidden sm:flex items-center gap-2">
+          <Image
+            src="/logos/studystack-logo.png"
+            alt="StudyStack Logo"
+            width={32}
+            height={32}
+            className="object-contain"
+            priority
+          />
           <span
             id="temp-logo"
             className="text-xl font-bold font-sora tracking-tight"

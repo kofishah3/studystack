@@ -39,11 +39,32 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
 
     const comments = await listCommentsForTutorialDetailed(id);
 
+    let userInteraction = null;
+    const authHeader = _req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.slice(7);
+        const { one } = await import("@/lib/db");
+        const jwt = await import("jsonwebtoken");
+        const { JWT_SECRET } = await import("@/lib/auth");
+        const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+        
+        userInteraction = await one(
+          `SELECT interaction_type, value FROM interactions WHERE user_id = $1 AND tutorial_id = $2`,
+          [payload.userId, id]
+        );
+      } catch (e) {
+      }
+    }
+
     return NextResponse.json({
       data: {
         ...tutorial,
+        upvotes: Number(tutorial.upvotes || 0),
+        downvotes: Number(tutorial.downvotes || 0),
         linked_questions: questions,
         comments,
+        userInteraction,
       },
     });
   } catch (error) {
@@ -52,7 +73,7 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
 }
 
 export const PUT = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+  withAuth(async (authedReq: AuthedRequest, _ctx: RouteCtx) => {
     try {
       const { tutorialId } = await ctx.params;
       const id = asTutorialId(tutorialId);
@@ -77,10 +98,10 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req);
+  })(req, ctx);
 
 export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
-  withAuth(async (authedReq: AuthedRequest) => {
+  withAuth(async (authedReq: AuthedRequest, _ctx: RouteCtx) => {
     try {
       const { tutorialId } = await ctx.params;
       const id = asTutorialId(tutorialId);
@@ -96,4 +117,4 @@ export const DELETE = (req: NextRequest, ctx: RouteCtx) =>
     } catch (error) {
       return errorToResponse(error);
     }
-  })(req);
+  })(req, ctx);

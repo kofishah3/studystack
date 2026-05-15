@@ -107,11 +107,39 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
     [user_id],
   );
 
-  const user = await getUserById(user_id);
+  const downvotes_row = await one<{ count: string }>(
+    `SELECT COUNT(*) as count FROM interactions i
+     WHERE i.interaction_type = 'react' AND i.value < 0 AND (
+       i.question_id IN (SELECT question_id FROM questions WHERE user_id = $1) OR
+       i.answer_id IN (SELECT answer_id FROM answers WHERE user_id = $1) OR
+       i.tutorial_id IN (SELECT tutorial_id FROM tutorials WHERE user_id = $1)
+     )`,
+    [user_id],
+  );
+
+  const accepted_answers_row = await one<{ count: string }>(
+    "SELECT COUNT(*) as count FROM answers WHERE user_id = $1 AND is_accepted = true",
+    [user_id],
+  );
+
+  const tutorials_rating_row = await one<{ avg: string }>(
+    "SELECT AVG(value) as avg FROM interactions WHERE tutorial_id IN (SELECT tutorial_id FROM tutorials WHERE user_id = $1) AND interaction_type = 'rating'",
+    [user_id],
+  );
+
   const questionsCount = Number(questions_row?.count || 0);
   const answersCount = Number(answers_row?.count || 0);
   const likesCount = Number(likes_row?.count || 0);
-  const rating = user?.credibility_score || 0;
+  const downvotesCount = Number(downvotes_row?.count || 0);
+  const acceptedCount = Number(accepted_answers_row?.count || 0);
+  const avgTutorialRating = Number(tutorials_rating_row?.avg || 0);
+
+  const rating = Math.max(0, 
+    (likesCount * 10) - 
+    (downvotesCount * 5) + 
+    (acceptedCount * 50) + 
+    (avgTutorialRating > 0 ? Math.round((avgTutorialRating - 3) * 20) : 0)
+  );
 
   const engagement = Math.min(
     100,

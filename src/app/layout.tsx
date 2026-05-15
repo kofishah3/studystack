@@ -17,7 +17,12 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   title: "StudyStack",
-  description: "something somethiing study app",
+  description:
+    "A community-driven learning platform designed for students to collaborate through interactive Q&A and comprehensive tutorials",
+  icons: {
+    icon: "/logos/studystack-logo.png",
+    apple: "/logos/studystack-logo.png",
+  },
 };
 
 export default function RootLayout({

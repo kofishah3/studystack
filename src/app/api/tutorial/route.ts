@@ -39,12 +39,14 @@ export async function GET(request: NextRequest) {
 
     const authHeader = request.headers.get("authorization");
     let userInfo = undefined;
+    let userId = null;
 
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
       try {
         const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
-        const user = await getUserById(payload.userId as UserID);
+        userId = payload.userId as UserID;
+        const user = await getUserById(userId);
         if (user) {
           userInfo = {
             institution: user.institution || undefined,
@@ -62,6 +64,7 @@ export async function GET(request: NextRequest) {
       search,
       settings,
       userInfo,
+      userId,
     );
 
     const detailedTutorials = await Promise.all(
@@ -71,6 +74,9 @@ export async function GET(request: NextRequest) {
         );
         return {
           ...t,
+          upvotes: Number(t.upvotes || 0),
+          downvotes: Number(t.downvotes || 0),
+          user_vote: t.user_vote === 1 ? "up" : (t.user_vote === -1 ? "down" : null),
           linked_questions: questions,
         };
       }),
@@ -87,7 +93,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export const POST = withAuth(async (req: AuthedRequest) => {
+export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
     const body = await req.json();
     const parsed = parseOrThrow(createTutorialSchema, body);

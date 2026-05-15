@@ -1,4 +1,3 @@
-// PATH: src/lib/queries/answers.ts  (replace existing file)
 
 import { one, q } from "@/lib/db";
 import { asAnswerId, asQuestionId, asUserId } from "@/lib/db-brands";
@@ -44,8 +43,6 @@ export async function insertAnswer(
   question_id: QuestionID,
   content: string,
 ): Promise<Answers> {
-  // FIX: explicitly pass media_urls so the column is always set;
-  // avoids any edge-case where the DB default doesn't fire (e.g. older pg drivers).
   const row = await one<AnswerRow>(
     `INSERT INTO answers (user_id, question_id, content, media_urls, is_accepted)
      VALUES ($1, $2, $3, '[]'::jsonb, false)
@@ -117,13 +114,28 @@ export async function listAnswersForQuestionDetailed(
     `SELECT a.*,
             u.user_name             as author_name,
             u.institution           as author_institution,
+            u.degree_program        as author_degree_program,
             u.profile_url           as author_profile_url,
-            u.credibility_score     as author_credibility_score
+            u.credibility_score     as author_credibility_score,
+            (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value > 0) as upvotes,
+            (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value < 0) as downvotes
      FROM answers a
      JOIN users u ON a.user_id = u.user_id
      WHERE a.question_id = $1
      ORDER BY a.is_accepted DESC, a.created_at ASC`,
     [qid],
   );
-  return rows;
+  return rows.map((r) => ({
+    ...r,
+    upvotes: Number(r.upvotes || 0),
+    downvotes: Number(r.downvotes || 0),
+  }));
+}
+
+export async function deleteAnswer(id: AnswerID, userId: UserID): Promise<boolean> {
+  const row = await one<{ answer_id: number }>(
+    "DELETE FROM answers WHERE answer_id = $1 AND user_id = $2 RETURNING answer_id",
+    [id, userId],
+  );
+  return !!row;
 }

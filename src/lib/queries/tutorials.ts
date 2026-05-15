@@ -162,18 +162,20 @@ export async function listTutorialsDetailed(
   search?: string,
   settings?: FeedSettingsState,
   userInfo?: { institution?: string; degree_program?: string },
+  userId?: UserID | null,
 ): Promise<any[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
   const safeOffset = Math.max(offset, 0);
 
   let query = `
     SELECT ts.*, u.institution, u.degree_program 
+    ${userId ? `, (SELECT value FROM interactions i WHERE i.tutorial_id = ts.tutorial_id AND i.user_id = $1 AND i.interaction_type = 'react') as user_vote` : ''}
     FROM tutorial_stats ts
     JOIN users u ON ts.user_id = u.user_id
     WHERE 1=1
   `;
-  const params: any[] = [];
-  let paramIndex = 1;
+  const params: any[] = userId ? [userId] : [];
+  let paramIndex = userId ? 2 : 1;
 
   if (category && category !== "All") {
     query += ` AND ts.category ILIKE $${paramIndex}`;

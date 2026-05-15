@@ -24,11 +24,16 @@ export interface QuestionProps {
   resolved_at?: string | null;
   user_name: string;
   profile_url?: string | null;
+  institution?: string;
+  degree_program?: string;
   answers?: AnswerProps[];
   mode?: "preview" | "full";
   onCreateTutorial?: (id: string) => void;
   onAnswerPosted?: (answer: Record<string, unknown>) => void;
   onCommentPosted?: (comment: Record<string, unknown>) => void;
+  upvotes?: number;
+  downvotes?: number;
+  user_vote?: "up" | "down" | null;
 }
 
 type ComposerTab = "answer" | "comment";
@@ -47,9 +52,19 @@ export default function QuestionCard({
   onAnswerPosted,
   onCommentPosted,
   onCreateTutorial,
+  upvotes = 0,
+  downvotes = 0,
+  user_vote = null,
+  institution,
+  degree_program,
 }: QuestionProps) {
   const [composerTab, setComposerTab] = useState<ComposerTab>("answer");
-  const [helpfulVote, setHelpfulVote] = useState<"up" | "down" | null>(null);
+  const [helpfulVote, setHelpfulVote] = useState<"up" | "down" | null>(
+    user_vote,
+  );
+  const [upCount, setUpCount] = useState(upvotes);
+  const [downCount, setDownCount] = useState(downvotes);
+  const [loading, setLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -99,9 +114,50 @@ export default function QuestionCard({
     });
   }
 
-  function handleHelpful(type: "up" | "down") {
-    setHelpfulVote((prev) => (prev === type ? null : type));
-  }
+  const handleHelpful = async (type: "up" | "down") => {
+    if (loading) return;
+    setLoading(true);
+
+    const newValue: 1 | -1 | 0 =
+      helpfulVote === type ? 0 : type === "up" ? 1 : -1;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/interactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          interaction_type: "react",
+          value: newValue,
+          target_type: "question",
+          target_id: question_id,
+        }),
+      });
+
+      if (res.ok) {
+        if (newValue === 0) {
+          if (type === "up") setUpCount((prev) => prev - 1);
+          else setDownCount((prev) => prev - 1);
+          setHelpfulVote(null);
+        } else if (newValue === 1) {
+          setUpCount((prev) => prev + 1);
+          if (helpfulVote === "down") setDownCount((prev) => prev - 1);
+          setHelpfulVote("up");
+        } else {
+          setDownCount((prev) => prev + 1);
+          if (helpfulVote === "up") setUpCount((prev) => prev - 1);
+          setHelpfulVote("down");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to save interaction:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   function handleComposerTab(tab: ComposerTab) {
     setComposerTab(tab);
@@ -140,16 +196,32 @@ export default function QuestionCard({
               Helpful?
             </span>
             <button
-              onClick={() => handleHelpful("up")}
-              className={`p-1.5 rounded-lg ${helpfulVote === "up" ? "bg-emerald-100 text-emerald-600" : "text-gray-400 hover:bg-gray-100"}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleHelpful("up");
+              }}
+              disabled={loading}
+              className={`p-1.5 rounded-lg flex items-center gap-1 ${helpfulVote === "up" ? "bg-emerald-100 text-emerald-600" : "text-gray-400 hover:bg-gray-100"} disabled:opacity-50`}
             >
               <ThumbsUp size={13} />
+              {upCount > 0 && (
+                <span className="text-[10px] font-bold">{upCount}</span>
+              )}
             </button>
             <button
-              onClick={() => handleHelpful("down")}
-              className={`p-1.5 rounded-lg ${helpfulVote === "down" ? "bg-red-100 text-red-500" : "text-gray-400 hover:bg-gray-100"}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleHelpful("down");
+              }}
+              disabled={loading}
+              className={`p-1.5 rounded-lg flex items-center gap-1 ${helpfulVote === "down" ? "bg-red-100 text-red-500" : "text-gray-400 hover:bg-gray-100"} disabled:opacity-50`}
             >
               <ThumbsDown size={13} />
+              {downCount > 0 && (
+                <span className="text-[10px] font-bold">{downCount}</span>
+              )}
             </button>
             <ActionMenu />
           </div>
@@ -160,6 +232,8 @@ export default function QuestionCard({
             name={user_name}
             createdAt={mounted ? formattedDate : ""}
             avatarUrl={profile_url ?? undefined}
+            institution={institution}
+            degreeProgram={degree_program}
           />
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 border-l border-gray-200 dark:border-gray-700 ml-1 pl-2">
@@ -178,7 +252,11 @@ export default function QuestionCard({
 
         <div className="flex justify-end pt-0.5">
           <button
-            onClick={handleShare}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleShare();
+            }}
             className={`flex items-center gap-1 text-xs font-medium ${shareCopied ? "text-primary-500" : "text-gray-400 hover:text-primary-500"}`}
           >
             <Share2 size={12} />

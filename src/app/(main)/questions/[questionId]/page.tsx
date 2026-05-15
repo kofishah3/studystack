@@ -37,7 +37,9 @@ export default function QuestionDetailPage() {
   const loadQuestion = useCallback(async () => {
     if (!questionId) return;
     try {
-      const res = await fetch(`/api/questions/${questionId}`);
+      const res = await fetch(`/api/questions/${questionId}`, {
+        headers: authHeaders(),
+      });
       if (!res.ok) throw new Error("Failed to load question");
       const json = await res.json();
       const d = json.data;
@@ -100,38 +102,55 @@ export default function QuestionDetailPage() {
       );
     };
 
-  const handleDeleteComment = async (commentId: string) => {
-    try {
-      const res = await fetch(
-        `/api/questions/${questionId}/comments/${commentId}`,
-        {
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return showToast({ type: "error", title: "Error", message: "You must be logged in to delete comments" });
+
+        const res = await fetch(`/api/comments/${commentId}`, {
           method: "DELETE",
-          headers: authHeaders(),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to delete");
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setComments((prev) =>
-        prev.filter((c) => String(c.comment_id) !== commentId),
-      );
-      setAnswers((prev) =>
-        prev.map((a) => ({
-          ...a,
-          comments: (a.comments ?? []).filter(
-            (c) => String(c.comment_id) !== commentId,
-          ),
-        })),
-      );
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error || "Failed to delete comment");
+        }
 
-      showToast({
-        type: "success",
-        title: "Deleted",
-        message: "Comment removed.",
-      });
-    } catch (err: any) {
-      showToast({ type: "error", title: "Error", message: err.message });
-    }
-  };
+        showToast({ type: "success", title: "Deleted", message: "Comment deleted successfully" });
+        loadQuestion(); // reload the UI
+      } catch (error: any) {
+        showToast({ type: "error", title: "Error", message: error.message });
+      }
+    },
+    [loadQuestion, showToast]
+  );
+
+  const handleDeleteAnswer = useCallback(
+    async (answerId: number) => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return showToast({ type: "error", title: "Error", message: "You must be logged in to delete answers" });
+
+        const res = await fetch(`/api/answers/${answerId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error || "Failed to delete answer");
+        }
+
+        showToast({ type: "success", title: "Deleted", message: "Answer deleted successfully" });
+        loadQuestion(); // reload the UI
+      } catch (error: any) {
+        showToast({ type: "error", title: "Error", message: error.message });
+      }
+    },
+    [loadQuestion, showToast]
+  );
 
   if (loading)
     return (
@@ -232,6 +251,7 @@ export default function QuestionDetailPage() {
                     hideComments={false}
                     onReply={handleAnswerReply(Number(answer.answer_id))}
                     onDeleteComment={handleDeleteComment}
+                    onDelete={handleDeleteAnswer}
                   />
                 ))}
 

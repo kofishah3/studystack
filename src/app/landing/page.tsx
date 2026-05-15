@@ -1,9 +1,18 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background text-text">
-      <h1 className="text-4xl font-sora font-bold mb-4">Studystack</h1>
+      <Image
+        src="/logos/studystack-logo.png"
+        alt="StudyStack Logo"
+        width={80}
+        height={80}
+        className="mb-4 object-contain"
+        priority
+      />
+      <h1 className="text-4xl font-sora font-bold mb-4">StudyStack</h1>
       <div className="flex gap-4">
         <Link
           href="/login"
