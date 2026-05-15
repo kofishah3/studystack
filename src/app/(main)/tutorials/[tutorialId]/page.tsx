@@ -164,7 +164,10 @@ export default function TutorialDetailPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to rate");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to rate");
+      }
 
       const resTutorial = await fetch(`/api/tutorial/${tutorialId}`, {
         headers: {
@@ -181,12 +184,12 @@ export default function TutorialDetailPage() {
         title: "Rating saved",
         message: `You rated this tutorial ${value} stars!`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Rating failed:", error);
       showToast({
         type: "error",
         title: "Rating failed",
-        message: "Something went wrong. Please try again.",
+        message: error.message || "Something went wrong. Please try again.",
       });
     }
   };
@@ -324,25 +327,27 @@ export default function TutorialDetailPage() {
                 How would you rate this tutorial?
               </span>
               <div className="flex items-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => handleRate(star)}
-                    className="p-1 group transition-transform active:scale-90"
-                  >
-                    <Star
-                      size={28}
-                      className={
-                        star <=
-                        (tutorial.userInteraction?.interaction_type === "rating"
-                          ? tutorial.userInteraction.value
-                          : 0)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300 dark:text-gray-600 group-hover:text-yellow-400 transition-colors"
-                      }
-                    />
-                  </button>
-                ))}
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const userRating = tutorial.userInteractions?.find(
+                    (i: any) => i.interaction_type === "rating",
+                  )?.value;
+                  return (
+                    <button
+                      key={star}
+                      onClick={() => handleRate(star)}
+                      className="p-1 group transition-transform active:scale-90"
+                    >
+                      <Star
+                        size={28}
+                        className={
+                          star <= (userRating || 0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300 dark:text-gray-600 group-hover:text-yellow-400 transition-colors"
+                        }
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -351,19 +356,26 @@ export default function TutorialDetailPage() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   Helpful?
                 </span>
-                <VotePanel
-                  targetID={tutorialId as string}
-                  targetType="tutorial"
-                  voteUpCount={tutorial.upvotes || 0}
-                  voteDownCount={tutorial.downvotes || 0}
-                  initialUserVote={
-                    tutorial.userInteraction?.interaction_type === "react"
-                      ? tutorial.userInteraction.value === 1
-                        ? "up"
-                        : "down"
-                      : null
-                  }
-                />
+                {(() => {
+                  const userReact = tutorial.userInteractions?.find(
+                    (i: any) => i.interaction_type === "react",
+                  )?.value;
+                  return (
+                    <VotePanel
+                      targetID={tutorialId as string}
+                      targetType="tutorial"
+                      voteUpCount={tutorial.upvotes || 0}
+                      voteDownCount={tutorial.downvotes || 0}
+                      initialUserVote={
+                        userReact === 1
+                          ? "up"
+                          : userReact === -1
+                            ? "down"
+                            : null
+                      }
+                    />
+                  );
+                })()}
               </div>
             </div>
           </div>

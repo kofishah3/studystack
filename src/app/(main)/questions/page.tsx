@@ -8,6 +8,8 @@ import FeedSettings, {
   FeedSettingsState,
 } from "@/components/feed/FeedSettings";
 
+import { useQuestionActions } from "@/hooks/useQuestionActions";
+
 const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
 
 export default function QuestionsPage() {
@@ -24,6 +26,17 @@ export default function QuestionsPage() {
     degreeFilter: "all",
     timeFilter: "all",
   });
+
+  const { currentUserId, deleteQuestion } = useQuestionActions();
+
+  const handleDeleteQuestion = useCallback(
+    (id: string) => {
+      deleteQuestion(id, () => {
+        setQuestions((prev) => prev.filter((q) => String(q.question_id) !== id));
+      });
+    },
+    [deleteQuestion],
+  );
 
   const fetchQuestions = useCallback(
     async (
@@ -142,6 +155,8 @@ export default function QuestionsPage() {
                 user_vote={q.user_vote}
                 answers={q.answers ?? []}
                 mode="preview"
+                currentUserId={currentUserId}
+                onDelete={handleDeleteQuestion}
                 onCreateTutorial={(id) =>
                   console.log("Create tutorial for:", id)
                 }

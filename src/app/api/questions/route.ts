@@ -17,7 +17,8 @@ import { FeedSettingsState } from "@/components/feed/FeedSettings";
 export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
     const body = await req.json();
-    const { title, body: questionBody, category = "general" } = body;
+    const { title, body: questionBody, category: rawCategory } = body;
+    const category = (rawCategory || "").trim() || "general";
 
     if (!title) {
       return NextResponse.json(
@@ -42,7 +43,7 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
        RETURNING question_id`,
       [
         title,
-        questionBody || null,
+        questionBody || "",
         userId,
         false,
         initialDemandScore,

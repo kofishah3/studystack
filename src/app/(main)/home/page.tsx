@@ -6,6 +6,8 @@ import SkeletonCard from "@/components/ui/SkeletonCard";
 import FeedSettings, { FeedSettingsState } from "@/components/feed/FeedSettings";
 import { useEffect, useState, useCallback } from "react";
 
+import { useQuestionActions } from "@/hooks/useQuestionActions";
+
 export default function HomePage() {
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,6 +17,22 @@ export default function HomePage() {
     degreeFilter: "all",
     timeFilter: "all",
   });
+
+  const { currentUserId, deleteQuestion } = useQuestionActions();
+
+  const handleDeleteQuestion = useCallback(
+    (id: string) => {
+      deleteQuestion(id, () => {
+        setItems((prev) =>
+          prev.filter(
+            (item) =>
+              item.type !== "question" || String(item.data.question_id) !== id,
+          ),
+        );
+      });
+    },
+    [deleteQuestion],
+  );
 
   const fetchFeed = useCallback(async (currentSettings: FeedSettingsState) => {
     try {
@@ -70,7 +88,12 @@ export default function HomePage() {
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 {item.type === "question" ? (
-                  <QuestionCard {...item.data} mode="preview" />
+                  <QuestionCard 
+                    {...item.data} 
+                    mode="preview" 
+                    currentUserId={currentUserId}
+                    onDelete={handleDeleteQuestion}
+                  />
                 ) : (
                   <TutorialCard {...item.data} />
                 )}

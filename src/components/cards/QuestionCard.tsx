@@ -1,10 +1,8 @@
-// PATH: src/components/cards/QuestionCard.tsx  (replace existing file)
-
 "use client";
 
 import Link from "next/link";
 import { useRef, useState, useMemo, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Share2, Trash2 } from "lucide-react";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import SubjectTag from "../ui/Tag";
@@ -15,6 +13,7 @@ import CreateAnswer from "../inputs/CreateCards/CreateAnswer";
 import CreateComment from "../inputs/CreateCards/CreateComment";
 import type { QuestionID, UserID } from "@/types/database";
 import { useRouter } from "next/navigation";
+import { usePrompt } from "@/contexts/PromptContext";
 
 export interface QuestionProps {
   question_id: QuestionID;
@@ -36,12 +35,15 @@ export interface QuestionProps {
   upvotes?: number;
   downvotes?: number;
   user_vote?: "up" | "down" | null;
+  onDelete?: (id: string) => void;
+  currentUserId?: string | null;
 }
 
 type ComposerTab = "answer" | "comment";
 
 export default function QuestionCard({
   question_id,
+  user_id,
   title,
   content,
   category,
@@ -59,6 +61,8 @@ export default function QuestionCard({
   user_vote = null,
   institution,
   degree_program,
+  onDelete,
+  currentUserId,
 }: QuestionProps) {
   const [composerTab, setComposerTab] = useState<ComposerTab>("answer");
   const [helpfulVote, setHelpfulVote] = useState<"up" | "down" | null>(
@@ -69,6 +73,7 @@ export default function QuestionCard({
   const [loading, setLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { showPrompt } = usePrompt();
 
   const router = useRouter();
   const answerTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -178,8 +183,6 @@ export default function QuestionCard({
       id={`question-card-${idStr}`}
     >
       <div className="p-3.5 px-5 flex flex-col gap-1.5">
-
-        {/* ── Row 1: UserMeta + tags (moved above title) ── */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <UserMeta
@@ -198,7 +201,6 @@ export default function QuestionCard({
             )}
           </div>
 
-          {/* Helpful + action menu sit on the same row as UserMeta */}
           <div className="shrink-0 flex items-center gap-1">
             <span className="hidden sm:inline text-xs text-gray-400 font-medium">
               Helpful?
@@ -231,11 +233,29 @@ export default function QuestionCard({
                 <span className="text-[10px] font-bold">{downCount}</span>
               )}
             </button>
-            <ActionMenu />
+            {currentUserId === user_id && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  showPrompt({
+                    title: "Delete Question?",
+                    description:
+                      "Are you sure you want to delete this question? This action cannot be undone.",
+                    type: "confirmation",
+                    icon: Trash2,
+                    onAccept: () => onDelete?.(idStr),
+                  });
+                }}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                title="Delete question"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ── Row 2: Title (now below UserMeta) ── */}
         <div className="flex-1 min-w-0">
           {mode === "full" ? (
             <h1 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-base sm:text-lg">
@@ -250,14 +270,12 @@ export default function QuestionCard({
           )}
         </div>
 
-        {/* ── Row 3: Body ── */}
         <p
           className={`text-gray-600 dark:text-gray-400 leading-relaxed ${mode === "full" ? "text-sm whitespace-pre-wrap" : "text-xs line-clamp-3"}`}
         >
           {content}
         </p>
 
-        {/* ── Row 4: Share ── */}
         <div className="flex justify-end pt-0.5">
           <button
             onClick={(e) => {
@@ -273,7 +291,6 @@ export default function QuestionCard({
         </div>
       </div>
 
-      {/* ── Featured answer (preview mode) ── */}
       {mode === "preview" && (
         <div className="px-3.5 pb-3.5">
           <div className="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
@@ -304,7 +321,6 @@ export default function QuestionCard({
         </div>
       )}
 
-      {/* ── Composer (answer / comment) ── */}
       {!isResolved && (
         <div className="px-3.5 pb-3.5">
           <div className="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
@@ -329,14 +345,18 @@ export default function QuestionCard({
               />
             </div>
 
-            <div style={{ display: composerTab === "answer" ? "block" : "none" }}>
+            <div
+              style={{ display: composerTab === "answer" ? "block" : "none" }}
+            >
               <CreateAnswer
                 questionId={idStr}
                 onSuccess={onAnswerPosted}
                 textareaRef={answerTextareaRef}
               />
             </div>
-            <div style={{ display: composerTab === "comment" ? "block" : "none" }}>
+            <div
+              style={{ display: composerTab === "comment" ? "block" : "none" }}
+            >
               <CreateComment
                 questionId={idStr}
                 onSuccess={onCommentPosted}

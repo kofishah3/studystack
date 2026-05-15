@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, CheckCircle } from "lucide-react";
 import { usePrompt } from "@/contexts/PromptContext";
 import VotePanel, { VoteType } from "../inputs/VotePanel";
 import UserMeta from "../ui/UserMeta";
@@ -19,6 +19,7 @@ export interface AnswerProps {
   content: string;
   media_urls: { type: "image" | "video"; url: string }[];
   is_accepted: boolean;
+  isTopAnswer?: boolean;
   created_at: string;
 
   author_name: string;
@@ -35,19 +36,13 @@ export interface AnswerProps {
   userVote: VoteType;
   hideComments?: boolean;
 
+  isQuestionAuthor?: boolean;
+  onAcceptAnswer?: (answerId: number) => Promise<void>;
+
   onReply?: (content: string, parentCommentId?: string) => Promise<void>;
   onDeleteComment?: (commentId: string) => Promise<void>;
   onDelete?: (answerId: number) => Promise<void>;
 }
-
-function getCredibilityStyles(score: number) {
-  if (score < 40)
-    return "bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800";
-  if (score < 70)
-    return "bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800";
-  return "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800";
-}
-
 
 export default function AnswerCard({
   answer_id,
@@ -55,6 +50,7 @@ export default function AnswerCard({
   content,
   media_urls = [],
   is_accepted,
+  isTopAnswer = false,
   created_at,
   author_name,
   author_profile_url,
@@ -64,18 +60,24 @@ export default function AnswerCard({
   comments = [],
   userVote,
   hideComments = false,
+  isQuestionAuthor = false,
+  onAcceptAnswer,
   onReply,
   onDeleteComment,
   onDelete,
   upvotes = 0,
   downvotes = 0,
 }: AnswerProps) {
-  const [resolved] = useState(is_accepted);
+  const [resolved, setResolved] = useState(is_accepted);
   const [isReplying, setIsReplying] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const { showPrompt } = usePrompt();
+
+  useEffect(() => {
+    setResolved(is_accepted);
+  }, [is_accepted]);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -100,16 +102,23 @@ export default function AnswerCard({
     });
   };
 
+  const handleAcceptClick = () => {
+    showPrompt({
+      title: "Mark as Resolved?",
+      description: "Are you sure you want to mark this answer as the resolved answer for your question?",
+      icon: CheckCircle,
+      type: "confirmation",
+      onAccept: async () => {
+        await onAcceptAnswer?.(answer_id as number);
+      },
+    });
+  }
+
   const builtReplies = buildCommentTree(comments);
   const replyCount = builtReplies.length;
   const idStr = answer_id ? answer_id.toString() : "";
 
-  const reliabilityLabel =
-    author_credibility_score < 40
-      ? "Low Reliability"
-      : author_credibility_score < 70
-        ? "Moderate Reliability"
-        : "High Reliability";
+  const isHighlighted = resolved || isTopAnswer;
 
   return (
     <div
@@ -119,7 +128,7 @@ export default function AnswerCard({
       <div
         id={`answer-card-${idStr}`}
         className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex gap-3 transition-colors ${
-          resolved
+          isHighlighted
             ? "border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-200 dark:ring-emerald-800"
             : "border-gray-200 dark:border-gray-700"
         }`}
@@ -153,21 +162,33 @@ export default function AnswerCard({
               />
 
               <div className="flex items-center gap-2 flex-wrap">
-                <div
-                  className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(author_credibility_score)}`}
-                >
-                  {reliabilityLabel} ({author_credibility_score}%)
-                </div>
+                {isTopAnswer && (
+                  <div className="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500 text-white uppercase tracking-wider shadow-sm">
+                    Top Answer
+                  </div>
+                )}
 
                 {resolved && (
                   <div className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    Resolved
+                    Accepted Answer
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="shrink-0 -mt-1 flex items-center gap-1" id={`answer-actions-${idStr}`}>
+            <div
+              className="shrink-0 -mt-1 flex items-center gap-1"
+              id={`answer-actions-${idStr}`}
+            >
+              {isQuestionAuthor && !resolved && onAcceptAnswer && (
+                 <button
+                  onClick={handleAcceptClick}
+                  className="p-1.5 rounded hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/30 text-gray-400 transition-colors"
+                  title="Mark as accepted answer"
+                >
+                  <CheckCircle size={18} />
+                </button>
+              )}
               {currentUserId === user_id && onDelete && (
                 <button
                   onClick={handleDeleteClick}

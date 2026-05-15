@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { asQuestionId } from "@/lib/db-brands";
 
 export async function GET(
-  req: Request,
+  req: import("next/server").NextRequest,
   { params }: { params: Promise<{ questionId: string }> },
 ) {
   try {
@@ -91,3 +91,31 @@ export async function GET(
     return errorToResponse(error);
   }
 }
+
+export const DELETE = (
+  req: import("next/server").NextRequest,
+  { params }: { params: Promise<{ questionId: string }> },
+) =>
+  import("@/lib/auth").then(({ withAuth }) =>
+    withAuth(async (authedReq: any, _ctx: any) => {
+      try {
+        const { questionId: rawId } = await params;
+        const questionId = asQuestionId(rawId);
+
+        const { getQuestionById, deleteQuestion } = await import("@/lib/queries/questions");
+        const { ForbiddenError, NotFoundError } = await import("@/lib/errors");
+
+        const question = await getQuestionById(questionId);
+        if (!question) throw new NotFoundError("Question not found");
+
+        if (question.user_id !== authedReq.userId) {
+          throw new ForbiddenError("Only the author can delete this question");
+        }
+
+        await deleteQuestion(questionId);
+        return NextResponse.json({ success: true });
+      } catch (error) {
+        return errorToResponse(error);
+      }
+    })(req, { params }),
+  );

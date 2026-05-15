@@ -11,21 +11,6 @@ import {
 } from "@/lib/db-brands";
 import { errorToResponse } from "@/lib/errors";
 
-/**
- * POST /api/interactions
- *
- * Body:
- *  {
- *    interaction_type: "react" | "rating",
- *    value: number,            // +1 upvote / -1 downvote / 0 to remove / rating 1-5
- *    target_type: "question" | "answer" | "comment" | "tutorial",
- *    target_id: string | number
- *  }
- *
- * Behaviour:
- *  - value === 0  → DELETE the existing interaction (toggle off)
- *  - otherwise    → UPSERT (the unique partial indexes ensure one per user per target)
- */
 export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
     const body = await req.json();
@@ -64,7 +49,6 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
     const tutorial_id =
       target_type === "tutorial" ? asTutorialId(String(target_id)) : null;
 
-    // Resolve the correctly-typed FK value for use in DELETE / UPSERT conflict clause
     const fkValue =
       target_type === "question"
         ? question_id
@@ -83,26 +67,36 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
             ? "comment_id"
             : "tutorial_id";
 
-    // value === 0 means the user is toggling their reaction off → delete
+    const targetTable = target_type === "tutorial" ? "tutorials" : target_type + "s";
+    const targetRow = await one<{ user_id: string }>(
+      `SELECT user_id FROM ${targetTable} WHERE ${fkColName} = $1`,
+      [fkValue]
+    );
+
+    if (targetRow && targetRow.user_id === req.userId) {
+      return NextResponse.json(
+        { error: `You cannot ${interaction_type === 'rating' ? 'rate' : 'interact with'} your own ${target_type}` },
+        { status: 403 }
+      );
+    }
+
     if (value === 0) {
       await q(
-        `DELETE FROM interactions WHERE user_id = $1 AND ${fkColName} = $2`,
-        [req.userId, fkValue], // use the cast value, not the raw string
+        `DELETE FROM interactions WHERE user_id = $1 AND ${fkColName} = $2 AND interaction_type = $3`,
+        [req.userId, fkValue, interaction_type],
       );
 
       return NextResponse.json({ success: true, removed: true });
     }
 
-    // UPSERT — ON CONFLICT DO UPDATE lets the user change their vote (e.g. up → down)
     const row = await one<InteractionRow>(
       `INSERT INTO interactions
          (user_id, interaction_type, value, question_id, answer_id, comment_id, tutorial_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (user_id, ${fkColName})
+       ON CONFLICT (user_id, ${fkColName}, interaction_type)
          WHERE ${fkColName} IS NOT NULL
        DO UPDATE SET
          value = EXCLUDED.value,
-         interaction_type = EXCLUDED.interaction_type,
          created_at = CURRENT_TIMESTAMP
        RETURNING *`,
       [
@@ -154,14 +148,12 @@ export const GET = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
             ? "comment_id"
             : "tutorial_id";
 
-    // Cast target_id to the correct type for the FK column
     const castTargetId =
       target_type === "answer" || target_type === "comment"
         ? Number(target_id)
         : target_id;
 
-    // Current user's vote on this target
-    const userRow = await one<InteractionRow>(
+    const userRows = await q<InteractionRow>(
       `SELECT * FROM interactions WHERE user_id = $1 AND ${fkCol} = $2`,
       [req.userId, castTargetId],
     );
@@ -183,7 +175,8 @@ export const GET = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
     );
 
     return NextResponse.json({
-      userInteraction: userRow ? rowToInteraction(userRow) : null,
+      userInteractions: userRows.map(rowToInteraction),
+      userInteraction: userRows[0] ? rowToInteraction(userRows[0]) : null,
       upvotes: Number(agg.upvotes),
       downvotes: Number(agg.downvotes),
       ratingCount: Number(agg.rating_count),

@@ -1,5 +1,6 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { asTutorialId } from "@/lib/db-brands";
+import { q } from "@/lib/db";
 import { errorToResponse, ForbiddenError, NotFoundError } from "@/lib/errors";
 import {
   getTutorialById,
@@ -7,9 +8,7 @@ import {
   softDeleteTutorial,
   updateTutorial,
 } from "@/lib/queries/tutorials";
-import {
-  listQuestionsForTutorialDetailed,
-} from "@/lib/queries/questions-tutorials";
+import { listQuestionsForTutorialDetailed } from "@/lib/queries/questions-tutorials";
 import { getQuestionByIdDetailed } from "@/lib/queries/questions";
 import { listCommentsForTutorialDetailed } from "@/lib/queries/comments";
 import {
@@ -39,22 +38,20 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
 
     const comments = await listCommentsForTutorialDetailed(id);
 
-    let userInteraction = null;
+    let userInteractions: any[] = [];
     const authHeader = _req.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
       try {
         const token = authHeader.slice(7);
-        const { one } = await import("@/lib/db");
         const jwt = await import("jsonwebtoken");
         const { JWT_SECRET } = await import("@/lib/auth");
         const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
-        
-        userInteraction = await one(
+
+        userInteractions = await q(
           `SELECT interaction_type, value FROM interactions WHERE user_id = $1 AND tutorial_id = $2`,
-          [payload.userId, id]
+          [payload.userId, id],
         );
-      } catch (e) {
-      }
+      } catch (e) {}
     }
 
     return NextResponse.json({
@@ -64,7 +61,8 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
         downvotes: Number(tutorial.downvotes || 0),
         linked_questions: questions,
         comments,
-        userInteraction,
+        userInteractions,
+        userInteraction: userInteractions[0] || null,
       },
     });
   } catch (error) {

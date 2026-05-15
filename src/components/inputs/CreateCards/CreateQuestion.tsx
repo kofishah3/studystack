@@ -19,7 +19,7 @@ export default function AskQuestionCard() {
   const [uploads, setUploads] = useState<UploadFile[]>([]);
   const [title, setTitle] = useState("");
   const [questionBody, setQuestionBody] = useState("");
-  const [category, setCategory] = useState("general");
+  const [category, setCategory] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState("");
 
@@ -86,7 +86,7 @@ export default function AskQuestionCard() {
 
     try {
       const token = localStorage.getItem("token");
-      
+
       const response = await fetch("/api/questions", {
         method: "POST",
         headers: {
@@ -95,7 +95,7 @@ export default function AskQuestionCard() {
         },
         body: JSON.stringify({
           title: title.trim(),
-          body: questionBody.trim() || null,
+          body: questionBody.trim() || "",
           category,
         }),
       });
@@ -110,7 +110,7 @@ export default function AskQuestionCard() {
       setQuestionBody("");
       setCategory("general");
       setUploads([]);
-      
+
       window.location.reload();
     } catch (err: any) {
       setError(err.message || "Failed to post question");
@@ -156,6 +156,13 @@ export default function AskQuestionCard() {
         rows={6}
         value={questionBody}
         onChange={(e) => setQuestionBody(e.target.value)}
+      />
+
+      <TextInput
+        name="category"
+        placeholder="Tags (e.g. React, Javascript, Python)..."
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
       />
 
       {uploads.length > 0 && (
