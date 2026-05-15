@@ -6,32 +6,33 @@ import UserMeta from "../ui/UserMeta";
 import CommentInput from "../inputs/CommentInput";
 import { Trash, Trash2 } from "lucide-react";
 import { usePrompt } from "@/contexts/PromptContext";
+import type { CommentID, UserID } from "@/types/database";
 
+// Mirrors the Comments table + author join columns returned by the API.
 export interface CommentData {
-  comment_id: number;
-  user_id: string;
-  author_name: string;
-  created_at: string;
+  comment_id: CommentID;
+  user_id: UserID;
   content: string;
-  author_profile_url?: string;
-  parent_comment_id?: number | null;
+  parent_comment_id: CommentID | null;
+  question_id?: string | null;
+  answer_id?: number | null;
+  created_at: string; // ISO string from JSON — Date on the DB side
+  // Join fields
+  author_name: string;
+  author_profile_url?: string | null;
+  // Tree
   replies?: CommentData[];
 }
 
-export interface CommentCardProps {
-  id: string;
-  authorId: string;
-  authorName: string;
-  createdAt: string;
-  body: string;
-  avatarUrl?: string;
-  replies?: CommentData[];
-  onReply?: (content: string, parentId: string) => Promise<void>;
+// CommentCardProps is a direct projection of CommentData plus UI callbacks.
+export interface CommentCardProps
+  extends Omit<CommentData, "question_id" | "answer_id"> {
+  onReply?: (content: string, parentCommentId: string) => Promise<void>;
   onDelete?: (commentId: string) => Promise<void>;
   depth?: number;
 }
 
-export function buildCommentTree(comments: any[]): CommentData[] {
+export function buildCommentTree(comments: CommentData[]): CommentData[] {
   const map = new Map<number, CommentData>();
   const roots: CommentData[] = [];
 
@@ -56,12 +57,12 @@ export function buildCommentTree(comments: any[]): CommentData[] {
 }
 
 export function CommentCard({
-  id,
-  authorId,
-  authorName,
-  createdAt,
-  body,
-  avatarUrl,
+  comment_id,
+  user_id,
+  author_name,
+  author_profile_url,
+  created_at,
+  content,
   replies = [],
   onReply,
   onDelete,
@@ -83,6 +84,8 @@ export function CommentCard({
     }
   }, []);
 
+  const idStr = comment_id.toString();
+
   const handleDeleteClick = () => {
     showPrompt({
       title: "Delete Comment?",
@@ -91,36 +94,34 @@ export function CommentCard({
       icon: Trash,
       type: "confirmation",
       onAccept: async () => {
-        if (onDelete) {
-          onDelete(id);
-        }
+        onDelete?.(idStr);
       },
     });
   };
 
   return (
     <div
-      id={`comment-card-container-${id}`}
+      id={`comment-card-container-${idStr}`}
       className="flex flex-col gap-0 w-full"
     >
       <div
-        id={`comment-card-${id}`}
+        id={`comment-card-${idStr}`}
         className="group flex gap-3 transition-colors bg-gray-50/50 dark:bg-gray-800/30 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50"
       >
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           <div className="flex items-start justify-between">
             <UserMeta
-              name={authorName}
-              createdAt={new Date(createdAt).toLocaleDateString("en-US", {
+              name={author_name}
+              createdAt={new Date(created_at).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
               })}
-              avatarUrl={avatarUrl}
+              avatarUrl={author_profile_url ?? undefined}
               size="sm"
             />
             <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-              {currentUserId === authorId && onDelete && (
+              {currentUserId === user_id && onDelete && (
                 <button
                   onClick={handleDeleteClick}
                   className="p-1.5 rounded hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 text-gray-400 transition-colors"
@@ -134,16 +135,16 @@ export function CommentCard({
           </div>
 
           <p
-            id={`comment-body-${id}`}
+            id={`comment-body-${idStr}`}
             className="leading-relaxed text-xs text-gray-500 dark:text-gray-400"
           >
-            {body}
+            {content}
           </p>
 
           <div className="flex items-center gap-3">
             {onReply && (
               <button
-                id={`comment-reply-btn-${id}`}
+                id={`comment-reply-btn-${idStr}`}
                 onClick={() => setIsReplying((v) => !v)}
                 className="text-[10px] font-bold text-gray-400 hover:text-primary-500 uppercase tracking-wider transition-colors"
               >
@@ -152,7 +153,7 @@ export function CommentCard({
             )}
             {replies.length > 0 && (
               <button
-                id={`comment-toggle-replies-btn-${id}`}
+                id={`comment-toggle-replies-btn-${idStr}`}
                 onClick={() => setShowReplies((v) => !v)}
                 className="text-[10px] font-semibold text-primary-500 hover:text-primary-600 transition-colors"
               >
@@ -167,14 +168,14 @@ export function CommentCard({
 
       {isReplying && onReply && (
         <div
-          id={`comment-reply-input-wrapper-${id}`}
+          id={`comment-reply-input-wrapper-${idStr}`}
           className="ml-8 mt-2 animate-in fade-in slide-in-from-top-1 duration-200"
         >
           <CommentInput
-            id={`comment-reply-input-${id}`}
-            placeholder={`Reply to ${authorName}...`}
+            id={`comment-reply-input-${idStr}`}
+            placeholder={`Reply to ${author_name}...`}
             onSubmit={async (content) => {
-              await onReply(content, id);
+              await onReply(content, idStr);
               setIsReplying(false);
             }}
           />
@@ -183,18 +184,13 @@ export function CommentCard({
 
       {showReplies && replies.length > 0 && (
         <div
-          id={`comment-replies-${id}`}
+          id={`comment-replies-${idStr}`}
           className="ml-6 mt-2 pl-3 border-l-2 border-gray-200 dark:border-gray-700 flex flex-col gap-2"
         >
           {replies.map((reply) => (
             <CommentCard
               key={reply.comment_id}
-              id={reply.comment_id.toString()}
-              authorId={reply.user_id}
-              authorName={reply.author_name}
-              createdAt={reply.created_at}
-              body={reply.content}
-              avatarUrl={reply.author_profile_url}
+              {...reply}
               replies={reply.replies ?? []}
               onReply={onReply}
               onDelete={onDelete}

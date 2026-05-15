@@ -1,3 +1,5 @@
+// PATH: src/lib/queries/answers.ts  (replace existing file)
+
 import { one, q } from "@/lib/db";
 import { asAnswerId, asQuestionId, asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
@@ -42,9 +44,11 @@ export async function insertAnswer(
   question_id: QuestionID,
   content: string,
 ): Promise<Answers> {
+  // FIX: explicitly pass media_urls so the column is always set;
+  // avoids any edge-case where the DB default doesn't fire (e.g. older pg drivers).
   const row = await one<AnswerRow>(
-    `INSERT INTO answers (user_id, question_id, content, is_accepted)
-     VALUES ($1, $2, $3, false)
+    `INSERT INTO answers (user_id, question_id, content, media_urls, is_accepted)
+     VALUES ($1, $2, $3, '[]'::jsonb, false)
      RETURNING *`,
     [user_id, question_id, content],
   );
@@ -64,15 +68,15 @@ export async function listAnswersByUser(
   user_id: UserID,
   limit: number,
   offset: number,
-): Promise<(Answers & { 
-    question_content: string; 
+): Promise<(Answers & {
+    question_content: string;
     question_title: string;
     question_author_name: string;
-    upvotes: number; 
-    downvotes: number; 
-    comment_count: number 
+    upvotes: number;
+    downvotes: number;
+    comment_count: number;
   })[]> {
-  const rows = await q<AnswerRow & { 
+  const rows = await q<AnswerRow & {
     question_content: string;
     question_title: string;
     question_author_name: string;
@@ -80,15 +84,18 @@ export async function listAnswersByUser(
     downvotes: string;
     comment_count: string;
   }>(
-    `SELECT a.*, q.content as question_content, q.title as question_title, u.user_name as question_author_name,
-        (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value > 0) as upvotes,
-        (SELECT COUNT(*) FROM interactions i WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value < 0) as downvotes,
+    `SELECT a.*, q.content as question_content, q.title as question_title,
+            u.user_name as question_author_name,
+        (SELECT COUNT(*) FROM interactions i
+           WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value > 0) as upvotes,
+        (SELECT COUNT(*) FROM interactions i
+           WHERE i.answer_id = a.answer_id AND i.interaction_type = 'react' AND i.value < 0) as downvotes,
         (SELECT COUNT(*) FROM comments c WHERE c.answer_id = a.answer_id) as comment_count
      FROM answers a
      JOIN questions q ON a.question_id = q.question_id
      JOIN users u ON q.user_id = u.user_id
-     WHERE a.user_id = $3 
-     ORDER BY a.created_at DESC 
+     WHERE a.user_id = $3
+     ORDER BY a.created_at DESC
      LIMIT $1 OFFSET $2`,
     [Math.min(Math.max(limit, 1), 100), Math.max(offset, 0), user_id],
   );
@@ -107,11 +114,15 @@ export async function listAnswersForQuestionDetailed(
   qid: QuestionID,
 ): Promise<any[]> {
   const rows = await q<any>(
-    `SELECT a.*, u.user_name as author_name, u.institution as author_institution, u.profile_url as author_profile_url, u.credibility_score as author_credibility_score
+    `SELECT a.*,
+            u.user_name             as author_name,
+            u.institution           as author_institution,
+            u.profile_url           as author_profile_url,
+            u.credibility_score     as author_credibility_score
      FROM answers a
      JOIN users u ON a.user_id = u.user_id
-     WHERE a.question_id = $1 
-     ORDER BY a.created_at ASC`,
+     WHERE a.question_id = $1
+     ORDER BY a.is_accepted DESC, a.created_at ASC`,
     [qid],
   );
   return rows;
