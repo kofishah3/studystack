@@ -11,18 +11,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      user_name,
+      user_name: initial_user_name,
       email,
       password,
       age,
       gender,
-      institution,
-      education_level,
+      institution: initial_institution,
+      education_level: initial_education_level,
       profile_url
     } = body;
 
-    if (!user_name || !email || !password || !institution || !education_level) {
-      throw new ValidationError("Required fields are missing");
+    if (!email || !password) {
+      throw new ValidationError("Email and password are required");
     }
 
     const existingEmail = await getUserByEmail(email);
@@ -30,9 +30,24 @@ export async function POST(request: NextRequest) {
       throw new ConflictError("Email already registered");
     }
 
-    const existingUsername = await getUserByUsername(user_name);
-    if (existingUsername) {
-      throw new ConflictError("Username already taken");
+    let user_name = initial_user_name;
+    if (!user_name) {
+      const emailPrefix = email
+        .split("@")[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      user_name = `${emailPrefix}${randomSuffix}`;
+
+      const existingUsername = await getUserByUsername(user_name);
+      if (existingUsername) {
+        user_name = `${emailPrefix}${randomSuffix}${Math.floor(Math.random() * 100)}`;
+      }
+    } else {
+      const existingUsername = await getUserByUsername(user_name);
+      if (existingUsername) {
+        throw new ConflictError("Username already taken");
+      }
     }
 
     const password_hash = await hashPassword(password);
@@ -43,8 +58,8 @@ export async function POST(request: NextRequest) {
       password_hash,
       age: age ? parseInt(age) : null,
       gender: gender || null,
-      institution,
-      education_level,
+      institution: initial_institution || "Pending...",
+      education_level: (initial_education_level as any) || "other",
       profile_url: profile_url || null,        
       credibility_score: 0
     });

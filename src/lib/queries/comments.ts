@@ -104,3 +104,54 @@ export async function insertComment(
   if (!row) throw new DatabaseError("insertComment: no row returned");
   return mapComment(row);
 }
+export async function listCommentsForQuestionDetailed(
+  qid: QuestionID,
+): Promise<any[]> {
+  const rows = await q<any>(
+    `SELECT c.*, u.user_name as author_name, u.profile_url as author_profile_url
+     FROM comments c
+     JOIN users u ON c.user_id = u.user_id
+     WHERE c.question_id = $1 
+     ORDER BY c.created_at ASC`,
+    [qid],
+  );
+  return rows;
+}
+
+export async function listCommentsForAnswerDetailed(
+  aid: AnswerID,
+): Promise<any[]> {
+  const rows = await q<any>(
+    `SELECT c.*, u.user_name as author_name, u.profile_url as author_profile_url
+     FROM comments c
+     JOIN users u ON c.user_id = u.user_id
+     WHERE c.answer_id = $1 
+     ORDER BY c.created_at ASC`,
+    [aid],
+  );
+  return rows;
+}
+export async function listCommentsForTutorialDetailed(
+  tid: TutorialID,
+): Promise<any[]> {
+  const rows = await q<any>(
+    `SELECT c.*, u.user_name as author_name, u.profile_url as author_profile_url
+     FROM comments c
+     JOIN users u ON c.user_id = u.user_id
+     WHERE c.tutorial_id = $1 
+     ORDER BY c.created_at ASC`,
+    [tid],
+  );
+  return rows;
+}
+
+export async function deleteComment(
+  id: CommentID,
+  userId: string,
+): Promise<boolean> {
+  const row = await one<{ comment_id: number }>(
+    "DELETE FROM comments WHERE comment_id = $1 AND user_id = $2 RETURNING comment_id",
+    [id, userId],
+  );
+  return !!row;
+}

@@ -1,42 +1,70 @@
+import Link from "next/link";
+
 type UserMetaProps = {
-    name: string;
-    createdAt: string;
-    updatedAt?: string;
-    avatarUrl?: string;
+  name: string;
+  createdAt: string;
+  updatedAt?: string;
+  avatarUrl?: string;
+  size?: "sm" | "md" | "lg";
 };
 
 export default function UserMeta({
-    name, 
-    createdAt,
-    updatedAt,
-    avatarUrl,
+  name,
+  createdAt,
+  updatedAt,
+  avatarUrl,
+  size = "md",
 }: UserMetaProps) {
-    return (
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-            {avatarUrl ? (
-                <img
-                    src={avatarUrl}
-                    alt={name}
-                    className="w-7 h-7 rounded-full object-cover"
-                />
-            ) : (
-                <div className="w-7 h-7 rounded-full bg-gray-300 dark:bg-gray-700" />
-            )}
+  const sizeClasses = {
+    sm: {
+      avatar: "w-6 h-6",
+      text: "text-xs",
+      gap: "gap-1.5",
+    },
+    md: {
+      avatar: "w-7 h-7",
+      text: "text-xs",
+      gap: "gap-2",
+    },
+    lg: {
+      avatar: "w-9 h-9",
+      text: "text-sm",
+      gap: "gap-2.5",
+    },
+  };
 
-            <div className="flex items-enter gap-1 flex-wrap">
-                <span
-                    className="font-medium">
-                    {name}
-                </span>
+  const currentSize = sizeClasses[size];
 
-                <span>•</span>
+  return (
+    <div
+      className={`flex items-center ${currentSize.gap} ${currentSize.text} text-gray-500`}
+    >
+      <Link href={`/${name}`} className="hover:opacity-80 transition-opacity shrink-0">
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={name}
+            className={`${currentSize.avatar} rounded-full object-cover`}
+          />
+        ) : (
+          <div
+            className={`${currentSize.avatar} rounded-full bg-gray-300 dark:bg-gray-700`}
+          />
+        )}
+      </Link>
 
-                <span>
-                    {updatedAt
-                        ? `edited ${updatedAt}`
-                        : createdAt}
-                </span>
-            </div>
-        </div>
-    );
+      <div className="flex items-center gap-1 flex-wrap">
+        <Link
+          href={`/${name}`}
+          className="font-semibold text-text hover:text-primary-500 transition-colors cursor-pointer"
+        >
+          {name}
+        </Link>
+
+        <span>•</span>
+
+        <span>{updatedAt ? `edited ${updatedAt}` : createdAt}</span>
+      </div>
+    </div>
+  );
 }

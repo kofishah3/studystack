@@ -22,8 +22,10 @@ export async function GET(request: NextRequest) {
     const page = Math.max(parseInt(sp.get("page") || "1"), 1);
     const limit = Math.min(Math.max(parseInt(sp.get("limit") || "20"), 1), 100);
     const offset = (page - 1) * limit;
+    const category = sp.get("category") || undefined;
+    const search = sp.get("search") || undefined;
 
-    const tutorials = await listTutorialsDetailed(limit, offset);
+    const tutorials = await listTutorialsDetailed(limit, offset, category, search);
 
     const detailedTutorials = await Promise.all(
       tutorials.map(async (t) => {

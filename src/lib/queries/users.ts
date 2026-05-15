@@ -1,4 +1,4 @@
-import { one } from "@/lib/db";
+import { one, q } from "@/lib/db";
 import { asUserId } from "@/lib/db-brands";
 import { DatabaseError } from "@/lib/errors";
 import type { User, UserID } from "@/types/database";
@@ -26,9 +26,10 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 export async function getUserByUsername(
   user_name: string,
 ): Promise<User | null> {
-  const row = await one<UserRow>("SELECT * FROM users WHERE user_name = $1", [
-    user_name,
-  ]);
+  const row = await one<UserRow>(
+    "SELECT * FROM users WHERE LOWER(user_name) = LOWER($1)",
+    [user_name],
+  );
   return row ? mapUser(row) : null;
 }
 
@@ -54,6 +55,28 @@ export async function insertUser(
   return mapUser(row);
 }
 
+export async function updateUser(
+  id: UserID,
+  input: Partial<
+    Omit<User, "user_id" | "created_at" | "password_hash" | "email">
+  >,
+): Promise<User | null> {
+  const fields = Object.keys(input);
+  if (fields.length === 0) return getUserById(id);
+
+  const setClause = fields
+    .map((field, index) => `${field} = $${index + 2}`)
+    .join(", ");
+  const values = fields.map((field) => (input as any)[field]);
+
+  const row = await one<UserRow>(
+    `UPDATE users SET ${setClause} WHERE user_id = $1 RETURNING *`,
+    [id, ...values],
+  );
+
+  return row ? mapUser(row) : null;
+}
+
 export type Metrics = {
   questions: number;
   answers: number;
@@ -64,7 +87,7 @@ export type Metrics = {
 
 export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
   const questions_row = await one<{ count: string }>(
-    "SELECT COUNT(*) as count FROM answers WHERE user_id = $1",
+    "SELECT COUNT(*) as count FROM questions WHERE user_id = $1",
     [user_id],
   );
 
@@ -73,11 +96,75 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
     [user_id],
   );
 
+  const likes_row = await one<{ count: string }>(
+    `SELECT COUNT(*) as count FROM interactions i
+     WHERE i.interaction_type = 'react' AND i.value > 0 AND (
+       i.question_id IN (SELECT question_id FROM questions WHERE user_id = $1) OR
+       i.answer_id IN (SELECT answer_id FROM answers WHERE user_id = $1) OR
+       i.tutorial_id IN (SELECT tutorial_id FROM tutorials WHERE user_id = $1)
+     )`,
+    [user_id],
+  );
+
+  const user = await getUserById(user_id);
+  const questionsCount = Number(questions_row?.count || 0);
+  const answersCount = Number(answers_row?.count || 0);
+  const likesCount = Number(likes_row?.count || 0);
+  const rating = user?.credibility_score || 0;
+
+  const engagement = Math.min(
+    100,
+    Math.round((questionsCount * 3 + answersCount * 5 + likesCount) / 2),
+  );
+
   return {
-    questions: Number(questions_row?.count || 0),
-    answers: Number(answers_row?.count || 0),
-    likes: 0,
-    rating: 0,
-    engagement: 0,
+    questions: questionsCount,
+    answers: answersCount,
+    likes: likesCount,
+    rating,
+    engagement,
   };
+}
+
+export async function getTopContributorsThisWeek(limit: number = 5) {
+  const rows = await q<UserRow & { engagement: string }>(
+    `SELECT u.*,
+      (
+        (SELECT COUNT(*) FROM questions q WHERE q.user_id = u.user_id AND q.created_at >= NOW() - INTERVAL '7 days') * 3 +
+        (SELECT COUNT(*) FROM answers a WHERE a.user_id = u.user_id AND a.created_at >= NOW() - INTERVAL '7 days') * 5
+      ) as engagement
+     FROM users u
+     ORDER BY engagement DESC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return rows.map((r) => {
+    const user = mapUser(r);
+    return { ...user, engagement: Number(r.engagement) };
+  });
+}
+
+export async function getHeatmapData(userId: string, days: number = 90) {
+  const rows = await q<{ date: string; count: string }>(
+    `
+    WITH dates AS (
+      SELECT generate_series(CURRENT_DATE - $2::interval, CURRENT_DATE, '1 day'::interval)::date as date
+    ),
+    activity AS (
+      SELECT DATE(created_at) as date, 1 as count FROM questions WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      UNION ALL
+      SELECT DATE(created_at) as date, 1 as count FROM answers WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+      UNION ALL
+      SELECT DATE(created_at) as date, 1 as count FROM comments WHERE user_id = $1 AND created_at >= CURRENT_DATE - $2::interval
+    )
+    SELECT d.date::text, COALESCE(SUM(a.count), 0) as count
+    FROM dates d
+    LEFT JOIN activity a ON d.date = a.date
+    GROUP BY d.date
+    ORDER BY d.date ASC
+    `,
+    [userId, `${days - 1} days`],
+  );
+  return rows.map((r) => ({ date: r.date, count: Number(r.count) }));
 }

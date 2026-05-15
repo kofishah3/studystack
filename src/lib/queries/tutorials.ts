@@ -152,7 +152,41 @@ export async function hardDeleteExpiredTutorials(
   );
   return rows.length;
 }
+
 export async function listTutorialsDetailed(
+  limit: number,
+  offset: number,
+  category?: string,
+  search?: string,
+): Promise<any[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const safeOffset = Math.max(offset, 0);
+
+  let query = "SELECT * FROM tutorial_stats WHERE 1=1";
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (category && category !== "All") {
+    query += ` AND category ILIKE $${paramIndex}`;
+    params.push(`%${category}%`);
+    paramIndex++;
+  }
+
+  if (search && search.trim()) {
+    query += ` AND (title ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`;
+    params.push(`%${search.trim()}%`);
+    paramIndex++;
+  }
+
+  query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  params.push(safeLimit, safeOffset);
+
+  const rows = await q<any>(query, params);
+  return rows;
+}
+
+export async function listTutorialsByUserDetailed(
+  userId: UserID,
   limit: number,
   offset: number,
 ): Promise<any[]> {
@@ -160,8 +194,8 @@ export async function listTutorialsDetailed(
   const safeOffset = Math.max(offset, 0);
 
   const rows = await q<any>(
-    "SELECT * FROM tutorial_stats ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-    [safeLimit, safeOffset],
+    "SELECT * FROM tutorial_stats WHERE user_id = $3 ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [safeLimit, safeOffset, userId],
   );
   return rows;
 }

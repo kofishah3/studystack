@@ -69,16 +69,22 @@ export async function questionsForTutorial(
 }
 export async function listQuestionsForTutorialDetailed(
   tid: TutorialID,
-): Promise<{ question_id: QuestionID; title: string }[]> {
-  const rows = await q<{ question_id: string; title: string }>(
-    `SELECT q.question_id, q.title 
+): Promise<{ question_id: QuestionID; title: string; author_name: string }[]> {
+  const rows = await q<{
+    question_id: string;
+    title: string;
+    author_name: string;
+  }>(
+    `SELECT q.question_id, q.title, u.user_name as author_name
      FROM questions_tutorials qt
      JOIN questions q ON q.question_id = qt.question_id
+     JOIN users u ON u.user_id = q.user_id
      WHERE qt.tutorial_id = $1`,
     [tid],
   );
   return rows.map((r) => ({
     question_id: asQuestionId(r.question_id),
     title: r.title,
+    author_name: r.author_name,
   }));
 }

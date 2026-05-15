@@ -80,7 +80,9 @@ function CreateTutorialForm() {
         <p className="text-sm text-muted-foreground">
           Tutorial editor form goes here. On submit, POST /api/tutorial with
           the title, content, optional embedded_video_url, and{" "}
-          <code>question_ids: [&quot;{questionId}&quot;]</code>.
+          <code>question_ids: [&quot;{questionId}&quot;]</code>. For video,
+          prefer an embedded YouTube/Vimeo/Loom link over a file upload —
+          uploaded video files are capped at 50 MB.
         </p>
       )}
     </div>

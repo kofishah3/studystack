@@ -2,6 +2,7 @@
 
 import FullButton from "@/components/inputs/FullButton";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,10 +18,7 @@ export default function SignupPage() {
     setIsLoading(true);
     setError("");
 
-    const user_name = formData.get("user_name") as string;
     const email = formData.get("email") as string;
-    const institution = formData.get("institution") as string;
-    const education_level = formData.get("education_level") as string;
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
 
@@ -32,19 +30,14 @@ export default function SignupPage() {
 
     try {
       const res = await axios.post("/api/auth/signup", {
-        user_name,
         email,
         password,
-        age: null,
-        gender: null,
-        institution,
-        education_level,
       });
 
       if (res.data.success) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
-        router.push("/home");
+        router.push("/onboarding");
       }
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to create account");
@@ -54,81 +47,116 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-sm py-12">
-      <h1 className="text-2xl font-sora font-bold mb-6">Create an account</h1>
-      <form
-        id="form-container"
-        action={handleSignup}
-        className="w-full max-w-lg p-8 bg-surface rounded-xl border border-border shadow-sm flex flex-col gap-5"
+    <div className="flex min-h-screen bg-background text-sm">
+      <div
+        id="signup-page-layout"
+        className="flex w-full min-h-screen"
       >
-        {error && (
-          <div className="p-3 bg-red-100 text-red-600 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-        <div id="input-fields" className="flex flex-col gap-3">
-          <TextInputwLabel
-            label="Email:"
-            name="email"
-            placeholder="sampleemail@domain.com"
-            type="email"
-          />
-          <TextInputwLabel
-            label="Username:"
-            name="user_name"
-            placeholder="johndoe123"
-            type="text"
-          />
-          <div id="education-field-container" className="flex flex-row gap-3">
-            <div className="w-3/5">
-              <TextInputwLabel
-                label="Institution:"
-                name="institution"
-                placeholder="UP Cebu"
-                type="text"
-              />
-            </div>
-            <div className="w-2/5 flex flex-col gap-1">
-              <p className="font-medium text-text">Education Level:</p>
-              <div className="group w-full h-fit p-1 border border-border rounded-xl bg-surface/50 transition-all duration-200">
-                <select
-                  name="education_level"
-                  className="w-full bg-transparent outline-none border-none text-text rounded-lg p-2 cursor-pointer"
-                >
-                  <option value="high_school">High School</option>
-                  <option value="bachelor">Bachelor</option>
-                  <option value="master">Master</option>
-                  <option value="doctorate">Doctorate</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <TextInputwLabel
-            label="Password:"
-            name="password"
-            placeholder="Enter your password"
-            type="password"
-          />
-          <TextInputwLabel
-            label="Confirm Password:"
-            name="confirmPassword"
-            placeholder="Re-enter your password"
-            type="password"
-          />
+        <div
+          id="leftside-graphic-container"
+          className="hidden lg:block lg:w-1/2 bg-white h-screen sticky top-0"
+        >
         </div>
 
-        <FullButton
-          label={isLoading ? "Creating Account..." : "Create Account"}
-          type="submit"
-        ></FullButton>
-      </form>
-      <p className="mt-4 text-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="text-secondary-500 hover:underline">
-          Login
-        </Link>
-      </p>
+        <div
+          id="signup-form-container"
+          className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-16 overflow-y-auto"
+        >
+          <div id="signup-content-wrapper" className="w-full max-w-md my-auto">
+            <div id="signup-header" className="mb-10 text-center lg:text-left">
+              <h1 id="signup-title" className="text-3xl font-sora font-bold text-text mb-2">
+                Create Account
+              </h1>
+              <p id="signup-subtitle" className="text-muted text-sm">
+                Join your very own learning community!
+              </p>
+            </div>
+
+            <form
+              id="signup-form-element"
+              action={handleSignup}
+              className="flex flex-col gap-5"
+            >
+              {error && (
+                <div id="signup-error-message" className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-center animate-shake">
+                  {error}
+                </div>
+              )}
+
+              <div id="signup-input-fields" className="flex flex-col gap-4">
+                <TextInputwLabel
+                  id="signup-email-input"
+                  label="Email"
+                  name="email"
+                  placeholder="name@company.com"
+                  type="email"
+                />
+
+                <TextInputwLabel
+                  id="signup-password-input"
+                  label="Password"
+                  name="password"
+                  placeholder="••••••••"
+                  type="password"
+                />
+                
+                <TextInputwLabel
+                  id="signup-confirm-password-input"
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  type="password"
+                />
+              </div>
+
+              <FullButton
+                id="signup-submit-button"
+                label="Create Account"
+                type="submit"
+                isLoading={isLoading}
+              />
+
+              <div id="signup-divider" className="relative my-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted">
+                    Or sign up with
+                  </span>
+                </div>
+              </div>
+
+              <div id="signup-social-auth" className="flex flex-col gap-4">
+                <GoogleAuthButton id="signup-google-button" />
+              </div>
+
+              <p id="signup-terms" className="text-xs text-muted text-center px-4">
+                By signing up, you agree to our{" "}
+                <Link href="#" className="text-primary-500 underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="#" className="text-primary-500 underline">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </form>
+
+            <p id="signup-footer" className="mt-8 text-center text-muted">
+              Already have an account?{" "}
+              <Link
+                id="signup-login-link"
+                href="/login"
+                className="text-primary-500 font-semibold hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

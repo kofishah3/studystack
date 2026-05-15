@@ -6,6 +6,7 @@ import {
   DEFAULT_URL_TTL_SECONDS,
   type StorageDriver,
 } from "@/lib/storage";
+import { DatabaseError } from "@/lib/errors";
 
 function bucket() {
   return getSupabaseServiceClient().storage.from(SUPABASE_STORAGE_BUCKET);
@@ -17,7 +18,7 @@ export const supabaseStorage: StorageDriver = {
       contentType: mimeType,
       upsert: false,
     });
-    if (error) throw new Error(`supabase upload failed: ${error.message}`);
+    if (error) throw new DatabaseError(`supabase upload failed: ${error.message}`);
     return key;
   },
 
@@ -31,7 +32,7 @@ export const supabaseStorage: StorageDriver = {
         ...(contentLength !== undefined ? { duplex: "half" } : {}),
       } as Parameters<ReturnType<typeof bucket>["upload"]>[2],
     );
-    if (error) throw new Error(`supabase upload failed: ${error.message}`);
+    if (error) throw new DatabaseError(`supabase upload failed: ${error.message}`);
     return key;
   },
 
@@ -39,7 +40,7 @@ export const supabaseStorage: StorageDriver = {
     const expiresIn = opts?.expiresIn ?? DEFAULT_URL_TTL_SECONDS;
     const { data, error } = await bucket().createSignedUrl(key, expiresIn);
     if (error || !data?.signedUrl) {
-      throw new Error(
+      throw new DatabaseError(
         `supabase signed url failed: ${error?.message ?? "no url returned"}`,
       );
     }
@@ -49,7 +50,7 @@ export const supabaseStorage: StorageDriver = {
   async delete(key) {
     const { error } = await bucket().remove([key]);
     if (error && !/not.*found/i.test(error.message)) {
-      throw new Error(`supabase delete failed: ${error.message}`);
+      throw new DatabaseError(`supabase delete failed: ${error.message}`);
     }
   },
 };
