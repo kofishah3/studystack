@@ -5,8 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, AlertCircle, MessageSquare } from "lucide-react";
 
-import Sidebar from "@/components/navigation/Sidebar";
-import TopNavBar from "@/components/navigation/TopNavigationBar";
 import QuestionCard from "@/components/cards/QuestionCard";
 import AnswerCard, { type AnswerProps } from "@/components/cards/AnswerCard";
 import {
@@ -137,45 +135,26 @@ export default function QuestionDetailPage() {
 
   if (loading)
     return (
-      <div className="flex flex-col h-screen bg-background">
-        <TopNavBar />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700" />
-          </div>
-        </div>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700" />
       </div>
     );
 
   if (error || !data)
     return (
-      <div className="flex flex-col h-screen bg-background">
-        <TopNavBar />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <div className="flex-1 flex flex-col items-center justify-center gap-4">
-            <AlertCircle size={48} className="text-red-500" />
-            <h2 className="text-xl font-bold">
-              {error || "Question not found"}
-            </h2>
-            <Link
-              href="/questions"
-              className="text-primary-700 hover:underline"
-            >
-              Back to List
-            </Link>
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <AlertCircle size={48} className="text-red-500" />
+        <h2 className="text-xl font-bold">
+          {error || "Question not found"}
+        </h2>
+        <Link href="/questions" className="text-primary-700 hover:underline">
+          Back to List
+        </Link>
       </div>
     );
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-      <TopNavBar />
-      <div className="flex flex-row flex-1 w-full overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 py-6 px-4 sm:px-8 overflow-y-auto">
+    <main className="flex-1 py-6 px-4 sm:px-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <button
@@ -267,8 +246,6 @@ export default function QuestionDetailPage() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }
