@@ -39,7 +39,7 @@ export default function UserMeta({
     <div
       className={`flex items-center ${currentSize.gap} ${currentSize.text} text-gray-500`}
     >
-      <Link href={`/${name}`} className="hover:opacity-80 transition-opacity">
+      <Link href={`/${name}`} className="hover:opacity-80 transition-opacity shrink-0">
         {avatarUrl ? (
           <img
             src={avatarUrl}

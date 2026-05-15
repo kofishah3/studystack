@@ -35,7 +35,7 @@ export const ALLOWED_VIDEO_HOSTS = [
 ] as const;
 
 export const MAX_MATERIAL_BYTES = 10 * 1024 * 1024;
-export const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 export const createTutorialSchema = z.object({
   title: z.string().min(1).max(255),

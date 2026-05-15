@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { DatabaseError } from "@/lib/errors";
 
 let cachedClient: SupabaseClient | null = null;
 
@@ -9,7 +10,7 @@ export function getSupabaseServiceClient(): SupabaseClient {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceRoleKey) {
-    throw new Error(
+    throw new DatabaseError(
       "Supabase service client requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
     );
   }

@@ -6,7 +6,7 @@ export default function SkeletonCard() {
   return (
     <div
       className="
-      w-full max-w-7xl mx-auto p-3.5
+      w-full p-3.5
       bg-white dark:bg-gray-900 
       border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm
       animate-pulse"
@@ -65,7 +65,9 @@ export function SkeletonList({ count = 3 }: { count?: number }) {
 
 export function MetricSkeleton({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex flex-row items-center p-4 rounded-2xl flex-1 border border-border bg-surface/40 animate-pulse ${className}`}>
+    <div
+      className={`flex flex-row items-center p-4 rounded-2xl flex-1 border border-border bg-surface/40 animate-pulse ${className}`}
+    >
       <div className="flex flex-row items-center gap-4 w-full">
         <div className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 w-10 h-10 animate-shimmer" />
         <div className="flex flex-col gap-1.5 flex-1">

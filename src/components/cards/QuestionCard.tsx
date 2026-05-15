@@ -110,19 +110,90 @@ export default function QuestionCard({
   return (
     <div
       className={`
-        w-full max-w-7xl mx-auto
-        bg-white dark:bg-gray-900
-        border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm
-        ${mode === "preview" ? "hover:shadow-md transition-shadow" : ""}
-        flex flex-col overflow-hidden
-      `}
+      w-full p-3.5 px-5
+      bg-white dark:bg-gray-900 
+      border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm 
+      ${mode === "preview" ? "hover:shadow-md transition-shadow" : ""}
+    `}
       id={`question-card-${id}`}
     >
-      {/* ── Section 1: Question ─────────────────────────────────────────────── */}
-      <div className="p-3.5">
-        <div className="flex gap-3 sm:gap-4">
-          {/* Demand badge */}
-          <div className="shrink-0 flex flex-col items-center self-stretch">
+      <div className="flex gap-4">
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={`/questions/${id}`}
+              className="group flex-1"
+              id={`question-link-${id}`}
+            >
+              <h2
+                className={`font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight transition-colors ${
+                  mode === "full"
+                    ? "text-lg leading-tight"
+                    : "text-md group-hover:text-primary-700"
+                }`}
+              >
+                {questionTitle}
+              </h2>
+            </Link>
+
+            {mode === "preview" && (
+              <div className="hidden sm:block w-fit">
+                <FullButton
+                  id={`create-tutorial-btn-top-${id}`}
+                  label="Create Tutorial"
+                  className="py-1.5 px-4 text-xs"
+                  variant="secondary"
+                />
+              </div>
+            )}
+
+            {mode === "full" && (
+              <div className="shrink-0 -mt-1 -mr-1" id="question-actions-menu">
+                <ActionMenu />
+              </div>
+            )}
+          </div>
+
+          <div
+            className="flex flex-wrap items-center gap-2"
+            id={`question-meta-${id}`}
+          >
+            <UserMeta
+              name={author}
+              createdAt={
+                mode === "full"
+                  ? new Date(createdAt).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : createdAt
+              }
+              updatedAt={updatedAt}
+              avatarUrl={profileURL}
+            />
+            <span className="hidden sm:inline text-gray-300 dark:text-gray-700 text-xs">
+              |
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <SubjectTag key={tag} label={tag} />
+              ))}
+            </div>
+          </div>
+
+          <p
+            className={`text-gray-600 dark:text-gray-400 leading-relaxed ${
+              mode === "full"
+                ? "text-sm whitespace-pre-wrap"
+                : "text-xs line-clamp-2"
+            }`}
+            id={`question-body-${id}`}
+          >
+            {body}
+          </p>
+
+          {mode === "preview" && firstAnswer && (
             <div
               className={`flex flex-col items-center justify-center w-10 sm:w-14 h-full rounded-lg border text-center font-bold ${demandColor}`}
             >

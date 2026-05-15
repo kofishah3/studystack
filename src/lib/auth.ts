@@ -9,7 +9,7 @@ export const JWT_SECRET =
 const SALT_ROUNDS = 10;
 
 export type AuthedRequest = NextRequest & { userId: UserID };
-type RouteHandler = (req: AuthedRequest) => Promise<NextResponse>;
+type RouteHandler<T = unknown> = (req: AuthedRequest, context: T) => Promise<NextResponse>;
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);
@@ -26,8 +26,8 @@ export function generateToken(userId: UserID): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
 }
 
-export function withAuth(handler: RouteHandler) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+export function withAuth<T>(handler: RouteHandler<T>) {
+  return async (req: NextRequest, context: T): Promise<NextResponse> => {
     const authHeader = req.headers.get("authorization");
 
     if (!authHeader?.startsWith("Bearer ")) {
@@ -39,7 +39,7 @@ export function withAuth(handler: RouteHandler) {
     try {
       const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
       (req as AuthedRequest).userId = payload.userId as UserID;
-      return handler(req as AuthedRequest);
+      return handler(req as AuthedRequest, context);
     } catch {
       return errorToResponse(new AuthError("Invalid token"));
     }

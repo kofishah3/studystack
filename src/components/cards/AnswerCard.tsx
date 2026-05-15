@@ -5,9 +5,9 @@ import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight, X, ZoomIn } from "luci
 import VotePanel, { VoteType } from "../inputs/VotePanel";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
-import { CommentCard, type CommentCardProps } from "./CommentCard";
-import CreateComment from "../inputs/CreateCards/CreateComment";
-import TextButton from "../inputs/textbutton";
+import CommentInput from "../inputs/CommentInput";
+import { CommentCard, type CommentData, buildCommentTree } from "./CommentCard";
+import { CornerDownRight } from "lucide-react";
 
 export interface AnswerProps {
   id: string;
@@ -29,10 +29,14 @@ export interface AnswerProps {
   /** When true, aligns the Comments button to the right (used in individual question page) */
   commentsOnRight?: boolean;
 
+  replies?: CommentData[];
+
   onVoteUp?: (id: string) => void;
   onVoteDown?: (id: string) => void;
   onResolved?: (id: string) => void;
-  onHelpful?: (id: string, value: 1 | -1) => void;
+  onHelpful?: (id: string) => void;
+  onReply?: (content: string, parentId?: string) => Promise<void>;
+  onDeleteComment?: (commentId: string) => Promise<void>;
 }
 
 function getCredibilityStyles(score: number) {
@@ -256,22 +260,20 @@ export default function AnswerCard({
   totalDownVotes,
   isResolved,
   userVote,
-  comments = [],
-  questionId,
-  hideComments = false,
-  commentsOnRight = false,
-  onHelpful,
-}: AnswerProps) {
-  const [upVotes] = useState(totalUpVotes);
-  const [downVotes] = useState(totalDownVotes);
-  const [resolved] = useState(isResolved);
-  const [showComments, setShowComments] = useState(false);
-  const [localComments, setLocalComments] =
-    useState<CommentCardProps[]>(comments);
 
-  const [helpfulVote, setHelpfulVote] = useState<"up" | "down" | null>(null);
-  const helpfulScore =
-    helpfulVote === "up" ? 1 : helpfulVote === "down" ? -1 : 0;
+  replies = [],
+
+  onReply,
+  onDeleteComment,
+}: AnswerProps) {
+  const [upVotes, setUpVotes] = useState(totalUpVotes);
+  const [downVotes, setDownVotes] = useState(totalDownVotes);
+  const [resolved, setResolved] = useState(isResolved);
+  const [isReplying, setIsReplying] = useState(false);
+  const [showReplies, setShowReplies] = useState(true);
+
+  const builtReplies = buildCommentTree(replies);
+  const replyCount = builtReplies.length;
 
   const reliabilityLabel =
     credibilityScore < 40
@@ -308,140 +310,170 @@ export default function AnswerCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex gap-3 transition-colors ${
-        resolved
-          ? "border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-200 dark:ring-emerald-800"
-          : "border-gray-200 dark:border-gray-700"
-      }`}
+      id={`answer-card-container-${id}`}
+      className="flex flex-col gap-2 w-full"
     >
-      {/* Vote panel */}
-      <div className="flex flex-col items-center gap-0.5 pt-0.5">
-        <VotePanel
-          voteUpCount={upVotes}
-          voteDownCount={downVotes}
-          targetID={id}
-          targetType="question"
-          initialUserVote={userVote}
-        />
-      </div>
+      <div
+        id={`answer-card-${id}`}
+        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex gap-3 transition-colors ${
+          resolved
+            ? "border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-200 dark:ring-emerald-800"
+            : "border-gray-200 dark:border-gray-700"
+        }`}
+      >
+        <div
+          className="flex flex-col items-center gap-0.5 pt-0.5"
+          id={`answer-vote-panel-${id}`}
+        >
+          <VotePanel
+            voteUpCount={upVotes}
+            voteDownCount={downVotes}
+            targetID={id}
+            targetType="question"
+            initialUserVote={userVote}
+          />
+        </div>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-2 min-w-0">
-            <UserMeta
-              name={authorName}
-              createdAt={new Date(createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            />
-            <div className="flex items-center gap-2 flex-wrap">
-              <div
-                className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(credibilityScore)}`}
-              >
-                {reliabilityLabel} ({credibilityScore}%)
-              </div>
-              {resolved && (
-                <div className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  Resolved
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-2">
+              <UserMeta
+                name={authorName}
+                createdAt={new Date(createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              />
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <div
+                  className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(credibilityScore)}`}
+                >
+                  {reliabilityLabel} ({credibilityScore}%)
                 </div>
-              )}
+
+                {resolved && (
+                  <div className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    Resolved
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Right: Helpful? + thumbs + ActionMenu */}
-          <div className="shrink-0 flex items-center gap-1.5 -mt-0.5">
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium select-none">
-              Helpful?
-            </span>
-
-            {helpfulVote !== null && (
-              <span
-                className={`text-xs font-bold tabular-nums ${
-                  helpfulScore > 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-500 dark:text-red-400"
-                }`}
-              >
-                {helpfulScore > 0 ? `+${helpfulScore}` : `${helpfulScore}`}
-              </span>
-            )}
-
-            <button
-              onClick={() => handleHelpful("up")}
-              aria-label="Mark as helpful"
-              className={`p-1.5 rounded-lg transition-colors ${
-                helpfulVote === "up"
-                  ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
-                  : "text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400"
-              }`}
-            >
-              <ThumbsUp size={14} strokeWidth={2} />
-            </button>
-
-            <button
-              onClick={() => handleHelpful("down")}
-              aria-label="Mark as not helpful"
-              className={`p-1.5 rounded-lg transition-colors ${
-                helpfulVote === "down"
-                  ? "bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400"
-                  : "text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400"
-              }`}
-            >
-              <ThumbsDown size={14} strokeWidth={2} />
-            </button>
-
-            <div className="-mr-1">
+            <div className="shrink-0 -mt-1" id={`answer-actions-${id}`}>
               <ActionMenu />
             </div>
           </div>
-        </div>
 
-        {/* Body */}
-        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-          {body}
-        </p>
-
-        {/* Media carousel */}
-        {mediaURLs.length > 0 && <MediaCarousel mediaURLs={mediaURLs} />}
-
-        {/* Action row — hidden when hideComments, right-aligned when commentsOnRight */}
-        {!hideComments && (
-          <div
-            className={`flex items-center pt-2 border-t border-gray-100 dark:border-gray-800 mt-1 ${
-              commentsOnRight ? "justify-end" : ""
-            }`}
+          <p
+            id={`answer-body-${id}`}
+            className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
           >
-            <TextButton
-              label={commentsLabel}
-              textColor="gray-500"
-              hoverColor="primary-700"
-              selectedColor="primary-700"
-              isSelected={showComments}
-              onClick={() => setShowComments((v) => !v)}
-            />
-          </div>
-        )}
+            {body}
+          </p>
 
-        {/* Comments */}
-        {!hideComments && showComments && (
-          <div className="flex flex-col gap-2 mt-1">
-            {localComments.map((c, i) => (
-              <CommentCard key={c.comment_id ?? i} {...c} />
-            ))}
-            <div className="mt-1">
-              <CreateComment
-                questionId={questionId}
-                answerId={Number(id)}
-                placeholder="Write a comment on this answer…"
-                onSuccess={handleCommentSuccess}
-              />
+          {mediaURLs && mediaURLs.length > 0 && (
+            <div
+              className="mt-3 flex gap-2 flex-wrap"
+              id={`answer-media-${id}`}
+            >
+              {mediaURLs.map((m, i) =>
+                m.type === "image" ? (
+                  <img
+                    key={i}
+                    src={m.url}
+                    alt=""
+                    className="h-24 rounded-lg border border-gray-200 dark:border-gray-700 object-cover"
+                  />
+                ) : (
+                  <video
+                    key={i}
+                    src={m.url}
+                    className="h-24 rounded-lg border border-gray-200 dark:border-gray-700"
+                    controls
+                    muted
+                  />
+                ),
+              )}
             </div>
+          )}
+
+          <div className="flex items-center gap-4 mt-1">
+            {onReply && (
+              <button
+                id={`answer-reply-btn-${id}`}
+                onClick={() => setIsReplying(!isReplying)}
+                className="text-[10px] font-bold text-gray-400 hover:text-primary-500 uppercase tracking-wider transition-colors"
+              >
+                {isReplying ? "Cancel" : "Reply"}
+              </button>
+            )}
+            {replyCount > 0 && (
+              <button
+                id={`answer-toggle-replies-btn-${id}`}
+                onClick={() => setShowReplies((v) => !v)}
+                className="text-[10px] font-semibold text-primary-500 hover:text-primary-600 transition-colors"
+              >
+                {showReplies
+                  ? `▲ Hide replies`
+                  : `▼ ${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
+
+      {isReplying && onReply && (
+        <div
+          id={`answer-reply-input-wrapper-${id}`}
+          className="ml-12 mt-1 animate-in fade-in slide-in-from-top-1 duration-200"
+        >
+          <CommentInput
+            id={`answer-reply-input-${id}`}
+            placeholder={`Reply to ${authorName}...`}
+            onSubmit={async (content) => {
+              await onReply(content, undefined);
+              setIsReplying(false);
+            }}
+          />
+        </div>
+      )}
+
+      {showReplies && replyCount > 0 && (
+        <div
+          className="ml-12 sm:ml-14 flex flex-col gap-2 relative"
+          id={`answer-replies-${id}`}
+        >
+          <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800"></div>
+          <div className="flex items-center gap-1.5 px-1">
+            <CornerDownRight
+              size={12}
+              strokeWidth={2.5}
+              className="text-gray-400"
+            />
+            <span className="text-xs font-semibold text-gray-400 uppercase">
+              Replies
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {builtReplies.map((comment) => (
+              <CommentCard
+                key={comment.comment_id}
+                id={comment.comment_id.toString()}
+                authorId={comment.user_id}
+                authorName={comment.author_name}
+                createdAt={comment.created_at}
+                body={comment.content}
+                avatarUrl={comment.author_profile_url}
+                replies={comment.replies ?? []}
+                onReply={onReply}
+                onDelete={onDeleteComment}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
