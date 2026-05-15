@@ -1,3 +1,5 @@
+// PATH: src/components/cards/QuestionCard.tsx  (replace existing file)
+
 "use client";
 
 import Link from "next/link";
@@ -176,22 +178,28 @@ export default function QuestionCard({
       id={`question-card-${idStr}`}
     >
       <div className="p-3.5 px-5 flex flex-col gap-1.5">
-        <div className="flex items-start gap-2">
-          <div className="flex-1 min-w-0">
-            {mode === "full" ? (
-              <h1 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-base sm:text-lg">
-                {title}
-              </h1>
-            ) : (
-              <Link href={`/questions/${idStr}`} className="group">
-                <h2 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-sm group-hover:text-primary-700 transition-colors">
-                  {title}
-                </h2>
-              </Link>
+
+        {/* ── Row 1: UserMeta + tags (moved above title) ── */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <UserMeta
+              name={user_name}
+              createdAt={mounted ? formattedDate : ""}
+              avatarUrl={profile_url ?? undefined}
+              institution={institution}
+              degreeProgram={degree_program}
+            />
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 border-l border-gray-200 dark:border-gray-700 ml-1 pl-2">
+                {tags.map((tag) => (
+                  <SubjectTag key={tag} label={tag} />
+                ))}
+              </div>
             )}
           </div>
 
-          <div className="shrink-0 flex items-center gap-1 mt-0.5">
+          {/* Helpful + action menu sit on the same row as UserMeta */}
+          <div className="shrink-0 flex items-center gap-1">
             <span className="hidden sm:inline text-xs text-gray-400 font-medium">
               Helpful?
             </span>
@@ -227,29 +235,29 @@ export default function QuestionCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <UserMeta
-            name={user_name}
-            createdAt={mounted ? formattedDate : ""}
-            avatarUrl={profile_url ?? undefined}
-            institution={institution}
-            degreeProgram={degree_program}
-          />
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 border-l border-gray-200 dark:border-gray-700 ml-1 pl-2">
-              {tags.map((tag) => (
-                <SubjectTag key={tag} label={tag} />
-              ))}
-            </div>
+        {/* ── Row 2: Title (now below UserMeta) ── */}
+        <div className="flex-1 min-w-0">
+          {mode === "full" ? (
+            <h1 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-base sm:text-lg">
+              {title}
+            </h1>
+          ) : (
+            <Link href={`/questions/${idStr}`} className="group">
+              <h2 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-sm group-hover:text-primary-700 transition-colors">
+                {title}
+              </h2>
+            </Link>
           )}
         </div>
 
+        {/* ── Row 3: Body ── */}
         <p
           className={`text-gray-600 dark:text-gray-400 leading-relaxed ${mode === "full" ? "text-sm whitespace-pre-wrap" : "text-xs line-clamp-3"}`}
         >
           {content}
         </p>
 
+        {/* ── Row 4: Share ── */}
         <div className="flex justify-end pt-0.5">
           <button
             onClick={(e) => {
@@ -265,6 +273,7 @@ export default function QuestionCard({
         </div>
       </div>
 
+      {/* ── Featured answer (preview mode) ── */}
       {mode === "preview" && (
         <div className="px-3.5 pb-3.5">
           <div className="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
@@ -283,16 +292,19 @@ export default function QuestionCard({
                 </div>
               </>
             ) : (
-              <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center">
-                <p className="text-xs text-gray-400 italic">
-                  No answers yet — be the first to help!
-                </p>
-              </div>
+              <Link href={`/questions/${idStr}`}>
+                <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/20 transition-colors cursor-pointer">
+                  <p className="text-xs text-gray-400 italic">
+                    No answers yet — be the first to help!
+                  </p>
+                </div>
+              </Link>
             )}
           </div>
         </div>
       )}
 
+      {/* ── Composer (answer / comment) ── */}
       {!isResolved && (
         <div className="px-3.5 pb-3.5">
           <div className="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
@@ -317,18 +329,14 @@ export default function QuestionCard({
               />
             </div>
 
-            <div
-              style={{ display: composerTab === "answer" ? "block" : "none" }}
-            >
+            <div style={{ display: composerTab === "answer" ? "block" : "none" }}>
               <CreateAnswer
                 questionId={idStr}
                 onSuccess={onAnswerPosted}
                 textareaRef={answerTextareaRef}
               />
             </div>
-            <div
-              style={{ display: composerTab === "comment" ? "block" : "none" }}
-            >
+            <div style={{ display: composerTab === "comment" ? "block" : "none" }}>
               <CreateComment
                 questionId={idStr}
                 onSuccess={onCommentPosted}
