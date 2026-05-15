@@ -1,3 +1,12 @@
+// PATH: src/app/api/questions/[questionId]/comments/route.ts  (new file)
+
+/**
+ *
+ * POST /api/questions/:questionId/comments
+ * — Creates a question-level comment (or threaded reply via parent_comment_id).
+ * — Requires authentication (Bearer token).
+ */
+
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { insertComment } from "@/lib/queries/comments";
@@ -5,7 +14,10 @@ import { asQuestionId, asCommentId } from "@/lib/db-brands";
 import { errorToResponse } from "@/lib/errors";
 
 export const POST = withAuth(
-  async (req: AuthedRequest, { params }: { params: Promise<{ questionId: string }> }) => {
+  async (
+    req: AuthedRequest,
+    { params }: { params: Promise<{ questionId: string }> },
+  ) => {
     try {
       const { questionId: rawId } = await params;
       const questionId = asQuestionId(rawId);

@@ -39,13 +39,18 @@ export default function CreateComment({
     setError(null);
 
     try {
+      const token = localStorage.getItem("token"); // Get token from storage
+
       const url = answerId
         ? `/api/questions/${questionId}/answers/${answerId}/comments`
         : `/api/questions/${questionId}/comments`;
 
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}) // Add this!
+        },
         body: JSON.stringify({ content: content.trim() }),
       });
 

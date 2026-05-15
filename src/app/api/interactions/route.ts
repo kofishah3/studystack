@@ -26,6 +26,8 @@ import { errorToResponse } from "@/lib/errors";
  *  - value === 0  → DELETE the existing interaction (toggle off)
  *  - otherwise    → UPSERT (the unique partial indexes ensure one per user per target)
  */
+
+
 export const POST = withAuth(async (req: AuthedRequest) => {
   try {
     const body = await req.json();

@@ -1,5 +1,7 @@
+// PATH: src/app/questions/page.tsx  (replace existing file)
+
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/navigation/Sidebar";
 import TopNavBar from "@/components/navigation/TopNavigationBar";
 import QuestionCard from "@/components/cards/QuestionCard";
@@ -18,34 +20,41 @@ export default function QuestionsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  async function fetchQuestions(pageNum: number, append = false) {
-    try {
-      if (!append) setLoading(true);
-      else setLoadingMore(true);
+  // FIX: fetchQuestions is now a useCallback that captures the latest
+  // selectedCategory and searchQuery, so handleLoadMore never uses stale values.
+  const fetchQuestions = useCallback(
+    async (pageNum: number, append = false) => {
+      try {
+        if (!append) setLoading(true);
+        else setLoadingMore(true);
 
-      const params = new URLSearchParams({ page: String(pageNum) });
-      if (selectedCategory !== "All") params.append("category", selectedCategory);
-      if (searchQuery.trim()) params.append("search", searchQuery.trim());
+        const params = new URLSearchParams({ page: String(pageNum) });
+        if (selectedCategory !== "All") params.append("category", selectedCategory);
+        if (searchQuery.trim()) params.append("search", searchQuery.trim());
 
-      const res = await fetch(`/api/questions?${params}`);
-      const json = await res.json();
+        const res = await fetch(`/api/questions?${params}`);
+        const json = await res.json();
 
-      if (json.data) {
-        setQuestions((prev) => (append ? [...prev, ...json.data] : json.data));
-        setHasMore(json.data.length === 20);
+        if (json.data) {
+          setQuestions((prev) => (append ? [...prev, ...json.data] : json.data));
+          setHasMore(json.data.length === 20);
+        }
+      } catch (error) {
+        console.error("Failed to fetch questions:", error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch questions:", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }
+    },
+    // Re-create when filters change so handleLoadMore always has fresh values
+    [selectedCategory, searchQuery],
+  );
 
+  // Reset to page 1 and refetch whenever filters change
   useEffect(() => {
     setPage(1);
     fetchQuestions(1);
-  }, [selectedCategory, searchQuery]);
+  }, [fetchQuestions]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -99,25 +108,17 @@ export default function QuestionsPage() {
                 {questions.map((q) => (
                   <QuestionCard
                     key={q.question_id}
-                    // ── Identity ──────────────────────────────────────────────
                     question_id={q.question_id}
                     user_id={q.user_id}
-                    // ── Content ───────────────────────────────────────────────
                     title={q.title}
                     content={q.content}
-                    // category is a raw comma-separated string from the DB
                     category={q.category ?? ""}
                     demand_score={q.demand_score}
-                    // ── Timestamps ────────────────────────────────────────────
                     created_at={q.created_at}
                     resolved_at={q.resolved_at ?? null}
-                    // ── Author ────────────────────────────────────────────────
                     user_name={q.user_name}
                     profile_url={q.profile_url ?? null}
-                    // ── Answers — pass the raw DB rows directly ───────────────
-                    // AnswerCard now mirrors the DB schema so no mapping needed.
                     answers={q.answers ?? []}
-                    // ── Mode + callbacks ──────────────────────────────────────
                     mode="preview"
                     onCreateTutorial={(id) =>
                       console.log("Create tutorial for:", id)

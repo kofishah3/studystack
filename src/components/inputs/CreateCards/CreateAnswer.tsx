@@ -80,9 +80,14 @@ export default function CreateAnswer({ questionId, onSuccess, textareaRef: exter
     setError(null);
 
     try {
+      const token = localStorage.getItem("token"); // Get token
+
       const res = await fetch(`/api/questions/${questionId}/answers`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}) // Add this!
+        },
         body: JSON.stringify({ content: content.trim() }),
       });
 

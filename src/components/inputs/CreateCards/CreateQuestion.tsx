@@ -219,7 +219,7 @@ export default function AskQuestionCard() {
           />
         </label>
 
-        <div className="w-fit min-w-[100px]">
+        <div className="w-fit min-w-25">
           <FullButton
             label={isPosting ? "Posting..." : "Post"}
             className="py-2 px-6 text-sm"
