@@ -257,3 +257,17 @@ FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_type = 'BASE TABLE'
 ORDER BY table_name;
+
+-- ============================================
+-- questions table changes
+-- ============================================
+ALTER TABLE questions ADD COLUMN title TEXT NOT NULL DEFAULT '';
+
+-- If you want to keep existing content as title temporarily
+UPDATE questions SET title = content WHERE title = '';
+
+-- Then you can keep body as optional (allow NULL)
+ALTER TABLE questions ADD COLUMN body TEXT;
+
+ALTER TABLE questions 
+ALTER COLUMN demand_score TYPE NUMERIC(10,4);
