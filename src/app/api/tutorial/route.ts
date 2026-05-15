@@ -17,9 +17,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { insertTutorial, listTutorialsDetailed } from "@/lib/queries/tutorials";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@/lib/auth";
-import { getUserById } from "@/lib/queries/users";
+import { getUserById, getUserMetrics } from "@/lib/queries/users";
 import { UserID } from "@/types/database";
 import { FeedSettingsState } from "@/components/feed/FeedSettings";
+import { TUTORIAL_ELIGIBILITY } from "@/lib/constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -95,6 +96,29 @@ export async function GET(request: NextRequest) {
 
 export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
+    const metrics = await getUserMetrics(req.userId as UserID);
+
+    if (
+      metrics.rating < TUTORIAL_ELIGIBILITY.MIN_RATING ||
+      metrics.engagement < TUTORIAL_ELIGIBILITY.MIN_ENGAGEMENT
+    ) {
+      return NextResponse.json(
+        {
+          error: "You are not yet eligible to create tutorials.",
+          reason:
+            metrics.rating < TUTORIAL_ELIGIBILITY.MIN_RATING
+              ? `Your rating score (${metrics.rating}) is below the required ${TUTORIAL_ELIGIBILITY.MIN_RATING}.`
+              : `Your engagement score (${metrics.engagement}) is below the required ${TUTORIAL_ELIGIBILITY.MIN_ENGAGEMENT}.`,
+          current: { rating: metrics.rating, engagement: metrics.engagement },
+          required: {
+            rating: TUTORIAL_ELIGIBILITY.MIN_RATING,
+            engagement: TUTORIAL_ELIGIBILITY.MIN_ENGAGEMENT,
+          },
+        },
+        { status: 403 },
+      );
+    }
+
     const body = await req.json();
     const parsed = parseOrThrow(createTutorialSchema, body);
 

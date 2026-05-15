@@ -6,14 +6,17 @@ import { ThumbsUp, ThumbsDown, Share2, Trash2 } from "lucide-react";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import SubjectTag from "../ui/Tag";
+import HelpfulVoteButtons from "../ui/HelpfulVoteButtons";
 import type { AnswerProps } from "./AnswerCard";
 import AnswerCard from "./AnswerCard";
 import FullButton from "../inputs/FullButton";
 import CreateAnswer from "../inputs/CreateCards/CreateAnswer";
 import CreateComment from "../inputs/CreateCards/CreateComment";
+import CreateTutorial from "../inputs/CreateCards/CreateTutorial";
 import type { QuestionID, UserID } from "@/types/database";
 import { useRouter } from "next/navigation";
 import { usePrompt } from "@/contexts/PromptContext";
+import { useEligibility } from "@/hooks/useEligibility";
 
 export interface QuestionProps {
   question_id: QuestionID;
@@ -35,6 +38,7 @@ export interface QuestionProps {
   upvotes?: number;
   downvotes?: number;
   user_vote?: "up" | "down" | null;
+  materials?: any[];
   onDelete?: (id: string) => void;
   currentUserId?: string | null;
 }
@@ -56,24 +60,27 @@ export default function QuestionCard({
   onAnswerPosted,
   onCommentPosted,
   onCreateTutorial,
-  upvotes = 0,
-  downvotes = 0,
-  user_vote = null,
+  upvotes: initialUpvotes = 0,
+  downvotes: initialDownvotes = 0,
+  user_vote: initialUserVote = null,
   institution,
   degree_program,
   onDelete,
   currentUserId,
+  materials = [],
 }: QuestionProps) {
   const [composerTab, setComposerTab] = useState<ComposerTab>("answer");
   const [helpfulVote, setHelpfulVote] = useState<"up" | "down" | null>(
-    user_vote,
+    initialUserVote,
   );
-  const [upCount, setUpCount] = useState(upvotes);
-  const [downCount, setDownCount] = useState(downvotes);
+  const [upCount, setUpCount] = useState(initialUpvotes);
+  const [downCount, setDownCount] = useState(initialDownvotes);
   const [loading, setLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
   const { showPrompt } = usePrompt();
+  const eligibility = useEligibility();
 
   const router = useRouter();
   const answerTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -205,34 +212,14 @@ export default function QuestionCard({
             <span className="hidden sm:inline text-xs text-gray-400 font-medium">
               Helpful?
             </span>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleHelpful("up");
-              }}
-              disabled={loading}
-              className={`p-1.5 rounded-lg flex items-center gap-1 ${helpfulVote === "up" ? "bg-emerald-100 text-emerald-600" : "text-gray-400 hover:bg-gray-100"} disabled:opacity-50`}
-            >
-              <ThumbsUp size={13} />
-              {upCount > 0 && (
-                <span className="text-[10px] font-bold">{upCount}</span>
-              )}
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleHelpful("down");
-              }}
-              disabled={loading}
-              className={`p-1.5 rounded-lg flex items-center gap-1 ${helpfulVote === "down" ? "bg-red-100 text-red-500" : "text-gray-400 hover:bg-gray-100"} disabled:opacity-50`}
-            >
-              <ThumbsDown size={13} />
-              {downCount > 0 && (
-                <span className="text-[10px] font-bold">{downCount}</span>
-              )}
-            </button>
+            <HelpfulVoteButtons
+              upCount={upCount}
+              downCount={downCount}
+              userVote={helpfulVote}
+              loading={loading}
+              onVote={handleHelpful}
+              variant="compact"
+            />
             {currentUserId === user_id && (
               <button
                 onClick={(e) => {
@@ -275,6 +262,33 @@ export default function QuestionCard({
         >
           {content}
         </p>
+
+        {materials.length > 0 && (
+          <div
+            className={`flex flex-wrap gap-2 ${mode === "preview" ? "max-h-24 overflow-hidden" : ""}`}
+          >
+            {materials.map((m, idx) => (
+              <div
+                key={idx}
+                className="rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 shadow-sm"
+              >
+                {m.mime_type?.startsWith("image/") ? (
+                  <img
+                    src={m.url}
+                    alt={m.file_name}
+                    className={`${mode === "preview" ? "w-20 h-20" : "max-w-full max-h-[500px]"} object-contain`}
+                  />
+                ) : m.mime_type?.startsWith("video/") ? (
+                  <video
+                    src={m.url}
+                    controls={mode === "full"}
+                    className={`${mode === "preview" ? "w-20 h-20" : "max-w-full max-h-[500px]"} object-contain`}
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-end pt-0.5">
           <button
@@ -329,7 +343,17 @@ export default function QuestionCard({
                 label="Create Tutorial"
                 variant="secondary"
                 className="w-fit! py-1 px-2.5 text-xs"
-                onClick={() => onCreateTutorial?.(idStr)}
+                onClick={() => {
+                  if (eligibility && !eligibility.canCreateTutorial) {
+                    showPrompt({
+                      title: "Unlock Tutorial Creation",
+                      description: `You need a rating of ${eligibility.required.rating}+ and engagement of ${eligibility.required.engagement}+ to create tutorials. Your current scores: Rating ${eligibility.metrics.rating}, Engagement ${eligibility.metrics.engagement}. Keep answering questions and contributing to build your reputation!`,
+                      type: "info",
+                    });
+                    return;
+                  }
+                  setShowTutorialModal(true);
+                }}
               />
               <FullButton
                 label="Answer"
@@ -365,6 +389,15 @@ export default function QuestionCard({
             </div>
           </div>
         </div>
+      )}
+
+      {showTutorialModal && (
+        <CreateTutorial
+          questionId={idStr}
+          questionTitle={title}
+          onSuccess={() => setShowTutorialModal(false)}
+          onClose={() => setShowTutorialModal(false)}
+        />
       )}
     </div>
   );

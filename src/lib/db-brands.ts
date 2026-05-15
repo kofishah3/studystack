@@ -5,6 +5,7 @@ import type {
   Interaction,
   InteractionID,
   QuestionID,
+  QuestionMaterialID,
   TutorialID,
   TutorialMaterialID,
   UserID,
@@ -17,6 +18,7 @@ export const asAnswerId = (n: number) => n as AnswerID;
 export const asCommentId = (n: number) => n as CommentID;
 export const asInteractionId = (n: number) => n as InteractionID;
 export const asTutorialMaterialId = (s: string) => s as TutorialMaterialID;
+export const asQuestionMaterialId = (s: string) => s as QuestionMaterialID;
 
 export type InteractionRow = {
   interaction_id: number;

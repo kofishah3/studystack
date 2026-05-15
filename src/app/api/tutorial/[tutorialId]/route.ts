@@ -11,6 +11,8 @@ import {
 import { listQuestionsForTutorialDetailed } from "@/lib/queries/questions-tutorials";
 import { getQuestionByIdDetailed } from "@/lib/queries/questions";
 import { listCommentsForTutorialDetailed } from "@/lib/queries/comments";
+import { listMaterialsForTutorial } from "@/lib/queries/tutorial-materials";
+import { getStorage, DEFAULT_URL_TTL_SECONDS } from "@/lib/storage";
 import {
   parseOrThrow,
   updateTutorialSchema,
@@ -38,6 +40,17 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
 
     const comments = await listCommentsForTutorialDetailed(id);
 
+    const rawMaterials = await listMaterialsForTutorial(id);
+    const storage = getStorage();
+    const materials = await Promise.all(
+      rawMaterials.map(async (m) => {
+        const url = await storage
+          .getUrl(m.storage_key, { expiresIn: DEFAULT_URL_TTL_SECONDS })
+          .catch(() => null);
+        return { ...m, url };
+      }),
+    );
+
     let userInteractions: any[] = [];
     const authHeader = _req.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -61,6 +74,7 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
         downvotes: Number(tutorial.downvotes || 0),
         linked_questions: questions,
         comments,
+        materials,
         userInteractions,
         userInteraction: userInteractions[0] || null,
       },

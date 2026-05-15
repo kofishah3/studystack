@@ -10,14 +10,13 @@ import FeedSettings, {
 
 import { useQuestionActions } from "@/hooks/useQuestionActions";
 
-const CATEGORIES = ["All", "CMSC", "Math", "Physics", "Others"];
-
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [dynamicTags, setDynamicTags] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [settings, setSettings] = useState<FeedSettingsState>({
@@ -32,7 +31,9 @@ export default function QuestionsPage() {
   const handleDeleteQuestion = useCallback(
     (id: string) => {
       deleteQuestion(id, () => {
-        setQuestions((prev) => prev.filter((q) => String(q.question_id) !== id));
+        setQuestions((prev) =>
+          prev.filter((q) => String(q.question_id) !== id),
+        );
       });
     },
     [deleteQuestion],
@@ -93,6 +94,21 @@ export default function QuestionsPage() {
     fetchQuestions(nextPage, true, settings);
   };
 
+  useEffect(() => {
+    async function fetchTags() {
+      try {
+        const res = await fetch("/api/questions/tags");
+        const json = await res.json();
+        if (json.data) {
+          setDynamicTags(json.data.map((t: any) => t.tag));
+        }
+      } catch (e) {
+        console.error("Failed to fetch tags:", e);
+      }
+    }
+    fetchTags();
+  }, []);
+
   return (
     <div
       id="questions-content-container"
@@ -110,17 +126,17 @@ export default function QuestionsPage() {
             />
           </div>
           <SearchBar
-            placeholder="Search questions..."
+            placeholder="Search questions or tags..."
             initialValue={searchQuery}
             onSearch={(query) => setSearchQuery(query)}
           />
 
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((category) => (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+            {["All", ...dynamicTags].map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
                   selectedCategory === category
                     ? "bg-primary-500 text-white"
                     : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"

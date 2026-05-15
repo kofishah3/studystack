@@ -97,6 +97,16 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
     [user_id],
   );
 
+  const tutorials_row = await one<{ count: string }>(
+    "SELECT COUNT(*) as count FROM tutorials WHERE user_id = $1",
+    [user_id],
+  );
+
+  const comments_row = await one<{ count: string }>(
+    "SELECT COUNT(*) as count FROM comments WHERE user_id = $1",
+    [user_id],
+  );
+
   const likes_row = await one<{ count: string }>(
     `SELECT COUNT(*) as count FROM interactions i
      WHERE i.interaction_type = 'react' AND i.value > 0 AND (
@@ -129,23 +139,33 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
 
   const questionsCount = Number(questions_row?.count || 0);
   const answersCount = Number(answers_row?.count || 0);
+  const tutorialsCount = Number(tutorials_row?.count || 0);
+  const commentsCount = Number(comments_row?.count || 0);
   const likesCount = Number(likes_row?.count || 0);
   const downvotesCount = Number(downvotes_row?.count || 0);
   const acceptedCount = Number(accepted_answers_row?.count || 0);
   const avgTutorialRating = Number(tutorials_rating_row?.avg || 0);
 
-  const rating = Math.max(
-    0,
-    likesCount * 10 -
-      downvotesCount * 5 +
-      acceptedCount * 50 +
-      (avgTutorialRating > 0 ? Math.round((avgTutorialRating - 3) * 20) : 0),
-  );
+  const totalPositive = likesCount + acceptedCount * 3;
+  const totalNegative = downvotesCount;
+  const totalVotes = totalPositive + totalNegative;
+  let voteRatio = totalVotes > 0 ? totalPositive / totalVotes : 0.5;
 
-  const engagement = Math.min(
-    100,
-    Math.round((questionsCount * 3 + answersCount * 5 + likesCount) / 2),
-  );
+  if (avgTutorialRating > 0) {
+    const tutorialRatio = (avgTutorialRating - 1) / 4;
+    voteRatio = voteRatio * 0.7 + tutorialRatio * 0.3;
+  }
+
+  const rating = Math.round(Math.min(100, Math.max(0, voteRatio * 100)));
+
+  const rawEngagement =
+    tutorialsCount * 10 +
+    answersCount * 5 +
+    acceptedCount * 10 +
+    questionsCount * 3 +
+    commentsCount * 1;
+
+  const engagement = Math.min(100, Math.round(rawEngagement / 2));
 
   return {
     questions: questionsCount,

@@ -1,19 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ImagePlus, X } from "lucide-react";
-
+import { useState } from "react";
 import TextInput from "../TextInput";
 import FullButton from "../FullButton";
-
-type UploadFile = {
-  file: File;
-  preview: string;
-  type: "image" | "video";
-};
-
-const MAX_IMAGES = 5;
-const MAX_VIDEOS = 3;
+import FileUploadArea, { type UploadFile } from "../../ui/FileUploadArea";
 
 export default function AskQuestionCard() {
   const [uploads, setUploads] = useState<UploadFile[]>([]);
@@ -23,56 +13,23 @@ export default function AskQuestionCard() {
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState("");
 
-  const imageCount = useMemo(
-    () => uploads.filter((u) => u.type === "image").length,
-    [uploads],
-  );
-
-  const videoCount = useMemo(
-    () => uploads.filter((u) => u.type === "video").length,
-    [uploads],
-  );
-
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = Array.from(e.target.files || []);
-
-    const newUploads: UploadFile[] = [];
-
-    let currentImages = imageCount;
-    let currentVideos = videoCount;
-
-    for (const file of selectedFiles) {
-      const isImage = file.type.startsWith("image/");
-      const isVideo = file.type.startsWith("video/");
-
-      if (isImage) {
-        if (currentImages >= MAX_IMAGES) continue;
-
-        currentImages++;
-
-        newUploads.push({
-          file,
-          preview: URL.createObjectURL(file),
-          type: "image",
-        });
-      } else if (isVideo) {
-        if (currentVideos >= MAX_VIDEOS) continue;
-
-        currentVideos++;
-
-        newUploads.push({
-          file,
-          preview: URL.createObjectURL(file),
-          type: "video",
-        });
-      }
-    }
-
-    setUploads((prev) => [...prev, ...newUploads]);
+  function authHeaders(): Record<string, string> {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
-  function removeUpload(index: number) {
-    setUploads((prev) => prev.filter((_, i) => i !== index));
+  async function uploadFile(questionId: string, file: File): Promise<void> {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`/api/questions/${questionId}/upload`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: fd,
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Failed to upload ${file.name}`);
+    }
   }
 
   async function handlePost() {
@@ -106,9 +63,21 @@ export default function AskQuestionCard() {
         throw new Error(data.error || "Failed to post question");
       }
 
+      const questionId = data.questionId;
+
+      if (questionId && uploads.length > 0) {
+        const results = await Promise.allSettled(
+          uploads.map((u) => uploadFile(questionId, u.file)),
+        );
+        const failed = results.filter((r) => r.status === "rejected");
+        if (failed.length > 0) {
+          console.error("Some file uploads failed:", failed);
+        }
+      }
+
       setTitle("");
       setQuestionBody("");
-      setCategory("general");
+      setCategory("");
       setUploads([]);
 
       window.location.reload();
@@ -130,9 +99,8 @@ export default function AskQuestionCard() {
     >
       <div>
         <h2 className="text-lg font-semibold text-text">Ask a Question</h2>
-
         <p className="text-xs text-muted mt-1">
-          Upload up to 5 images and 3 videos
+          Share your question with the community
         </p>
       </div>
 
@@ -165,73 +133,22 @@ export default function AskQuestionCard() {
         onChange={(e) => setCategory(e.target.value)}
       />
 
-      {uploads.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {uploads.map((upload, index) => (
-            <div
-              key={index}
-              className="
-                relative w-24 h-24 rounded-xl overflow-hidden
-                border border-border bg-background
-              "
-            >
-              <button
-                onClick={() => removeUpload(index)}
-                className="
-                  absolute top-1 right-1 z-10
-                  bg-black/70 hover:bg-black
-                  text-white rounded-full p-1
-                  transition-colors
-                "
-              >
-                <X size={12} />
-              </button>
+      <div className="pt-2">
+        <FileUploadArea
+          uploads={uploads}
+          onChange={setUploads}
+          allowDocuments={false}
+        />
+      </div>
 
-              {upload.type === "image" ? (
-                <img
-                  src={upload.preview}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <video
-                  src={upload.preview}
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <label
-          className="
-            flex items-center gap-2
-            text-sm text-muted
-            hover:text-primary-500
-            cursor-pointer transition-colors
-          "
-        >
-          <ImagePlus size={18} />
-
-          <span>Upload File</span>
-
-          <input
-            type="file"
-            multiple
-            accept="image/*,video/*"
-            className="hidden"
-            onChange={handleUpload}
-          />
-        </label>
-
+      <div className="flex items-center justify-end">
         <div className="w-fit min-w-25">
           <FullButton
-            label={isPosting ? "Posting..." : "Post"}
+            label={isPosting ? (uploads.length > 0 ? "Uploading..." : "Posting...") : "Post Question"}
             className="py-2 px-6 text-sm"
             onClick={handlePost}
-            disabled={isPosting}
+            disabled={isPosting || !title.trim()}
+            isLoading={isPosting}
           />
         </div>
       </div>

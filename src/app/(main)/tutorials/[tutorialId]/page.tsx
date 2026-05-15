@@ -9,8 +9,7 @@ import { useToast } from "@/contexts/ToastContext";
 import QuestionCard from "@/components/cards/QuestionCard";
 import { CommentCard, buildCommentTree } from "@/components/cards/CommentCard";
 import CommentInput from "@/components/inputs/CommentInput";
-import VotePanel from "@/components/inputs/VotePanel";
-import { Star, ThumbsUp, ThumbsDown } from "lucide-react";
+import TutorialInteraction from "@/components/tutorials/TutorialInteraction";
 
 export default function TutorialDetailPage() {
   const { tutorialId } = useParams();
@@ -20,23 +19,6 @@ export default function TutorialDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchTutorial() {
-      try {
-        const token = localStorage.getItem("token");
-        const headers: HeadersInit = token
-          ? { Authorization: `Bearer ${token}` }
-          : {};
-        const res = await fetch(`/api/tutorial/${tutorialId}`, { headers });
-        const json = await res.json();
-        if (json.data) {
-          setTutorial(json.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch tutorial:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     if (tutorialId) fetchTutorial();
   }, [tutorialId]);
 
@@ -147,52 +129,27 @@ export default function TutorialDetailPage() {
     }
   };
 
-  const handleRate = async (value: number) => {
+  const fetchTutorial = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/interactions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          interaction_type: "rating",
-          value,
-          target_type: "tutorial",
-          target_id: tutorialId,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to rate");
-      }
-
-      const resTutorial = await fetch(`/api/tutorial/${tutorialId}`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      const json = await resTutorial.json();
+      const headers: HeadersInit = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+      const res = await fetch(`/api/tutorial/${tutorialId}`, { headers });
+      const json = await res.json();
       if (json.data) {
         setTutorial(json.data);
       }
-
-      showToast({
-        type: "success",
-        title: "Rating saved",
-        message: `You rated this tutorial ${value} stars!`,
-      });
-    } catch (error: any) {
-      console.error("Rating failed:", error);
-      showToast({
-        type: "error",
-        title: "Rating failed",
-        message: error.message || "Something went wrong. Please try again.",
-      });
+    } catch (error) {
+      console.error("Failed to fetch tutorial:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (tutorialId) fetchTutorial();
+  }, [tutorialId]);
 
   if (loading) {
     return (
@@ -321,64 +278,76 @@ export default function TutorialDetailPage() {
             </p>
           </div>
 
-          <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-6">
-            <div className="flex flex-col items-center gap-3">
-              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                How would you rate this tutorial?
-              </span>
-              <div className="flex items-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const userRating = tutorial.userInteractions?.find(
-                    (i: any) => i.interaction_type === "rating",
-                  )?.value;
+          {tutorial.materials && tutorial.materials.length > 0 && (
+            <div className="flex flex-col gap-3 pt-2">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Attachments
+              </h3>
+              <div className="flex flex-col gap-3">
+                {tutorial.materials.map((m: any) => {
+                  if (!m.url) return null;
+                  const isImage = m.mime_type?.startsWith("image/");
+                  const isVideo = m.mime_type?.startsWith("video/");
                   return (
-                    <button
-                      key={star}
-                      onClick={() => handleRate(star)}
-                      className="p-1 group transition-transform active:scale-90"
+                    <div
+                      key={m.material_id}
+                      className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
                     >
-                      <Star
-                        size={28}
-                        className={
-                          star <= (userRating || 0)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300 dark:text-gray-600 group-hover:text-yellow-400 transition-colors"
-                        }
-                      />
-                    </button>
+                      {isImage ? (
+                        <img
+                          src={m.url}
+                          alt={m.file_name}
+                          className="w-full max-h-[480px] object-contain"
+                        />
+                      ) : isVideo ? (
+                        <video
+                          src={m.url}
+                          controls
+                          className="w-full max-h-[480px]"
+                        />
+                      ) : (
+                        <a
+                          href={m.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 truncate">
+                            {m.file_name}
+                          </span>
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {(m.size_bytes / 1024).toFixed(0)} KB
+                          </span>
+                        </a>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             </div>
+          )}
 
-            <div className="flex items-center gap-8 py-2 px-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50">
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Helpful?
-                </span>
-                {(() => {
-                  const userReact = tutorial.userInteractions?.find(
-                    (i: any) => i.interaction_type === "react",
-                  )?.value;
-                  return (
-                    <VotePanel
-                      targetID={tutorialId as string}
-                      targetType="tutorial"
-                      voteUpCount={tutorial.upvotes || 0}
-                      voteDownCount={tutorial.downvotes || 0}
-                      initialUserVote={
-                        userReact === 1
-                          ? "up"
-                          : userReact === -1
-                            ? "down"
-                            : null
-                      }
-                    />
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
+          <TutorialInteraction
+            tutorialId={tutorialId as string}
+            initialAvgRating={avgRating}
+            initialTotalInteractions={tutorial.total_interactions}
+            initialUpvotes={tutorial.upvotes || 0}
+            initialDownvotes={tutorial.downvotes || 0}
+            initialUserRating={
+              tutorial.userInteractions?.find(
+                (i: any) => i.interaction_type === "rating",
+              )?.value || 0
+            }
+            initialUserVote={
+              (() => {
+                const v = tutorial.userInteractions?.find(
+                  (i: any) => i.interaction_type === "react",
+                )?.value;
+                return v === 1 ? "up" : v === -1 ? "down" : null;
+              })()
+            }
+            onUpdate={fetchTutorial}
+          />
         </div>
 
         {tutorial.linked_questions && tutorial.linked_questions.length > 0 && (
