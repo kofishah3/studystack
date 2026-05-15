@@ -2,8 +2,6 @@
 
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import Sidebar from "@/components/navigation/Sidebar";
-import TopNavBar from "@/components/navigation/TopNavigationBar";
 import QuestionCard from "@/components/cards/QuestionCard";
 import AskQuestionCard from "@/components/inputs/CreateCards/CreateQuestion";
 import { SkeletonList } from "@/components/ui/SkeletonCard";
@@ -64,17 +62,10 @@ export default function QuestionsPage() {
 
   return (
     <div
-      id="questions-container"
-      className="flex h-screen bg-background flex-col overflow-hidden"
+      id="questions-content-container"
+      className="flex flex-col px-4 sm:px-8 py-8 gap-6 flex-1 overflow-y-auto"
     >
-      <TopNavBar />
-      <div className="flex flex-row flex-1 w-full overflow-hidden">
-        <Sidebar />
-        <div
-          id="questions-content-container"
-          className="flex flex-col px-4 sm:px-8 py-8 gap-6 flex-1 overflow-y-auto"
-        >
-          <div className="w-full flex flex-col gap-6">
+      <div className="w-full flex flex-col gap-6">
             <AskQuestionCard />
 
             <div className="flex flex-col gap-4">
@@ -139,8 +130,6 @@ export default function QuestionsPage() {
                 )}
               </>
             )}
-          </div>
-        </div>
       </div>
     </div>
   );
