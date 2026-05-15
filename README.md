@@ -70,4 +70,4 @@ studystack/
    npm run dev
    ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [https://studystack-jet.vercel.app](https://studystack-jet.vercel.app) to view the application.
