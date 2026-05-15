@@ -36,8 +36,8 @@ export default function SidebarHeatmap() {
   const getIntensityColor = (count: number) => {
     if (count === 0) return "bg-gray-100 dark:bg-gray-800/50";
     if (count === 1) return "bg-primary-200 dark:bg-primary-900/40";
-    if (count === 2) return "bg-primary-300 dark:bg-primary-800/60";
-    if (count === 3) return "bg-primary-400 dark:bg-primary-700/80";
+    if (count === 2) return "bg-primary-300 dark:bg-primary-700/60";
+    if (count === 3) return "bg-primary-500 dark:bg-primary-600/80";
     return "bg-primary-500 dark:bg-primary-600";
   };
 

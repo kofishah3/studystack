@@ -82,7 +82,7 @@ export default function TutorialCard({
                 id={`tutorial-link-${id}`}
               >
                 <h2
-                  className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight 
+                  className="text-md font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight 
                 transition-colors group-hover/link:text-primary-700"
                 >
                   {title}
