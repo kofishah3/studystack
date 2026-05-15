@@ -5,7 +5,7 @@ import TopNavBar from "@/components/navigation/TopNavigationBar";
 import { useState } from "react";
 
 export default function HomePage() {
-  const [isSideBarCollapsed, setIsSideBarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
     <div
       id="homepage-container"
@@ -13,7 +13,7 @@ export default function HomePage() {
     >
       <TopNavBar />
       <div className="flex flex-row flex-1 w-full overflow-hidden">
-        <Sidebar isCollapsed={isSideBarCollapsed} />
+        <Sidebar isCollapsed={isSidebarCollapsed} />
         <main className="flex-1 p-8 flex items-center justify-center overflow-y-auto">
           <div className="text-center opacity-0 animate-[fade-in_1s_ease-out_forwards]">
             <h1 className="text-3xl font-sora font-bold text-gray-900 dark:text-white mb-3">
