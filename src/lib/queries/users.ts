@@ -127,21 +127,27 @@ export async function getUserMetrics(user_id: UserID): Promise<Metrics> {
 }
 
 export async function getTopContributorsThisWeek(limit: number = 5) {
-  const rows = await q<UserRow & { engagement: string }>(
+  const rows = await q<UserRow & { engagement: string; weekly_acts: string }>(
     `SELECT u.*,
+      u.credibility_score as engagement,
       (
-        (SELECT COUNT(*) FROM questions q WHERE q.user_id = u.user_id AND q.created_at >= NOW() - INTERVAL '7 days') * 3 +
-        (SELECT COUNT(*) FROM answers a WHERE a.user_id = u.user_id AND a.created_at >= NOW() - INTERVAL '7 days') * 5
-      ) as engagement
+        (SELECT COUNT(*) FROM questions q WHERE q.user_id = u.user_id AND q.created_at >= NOW() - INTERVAL '7 days') +
+        (SELECT COUNT(*) FROM answers  a WHERE a.user_id = u.user_id AND a.created_at >= NOW() - INTERVAL '7 days') +
+        (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.user_id AND c.created_at >= NOW() - INTERVAL '7 days')
+      ) as weekly_acts
      FROM users u
-     ORDER BY engagement DESC
+     ORDER BY weekly_acts DESC, engagement DESC
      LIMIT $1`,
     [limit],
   );
 
   return rows.map((r) => {
     const user = mapUser(r);
-    return { ...user, engagement: Number(r.engagement) };
+    return {
+      ...user,
+      engagement: Number(r.engagement),
+      weekly_acts: Number(r.weekly_acts),
+    };
   });
 }
 

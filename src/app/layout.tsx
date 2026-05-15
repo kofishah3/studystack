@@ -3,6 +3,7 @@ import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { PromptProvider } from "@/contexts/PromptContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { TooltipProvider } from "@/contexts/TooltipContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,7 +50,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-background text-text">
         <PromptProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </ToastProvider>
         </PromptProvider>
       </body>
     </html>

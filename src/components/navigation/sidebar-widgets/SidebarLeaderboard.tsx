@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { TrendingUp, Award, User as UserIcon } from "lucide-react";
+import { Award, User as UserIcon, Zap } from "lucide-react";
 import type { User } from "@/types/database";
 
-type LeaderboardUser = User & { engagement: number };
+type LeaderboardUser = User & { weekly_acts: number };
 
 function LeaderboardRow({
   user,
@@ -14,15 +14,22 @@ function LeaderboardRow({
   user: LeaderboardUser;
   rank: number;
 }) {
+  const medalColor =
+    rank === 1
+      ? "text-yellow-500"
+      : rank === 2
+        ? "text-gray-400"
+        : rank === 3
+          ? "text-amber-600"
+          : "text-gray-400";
+
   return (
     <Link
       href={`/${user.user_name}`}
       className="flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group cursor-pointer"
     >
       <div className="flex items-center gap-2">
-        <span
-          className={`text-xs font-bold w-4 text-center ${rank === 1 ? "text-yellow-500" : rank === 2 ? "text-gray-400" : rank === 3 ? "text-amber-600" : "text-gray-500"}`}
-        >
+        <span className={`text-xs font-bold w-4 text-center ${medalColor}`}>
           {rank}
         </span>
 
@@ -43,8 +50,8 @@ function LeaderboardRow({
             {user.user_name}
           </span>
           <div className="flex items-center gap-1 text-[10px] text-gray-500">
-            <TrendingUp size={10} className="text-primary-500" />
-            <span>{user.engagement} acts</span>
+            <Zap size={9} className="text-primary-500" />
+            <span>{user.weekly_acts} this week</span>
           </div>
         </div>
       </div>
