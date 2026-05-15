@@ -1,41 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import VotePanel, { VoteType } from "../inputs/VotePanel";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import CommentInput from "../inputs/CommentInput";
 import { CommentCard, type CommentData, buildCommentTree } from "./CommentCard";
 import { CornerDownRight } from "lucide-react";
+import type { AnswerID, QuestionID, UserID } from "@/types/database";
 
+// ── AnswerProps ───────────────────────────────────────────────────────────────
+// Mirrors the Answers table columns exactly, plus join fields from the
+// users table (author_*) and UI-only extras (userVote, hideComments, callbacks).
 export interface AnswerProps {
-  id: string;
-  credibilityScore: number;
-  authorName: string;
-  body: string;
-  createdAt: string;
-  updatedAt?: string;
-  mediaURLs?: { type: "image" | "video"; url: string }[];
-  isResolved: boolean;
-  totalComments: number;
-  totalUpVotes: number;
-  totalDownVotes: number;
+  // Answers table columns
+  answer_id: AnswerID;
+  user_id: UserID;
+  question_id: QuestionID;
+  content: string;
+  media_urls: { type: "image" | "video"; url: string }[];
+  is_accepted: boolean;
+  created_at: string; // ISO string from JSON — Date on the DB side
+
+  // Join fields from users table
+  author_name: string;
+  author_profile_url?: string | null;
+  author_credibility_score: number;
+
+  // Nested join — comments on this answer
+  comments?: CommentData[];
+
+  // UI-only
   userVote: VoteType;
-  comments?: CommentCardProps[];
-  questionId: string;
-  /** When true, hides the Comments button entirely (used in preview/QuestionCard context) */
   hideComments?: boolean;
-  /** When true, aligns the Comments button to the right (used in individual question page) */
-  commentsOnRight?: boolean;
 
-  replies?: CommentData[];
-
-  onVoteUp?: (id: string) => void;
-  onVoteDown?: (id: string) => void;
-  onResolved?: (id: string) => void;
-  onHelpful?: (id: string) => void;
-  onReply?: (content: string, parentId?: string) => Promise<void>;
+  // Callbacks
+  onReply?: (content: string, parentCommentId?: string) => Promise<void>;
   onDeleteComment?: (commentId: string) => Promise<void>;
 }
 
@@ -115,9 +116,7 @@ function Lightbox({
                 <span
                   key={i}
                   className={`rounded-full transition-all ${
-                    i === index
-                      ? "w-4 h-2 bg-white"
-                      : "w-2 h-2 bg-white/30"
+                    i === index ? "w-4 h-2 bg-white" : "w-2 h-2 bg-white/30"
                   }`}
                 />
               ))}
@@ -156,7 +155,9 @@ function MediaCarousel({
         <div
           className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 group"
           style={{ height: item.type === "video" ? "380px" : "260px" }}
-          onClick={item.type === "image" ? () => setLightboxOpen(true) : undefined}
+          onClick={
+            item.type === "image" ? () => setLightboxOpen(true) : undefined
+          }
         >
           {item.type === "image" ? (
             <img
@@ -250,71 +251,41 @@ function MediaCarousel({
 
 // ── AnswerCard ────────────────────────────────────────────────────────────────
 export default function AnswerCard({
-  id,
-  credibilityScore,
-  authorName,
-  body,
-  createdAt,
-  mediaURLs = [],
-  totalUpVotes,
-  totalDownVotes,
-  isResolved,
+  answer_id,
+  content,
+  media_urls = [],
+  is_accepted,
+  created_at,
+  author_name,
+  author_credibility_score,
+  comments = [],
   userVote,
-
-  replies = [],
-
+  hideComments = false,
   onReply,
   onDeleteComment,
 }: AnswerProps) {
-  const [upVotes, setUpVotes] = useState(totalUpVotes);
-  const [downVotes, setDownVotes] = useState(totalDownVotes);
-  const [resolved, setResolved] = useState(isResolved);
+  const [resolved] = useState(is_accepted);
   const [isReplying, setIsReplying] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
 
-  const builtReplies = buildCommentTree(replies);
+  const builtReplies = buildCommentTree(comments);
   const replyCount = builtReplies.length;
+  const idStr = answer_id ? answer_id.toString() : "";
 
   const reliabilityLabel =
-    credibilityScore < 40
+    author_credibility_score < 40
       ? "Low Reliability"
-      : credibilityScore < 70
+      : author_credibility_score < 70
         ? "Moderate Reliability"
         : "High Reliability";
 
-  function handleHelpful(type: "up" | "down") {
-    const next = helpfulVote === type ? null : type;
-    setHelpfulVote(next);
-    if (next === "up") onHelpful?.(id, 1);
-    else if (next === "down") onHelpful?.(id, -1);
-  }
-
-  function handleCommentSuccess(raw: Record<string, unknown>) {
-    setLocalComments((prev) => [
-      ...prev,
-      {
-        comment_id: raw.comment_id as number,
-        authorName: (raw.author_name as string) ?? "You",
-        createdAt: (raw.created_at as string) ?? new Date().toISOString(),
-        body: raw.content as string,
-        questionId,
-        answerId: Number(id),
-      },
-    ]);
-    setShowComments(true);
-  }
-
-  const commentsLabel = showComments
-    ? "Hide comments"
-    : `${localComments.length > 0 ? localComments.length + " " : ""}Comment${localComments.length !== 1 ? "s" : ""}`;
-
   return (
     <div
-      id={`answer-card-container-${id}`}
+      id={`answer-card-container-${idStr}`}
       className="flex flex-col gap-2 w-full"
     >
       <div
-        id={`answer-card-${id}`}
+        id={`answer-card-${idStr}`}
         className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex gap-3 transition-colors ${
           resolved
             ? "border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-200 dark:ring-emerald-800"
@@ -323,13 +294,13 @@ export default function AnswerCard({
       >
         <div
           className="flex flex-col items-center gap-0.5 pt-0.5"
-          id={`answer-vote-panel-${id}`}
+          id={`answer-vote-panel-${idStr}`}
         >
           <VotePanel
-            voteUpCount={upVotes}
-            voteDownCount={downVotes}
-            targetID={id}
-            targetType="question"
+            voteUpCount={0}
+            voteDownCount={0}
+            targetID={idStr}
+            targetType="answer"
             initialUserVote={userVote}
           />
         </div>
@@ -338,8 +309,8 @@ export default function AnswerCard({
           <div className="flex items-start justify-between">
             <div className="flex flex-col gap-2">
               <UserMeta
-                name={authorName}
-                createdAt={new Date(createdAt).toLocaleDateString("en-US", {
+                name={author_name}
+                createdAt={new Date(created_at).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -348,9 +319,9 @@ export default function AnswerCard({
 
               <div className="flex items-center gap-2 flex-wrap">
                 <div
-                  className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(credibilityScore)}`}
+                  className={`text-xs px-2 py-0.5 rounded font-medium ${getCredibilityStyles(author_credibility_score)}`}
                 >
-                  {reliabilityLabel} ({credibilityScore}%)
+                  {reliabilityLabel} ({author_credibility_score}%)
                 </div>
 
                 {resolved && (
@@ -361,77 +332,55 @@ export default function AnswerCard({
               </div>
             </div>
 
-            <div className="shrink-0 -mt-1" id={`answer-actions-${id}`}>
+            <div className="shrink-0 -mt-1" id={`answer-actions-${idStr}`}>
               <ActionMenu />
             </div>
           </div>
 
           <p
-            id={`answer-body-${id}`}
+            id={`answer-body-${idStr}`}
             className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
           >
-            {body}
+            {content}
           </p>
 
-          {mediaURLs && mediaURLs.length > 0 && (
-            <div
-              className="mt-3 flex gap-2 flex-wrap"
-              id={`answer-media-${id}`}
-            >
-              {mediaURLs.map((m, i) =>
-                m.type === "image" ? (
-                  <img
-                    key={i}
-                    src={m.url}
-                    alt=""
-                    className="h-24 rounded-lg border border-gray-200 dark:border-gray-700 object-cover"
-                  />
-                ) : (
-                  <video
-                    key={i}
-                    src={m.url}
-                    className="h-24 rounded-lg border border-gray-200 dark:border-gray-700"
-                    controls
-                    muted
-                  />
-                ),
+          {media_urls.length > 0 && <MediaCarousel mediaURLs={media_urls} />}
+
+          {!hideComments && (
+            <div className="flex items-center gap-4 mt-1">
+              {onReply && (
+                <button
+                  id={`answer-reply-btn-${idStr}`}
+                  onClick={() => setIsReplying(!isReplying)}
+                  className="text-[10px] font-bold text-gray-400 hover:text-primary-500 uppercase tracking-wider transition-colors"
+                >
+                  {isReplying ? "Cancel" : "Reply"}
+                </button>
+              )}
+              {replyCount > 0 && (
+                <button
+                  id={`answer-toggle-replies-btn-${idStr}`}
+                  onClick={() => setShowReplies((v) => !v)}
+                  className="text-[10px] font-semibold text-primary-500 hover:text-primary-600 transition-colors"
+                >
+                  {showReplies
+                    ? `▲ Hide replies`
+                    : `▼ ${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
+                </button>
               )}
             </div>
           )}
-
-          <div className="flex items-center gap-4 mt-1">
-            {onReply && (
-              <button
-                id={`answer-reply-btn-${id}`}
-                onClick={() => setIsReplying(!isReplying)}
-                className="text-[10px] font-bold text-gray-400 hover:text-primary-500 uppercase tracking-wider transition-colors"
-              >
-                {isReplying ? "Cancel" : "Reply"}
-              </button>
-            )}
-            {replyCount > 0 && (
-              <button
-                id={`answer-toggle-replies-btn-${id}`}
-                onClick={() => setShowReplies((v) => !v)}
-                className="text-[10px] font-semibold text-primary-500 hover:text-primary-600 transition-colors"
-              >
-                {showReplies
-                  ? `▲ Hide replies`
-                  : `▼ ${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
-              </button>
-            )}
-          </div>
         </div>
       </div>
 
-      {isReplying && onReply && (
+      {!hideComments && isReplying && onReply && (
         <div
-          id={`answer-reply-input-wrapper-${id}`}
+          id={`answer-reply-input-wrapper-${idStr}`}
           className="ml-12 mt-1 animate-in fade-in slide-in-from-top-1 duration-200"
         >
           <CommentInput
-            id={`answer-reply-input-${id}`}
-            placeholder={`Reply to ${authorName}...`}
+            id={`answer-reply-input-${idStr}`}
+            placeholder={`Reply to ${author_name}...`}
             onSubmit={async (content) => {
               await onReply(content, undefined);
               setIsReplying(false);
@@ -440,12 +389,12 @@ export default function AnswerCard({
         </div>
       )}
 
-      {showReplies && replyCount > 0 && (
+      {!hideComments && showReplies && replyCount > 0 && (
         <div
           className="ml-12 sm:ml-14 flex flex-col gap-2 relative"
-          id={`answer-replies-${id}`}
+          id={`answer-replies-${idStr}`}
         >
-          <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800"></div>
+          <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800" />
           <div className="flex items-center gap-1.5 px-1">
             <CornerDownRight
               size={12}
@@ -460,12 +409,7 @@ export default function AnswerCard({
             {builtReplies.map((comment) => (
               <CommentCard
                 key={comment.comment_id}
-                id={comment.comment_id.toString()}
-                authorId={comment.user_id}
-                authorName={comment.author_name}
-                createdAt={comment.created_at}
-                body={comment.content}
-                avatarUrl={comment.author_profile_url}
+                {...comment}
                 replies={comment.replies ?? []}
                 onReply={onReply}
                 onDelete={onDeleteComment}

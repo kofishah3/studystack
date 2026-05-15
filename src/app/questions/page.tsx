@@ -23,16 +23,9 @@ export default function QuestionsPage() {
       if (!append) setLoading(true);
       else setLoadingMore(true);
 
-      const params = new URLSearchParams({
-        page: String(pageNum),
-      });
-
-      if (selectedCategory !== "All") {
-        params.append("category", selectedCategory);
-      }
-      if (searchQuery.trim()) {
-        params.append("search", searchQuery.trim());
-      }
+      const params = new URLSearchParams({ page: String(pageNum) });
+      if (selectedCategory !== "All") params.append("category", selectedCategory);
+      if (searchQuery.trim()) params.append("search", searchQuery.trim());
 
       const res = await fetch(`/api/questions?${params}`);
       const json = await res.json();
@@ -106,45 +99,26 @@ export default function QuestionsPage() {
                 {questions.map((q) => (
                   <QuestionCard
                     key={q.question_id}
-                    id={q.question_id}
-                    demandRate={q.demand_score}
-                    questionTitle={q.title}
-                    profileURL={q.profile_url}
-                    author={q.user_name}
-                    subjectTag={q.category
-                      .split(",")
-                      .map((s: string) => s.trim())}
-                    createdAt={new Date(q.created_at).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      },
-                    )}
-                    body={q.content}
-                    answers={q.answers.map((a: any) => ({
-                      id: String(a.answer_id),
-                      credibilityScore: a.author_credibility_score || 0,
-                      authorName: a.author_name,
-                      body: a.content,
-                      mediaURLs: a.media_urls,
-                      createdAt: new Date(a.created_at).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        },
-                      ),
-                      isResolved: a.is_accepted,
-                      totalComments: 0,
-                      totalUpVotes: 0,
-                      totalDownVotes: 0,
-                      userVote: null,
-                    }))}
-                    totalUpVotes={0}
-                    totalDownVotes={0}
+                    // ── Identity ──────────────────────────────────────────────
+                    question_id={q.question_id}
+                    user_id={q.user_id}
+                    // ── Content ───────────────────────────────────────────────
+                    title={q.title}
+                    content={q.content}
+                    // category is a raw comma-separated string from the DB
+                    category={q.category ?? ""}
+                    demand_score={q.demand_score}
+                    // ── Timestamps ────────────────────────────────────────────
+                    created_at={q.created_at}
+                    resolved_at={q.resolved_at ?? null}
+                    // ── Author ────────────────────────────────────────────────
+                    user_name={q.user_name}
+                    profile_url={q.profile_url ?? null}
+                    // ── Answers — pass the raw DB rows directly ───────────────
+                    // AnswerCard now mirrors the DB schema so no mapping needed.
+                    answers={q.answers ?? []}
+                    // ── Mode + callbacks ──────────────────────────────────────
+                    mode="preview"
                     onCreateTutorial={(id) =>
                       console.log("Create tutorial for:", id)
                     }
