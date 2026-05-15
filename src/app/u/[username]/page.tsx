@@ -50,7 +50,7 @@ export default function PublicProfilePage() {
 
   const followAction = (
     <button
-      className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-primary-500 hover:bg-primary-600 
+      className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-primary-500 hover:bg-primary-500 
     rounded-full text-white font-semibold shadow-sm text-xs
     cursor-pointer transition-all duration-200 active:scale-95
     "

@@ -2,28 +2,23 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 
-interface SelectOption {
-  value: string;
-  label: string;
-}
-
-interface SelectInputProps {
+interface SearchableSelectProps {
   id?: string;
   name: string;
   value: string;
   onChange: (e: { target: { name: string; value: string } }) => void;
-  options: SelectOption[];
+  options: string[];
   placeholder?: string;
   icon?: React.ReactNode;
 }
 
-interface SelectInputwLabelProps extends SelectInputProps {
+interface SearchableSelectwLabelProps extends SearchableSelectProps {
   label: string;
 }
 
-export default function SelectInput({
+export default function SearchableSelect({
   id,
   name,
   value,
@@ -31,13 +26,20 @@ export default function SelectInput({
   options,
   placeholder,
   icon,
-}: SelectInputProps) {
+}: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(value);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  useEffect(() => {
+    setSearchTerm(value);
+  }, [value]);
+
+  const filteredOptions = options.filter((opt) =>
+    opt.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,11 +49,12 @@ export default function SelectInput({
 
       if (!isInsideContainer && !isInsideDropdown) {
         setIsOpen(false);
+        onChange({ target: { name, value: searchTerm } });
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [searchTerm, name, onChange]);
 
   const updateCoords = () => {
     if (containerRef.current) {
@@ -76,9 +79,17 @@ export default function SelectInput({
     };
   }, [isOpen]);
 
-  const handleSelect = (optionValue: string) => {
-    onChange({ target: { name, value: optionValue } });
+  const handleSelect = (option: string) => {
+    setSearchTerm(option);
+    onChange({ target: { name, value: option } });
     setIsOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    setSearchTerm(newVal);
+    onChange({ target: { name, value: newVal } });
+    if (!isOpen) setIsOpen(true);
   };
 
   return (
@@ -88,21 +99,26 @@ export default function SelectInput({
       className="relative w-full"
     >
       <div
-        onClick={() => setIsOpen(!isOpen)}
         className={`
-          group w-full h-fit p-1 cursor-pointer
+          group w-full h-fit p-1 cursor-text
           border border-border rounded-xl bg-surface/50
           ${isOpen ? "border-primary-500 ring-1 ring-primary-500" : "hover:border-primary-300 hover:ring-1 hover:ring-primary-300"}
           transition-all duration-200 ease-in-out
         `}
       >
-        <div className="flex flex-row items-center px-2 py-2">
-          {icon && <div className="mr-2 text-muted shrink-0">{icon}</div>}
-          <div
-            className={`w-full text-sm ${!selectedOption ? "text-muted" : "text-text"}`}
-          >
-            {selectedOption ? selectedOption.label : placeholder || "Select..."}
-          </div>
+        <div className="flex flex-row items-center px-2 gap-5">
+          {icon || <Search size={18} className="mr-2 text-muted shrink-0" />}
+          <input
+            id={id}
+            name={name}
+            type="text"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onFocus={() => setIsOpen(true)}
+            placeholder={placeholder || "Type to search..."}
+            autoComplete="off"
+            className="w-full bg-transparent outline-none border-none text-text text-sm placeholder:text-muted py-2"
+          />
           <ChevronDown
             size={16}
             className={`shrink-0 text-muted transition-transform duration-200 ${isOpen ? "rotate-180 text-primary-500" : ""}`}
@@ -111,6 +127,7 @@ export default function SelectInput({
       </div>
 
       {isOpen &&
+        filteredOptions.length > 0 &&
         createPortal(
           <div
             ref={dropdownRef}
@@ -128,24 +145,24 @@ export default function SelectInput({
             "
           >
             <div className="p-1 max-h-60 overflow-y-auto custom-scrollbar">
-              {options.map((opt) => (
+              {filteredOptions.map((opt) => (
                 <div
-                  key={opt.value}
-                  id={`${id || name}-option-${opt.value}`}
+                  key={opt}
+                  id={`${id || name}-option-${opt.replace(/\s+/g, "-")}`}
                   onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleSelect(opt.value);
+                    e.preventDefault(); // Prevent input blur
+                    handleSelect(opt);
                   }}
                   className={`
                     px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors
                     ${
-                      value === opt.value
+                      value === opt
                         ? "bg-primary-500/10 text-primary-500 font-semibold"
                         : "text-text hover:bg-muted/10"
                     }
                   `}
                 >
-                  {opt.label}
+                  {opt}
                 </div>
               ))}
             </div>
@@ -156,7 +173,7 @@ export default function SelectInput({
   );
 }
 
-export function SelectInputwLabel({
+export function SearchableSelectwLabel({
   label,
   id,
   name,
@@ -165,7 +182,7 @@ export function SelectInputwLabel({
   options,
   placeholder,
   icon,
-}: SelectInputwLabelProps) {
+}: SearchableSelectwLabelProps) {
   return (
     <div
       id={`${id || name}-field-group`}
@@ -174,7 +191,7 @@ export function SelectInputwLabel({
       <p id={`${id || name}-label`} className="font-medium text-text text-sm">
         {label}
       </p>
-      <SelectInput
+      <SearchableSelect
         id={id}
         name={name}
         value={value}

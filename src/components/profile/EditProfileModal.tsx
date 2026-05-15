@@ -14,8 +14,10 @@ import {
 import axios from "axios";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
 import { SelectInputwLabel } from "@/components/inputs/SelectInput";
+import { SearchableSelectwLabel } from "@/components/inputs/SearchableSelect";
 import FullButton from "@/components/inputs/FullButton";
 import { useToast } from "@/contexts/ToastContext";
+import { CEBU_SCHOOLS, DEGREE_PROGRAMS } from "@/lib/constants";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -37,6 +39,7 @@ export default function EditProfileModal({
     user_name: user?.user_name || "",
     institution: user?.institution || "",
     education_level: user?.education_level || "bachelor",
+    degree_program: user?.degree_program || "",
     age: user?.age || "",
     gender: user?.gender || "",
   });
@@ -52,6 +55,7 @@ export default function EditProfileModal({
         user_name: user.user_name || "",
         institution: user.institution || "",
         education_level: user.education_level || "bachelor",
+        degree_program: user.degree_program || "",
         age: user.age || "",
         gender: user.gender || "",
       });
@@ -64,9 +68,7 @@ export default function EditProfileModal({
 
   if (!isOpen) return null;
 
-  const handleChange = (
-    e: { target: { name: string; value: string } }
-  ) => {
+  const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -125,6 +127,10 @@ export default function EditProfileModal({
     }
   };
 
+  const isCollegeLevel = ["bachelor", "master", "doctorate"].includes(
+    formData.education_level,
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div
@@ -173,7 +179,7 @@ export default function EditProfileModal({
               className="flex flex-col items-center gap-4"
             >
               <div className="relative group">
-                <div className="absolute -inset-1 bg-linear-to-r from-primary-500 to-primary-600 rounded-full opacity-20 blur-sm group-hover:opacity-40 transition duration-500"></div>
+                <div className="absolute -inset-1 bg-linear-to-r from-primary-500 to-primary-500 rounded-full opacity-20 blur-sm group-hover:opacity-40 transition duration-500"></div>
                 <div
                   id="profile-image-container"
                   className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-background shadow-xl"
@@ -225,16 +231,32 @@ export default function EditProfileModal({
               </div>
 
               <div className="md:col-span-2">
-                <TextInputwLabel
+                <SearchableSelectwLabel
                   id="edit-institution"
                   label="Institution"
                   name="institution"
                   value={formData.institution}
                   onChange={handleChange}
+                  options={CEBU_SCHOOLS}
                   placeholder="University Name"
                   icon={<Building size={18} className="text-muted" />}
                 />
               </div>
+
+              {isCollegeLevel && (
+                <div className="md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <SearchableSelectwLabel
+                    id="edit-degree-program"
+                    label="Degree Program"
+                    name="degree_program"
+                    value={formData.degree_program}
+                    onChange={handleChange}
+                    options={DEGREE_PROGRAMS}
+                    placeholder="BS Computer Science"
+                    icon={<GraduationCap size={18} className="text-muted" />}
+                  />
+                </div>
+              )}
 
               <SelectInputwLabel
                 id="edit-education-level"

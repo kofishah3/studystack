@@ -25,8 +25,10 @@ export interface CommentData {
 }
 
 // CommentCardProps is a direct projection of CommentData plus UI callbacks.
-export interface CommentCardProps
-  extends Omit<CommentData, "question_id" | "answer_id"> {
+export interface CommentCardProps extends Omit<
+  CommentData,
+  "question_id" | "answer_id"
+> {
   onReply?: (content: string, parentCommentId: string) => Promise<void>;
   onDelete?: (commentId: string) => Promise<void>;
   depth?: number;
@@ -155,7 +157,7 @@ export function CommentCard({
               <button
                 id={`comment-toggle-replies-btn-${idStr}`}
                 onClick={() => setShowReplies((v) => !v)}
-                className="text-[10px] font-semibold text-primary-500 hover:text-primary-600 transition-colors"
+                className="text-[10px] font-semibold text-primary-500 hover:text-primary-500 transition-colors"
               >
                 {showReplies
                   ? `▲ Hide replies`

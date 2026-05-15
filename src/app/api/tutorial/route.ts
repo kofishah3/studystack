@@ -15,6 +15,11 @@ import {
 import { NextRequest, NextResponse } from "next/server";
 
 import { insertTutorial, listTutorialsDetailed } from "@/lib/queries/tutorials";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "@/lib/auth";
+import { getUserById } from "@/lib/queries/users";
+import { UserID } from "@/types/database";
+import { FeedSettingsState } from "@/components/feed/FeedSettings";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +30,39 @@ export async function GET(request: NextRequest) {
     const category = sp.get("category") || undefined;
     const search = sp.get("search") || undefined;
 
-    const tutorials = await listTutorialsDetailed(limit, offset, category, search);
+    const settings: FeedSettingsState = {
+      sort: (sp.get("sort") as any) || "latest",
+      schoolFilter: (sp.get("schoolFilter") as any) || "all",
+      degreeFilter: (sp.get("degreeFilter") as any) || "all",
+      timeFilter: (sp.get("timeFilter") as any) || "all",
+    };
+
+    const authHeader = request.headers.get("authorization");
+    let userInfo = undefined;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      try {
+        const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+        const user = await getUserById(payload.userId as UserID);
+        if (user) {
+          userInfo = {
+            institution: user.institution || undefined,
+            degree_program: user.degree_program || undefined,
+          };
+        }
+      } catch (e) {
+      }
+    }
+
+    const tutorials = await listTutorialsDetailed(
+      limit,
+      offset,
+      category,
+      search,
+      settings,
+      userInfo,
+    );
 
     const detailedTutorials = await Promise.all(
       tutorials.map(async (t) => {

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       gender,
       institution: initial_institution,
       education_level: initial_education_level,
-      profile_url
+      profile_url,
     } = body;
 
     if (!email || !password) {
@@ -60,8 +60,9 @@ export async function POST(request: NextRequest) {
       gender: gender || null,
       institution: initial_institution || "Pending...",
       education_level: (initial_education_level as any) || "other",
-      profile_url: profile_url || null,        
-      credibility_score: 0
+      degree_program: null,
+      profile_url: profile_url || null,
+      credibility_score: 0,
     });
 
     const { password_hash: _ph, ...userWithoutPassword } = newUser;

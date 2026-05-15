@@ -3,30 +3,58 @@
 import QuestionCard from "@/components/cards/QuestionCard";
 import TutorialCard from "@/components/cards/TutorialCard";
 import SkeletonCard from "@/components/ui/SkeletonCard";
-import { useEffect, useState } from "react";
+import FeedSettings, { FeedSettingsState } from "@/components/feed/FeedSettings";
+import { useEffect, useState, useCallback } from "react";
 
 export default function HomePage() {
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState<FeedSettingsState>({
+    sort: "demand",
+    schoolFilter: "all",
+    degreeFilter: "all",
+    timeFilter: "all",
+  });
+
+  const fetchFeed = useCallback(async (currentSettings: FeedSettingsState) => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        limit: "20",
+        sort: currentSettings.sort,
+        schoolFilter: currentSettings.schoolFilter,
+        degreeFilter: currentSettings.degreeFilter,
+        timeFilter: currentSettings.timeFilter,
+      });
+
+      const token = localStorage.getItem("token");
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/feed?${params}`, { headers });
+      const json = await res.json();
+      setItems(json.data || []);
+    } catch (err) {
+      console.error("Failed to fetch feed:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchFeed() {
-      try {
-        const res = await fetch("/api/feed?limit=10");
-        const json = await res.json();
-        setItems(json.data || []);
-      } catch (err) {
-        console.error("Failed to fetch feed:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchFeed();
-  }, []);
+    fetchFeed(settings);
+  }, [fetchFeed, settings]);
 
   return (
     <main className="flex-1 p-6 overflow-y-auto scrollbar-hide">
       <div className="w-full flex flex-col gap-6 pb-12">
+        <div id="home-feed-header" className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-text">Community Feed</h2>
+          <FeedSettings 
+            initialSettings={settings} 
+            onSettingsChange={setSettings} 
+          />
+        </div>
         {isLoading ? (
           <div className="flex flex-col gap-4">
             {[1, 2, 3].map((i) => (

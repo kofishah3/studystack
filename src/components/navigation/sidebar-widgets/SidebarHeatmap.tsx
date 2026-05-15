@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Activity } from "lucide-react";
 import { useTooltip } from "@/contexts/TooltipContext";
 
-const DAYS = 91; // 13 weeks × 7 days
+const DAYS = 91;
 const COLS = 13;
 
 function formatDate(dateStr: string) {
@@ -19,8 +19,8 @@ function getIntensityColor(count: number) {
   if (count === 0) return "bg-gray-100 dark:bg-gray-800/50";
   if (count === 1) return "bg-primary-200 dark:bg-primary-900/50";
   if (count === 2) return "bg-primary-300 dark:bg-primary-700/60";
-  if (count === 3) return "bg-primary-400 dark:bg-primary-500/70";
-  return "bg-primary-500 dark:bg-primary-500";
+  if (count === 3) return "bg-primary-500 dark:bg-primary-500/70";
+  return "bg-primary-700 dark:bg-primary-300";
 }
 
 export default function SidebarHeatmap() {
@@ -119,7 +119,8 @@ export default function SidebarHeatmap() {
               {col.map((day, di) => (
                 <div
                   key={di}
-                  className={`w-full aspect-square rounded-[2px] ${getIntensityColor(day.count)} transition-colors hover:ring-1 hover:ring-primary-400 cursor-default`}
+                  className={`w-full aspect-square rounded-[2px] ${getIntensityColor(day.count)} 
+                  transition-colors hover:ring-1 hover:ring-primary-400 cursor-default`}
                   onMouseEnter={(e) =>
                     showTooltip(
                       `${day.count} act${day.count !== 1 ? "s" : ""} · ${formatDate(day.date)}`,

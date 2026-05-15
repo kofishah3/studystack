@@ -52,7 +52,7 @@ export default function QuestionCard({
   const [helpfulVote, setHelpfulVote] = useState<"up" | "down" | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
+
   const router = useRouter();
   const answerTextareaRef = useRef<HTMLTextAreaElement>(null);
   const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -63,7 +63,7 @@ export default function QuestionCard({
 
   const isResolved = resolved_at != null;
   const idStr = String(question_id);
-  
+
   const { tags, formattedDate, featuredAnswer } = useMemo(() => {
     const categoryTags = (category ?? "")
       .split(",")
@@ -77,17 +77,17 @@ export default function QuestionCard({
     });
 
     const sortedAnswers = [...answers].sort((a, b) => {
-        if (a.is_accepted && !b.is_accepted) return -1;
-        if (!a.is_accepted && b.is_accepted) return 1;
-        return 0;
+      if (a.is_accepted && !b.is_accepted) return -1;
+      if (!a.is_accepted && b.is_accepted) return 1;
+      return 0;
     });
-    
+
     const top = sortedAnswers.length > 0 ? sortedAnswers[0] : null;
 
-    return { 
-        tags: categoryTags, 
-        formattedDate: date,
-        featuredAnswer: top 
+    return {
+      tags: categoryTags,
+      formattedDate: date,
+      featuredAnswer: top,
     };
   }, [category, created_at, mode, answers]);
 
@@ -136,11 +136,19 @@ export default function QuestionCard({
           </div>
 
           <div className="shrink-0 flex items-center gap-1 mt-0.5">
-            <span className="hidden sm:inline text-xs text-gray-400 font-medium">Helpful?</span>
-            <button onClick={() => handleHelpful("up")} className={`p-1.5 rounded-lg ${helpfulVote === "up" ? "bg-emerald-100 text-emerald-600" : "text-gray-400 hover:bg-gray-100"}`}>
+            <span className="hidden sm:inline text-xs text-gray-400 font-medium">
+              Helpful?
+            </span>
+            <button
+              onClick={() => handleHelpful("up")}
+              className={`p-1.5 rounded-lg ${helpfulVote === "up" ? "bg-emerald-100 text-emerald-600" : "text-gray-400 hover:bg-gray-100"}`}
+            >
               <ThumbsUp size={13} />
             </button>
-            <button onClick={() => handleHelpful("down")} className={`p-1.5 rounded-lg ${helpfulVote === "down" ? "bg-red-100 text-red-500" : "text-gray-400 hover:bg-gray-100"}`}>
+            <button
+              onClick={() => handleHelpful("down")}
+              className={`p-1.5 rounded-lg ${helpfulVote === "down" ? "bg-red-100 text-red-500" : "text-gray-400 hover:bg-gray-100"}`}
+            >
               <ThumbsDown size={13} />
             </button>
             <ActionMenu />
@@ -155,17 +163,24 @@ export default function QuestionCard({
           />
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 border-l border-gray-200 dark:border-gray-700 ml-1 pl-2">
-              {tags.map((tag) => <SubjectTag key={tag} label={tag} />)}
+              {tags.map((tag) => (
+                <SubjectTag key={tag} label={tag} />
+              ))}
             </div>
           )}
         </div>
 
-        <p className={`text-gray-600 dark:text-gray-400 leading-relaxed ${mode === "full" ? "text-sm whitespace-pre-wrap" : "text-xs line-clamp-3"}`}>
+        <p
+          className={`text-gray-600 dark:text-gray-400 leading-relaxed ${mode === "full" ? "text-sm whitespace-pre-wrap" : "text-xs line-clamp-3"}`}
+        >
           {content}
         </p>
 
         <div className="flex justify-end pt-0.5">
-          <button onClick={handleShare} className={`flex items-center gap-1 text-xs font-medium ${shareCopied ? "text-primary-600" : "text-gray-400 hover:text-primary-600"}`}>
+          <button
+            onClick={handleShare}
+            className={`flex items-center gap-1 text-xs font-medium ${shareCopied ? "text-primary-500" : "text-gray-400 hover:text-primary-500"}`}
+          >
             <Share2 size={12} />
             {shareCopied ? "Link copied!" : "Share"}
           </button>
@@ -177,19 +192,23 @@ export default function QuestionCard({
           <div className="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
             {featuredAnswer ? (
               <>
-                <span className={`text-xs font-bold ${isResolved ? "text-emerald-600" : "text-primary-700"}`}>
+                <span
+                  className={`text-xs font-bold ${isResolved ? "text-emerald-600" : "text-primary-700"}`}
+                >
                   {isResolved ? "Resolved Answer" : "Top Answer"}
                 </span>
-                <div 
+                <div
                   onClick={() => router.push(`/questions/${idStr}`)}
                   className="block group opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
                 >
-                    <AnswerCard {...featuredAnswer} hideComments />
+                  <AnswerCard {...featuredAnswer} hideComments />
                 </div>
               </>
             ) : (
               <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center">
-                <p className="text-xs text-gray-400 italic">No answers yet — be the first to help!</p>
+                <p className="text-xs text-gray-400 italic">
+                  No answers yet — be the first to help!
+                </p>
               </div>
             )}
           </div>
@@ -200,16 +219,43 @@ export default function QuestionCard({
         <div className="px-3.5 pb-3.5">
           <div className="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-end gap-1.5">
-              <FullButton label="Create Tutorial" variant="secondary" className="w-fit! py-1 px-2.5 text-xs" onClick={() => onCreateTutorial?.(idStr)} />
-              <FullButton label="Answer" variant={composerTab === "answer" ? "primary" : "secondary"} className="w-fit! py-1 px-2.5 text-xs" onClick={() => handleComposerTab("answer")} />
-              <FullButton label="Comment" variant={composerTab === "comment" ? "primary" : "secondary"} className="w-fit! py-1 px-2.5 text-xs" onClick={() => handleComposerTab("comment")} />
+              <FullButton
+                label="Create Tutorial"
+                variant="secondary"
+                className="w-fit! py-1 px-2.5 text-xs"
+                onClick={() => onCreateTutorial?.(idStr)}
+              />
+              <FullButton
+                label="Answer"
+                variant={composerTab === "answer" ? "primary" : "secondary"}
+                className="w-fit! py-1 px-2.5 text-xs"
+                onClick={() => handleComposerTab("answer")}
+              />
+              <FullButton
+                label="Comment"
+                variant={composerTab === "comment" ? "primary" : "secondary"}
+                className="w-fit! py-1 px-2.5 text-xs"
+                onClick={() => handleComposerTab("comment")}
+              />
             </div>
 
-            <div style={{ display: composerTab === "answer" ? "block" : "none" }}>
-              <CreateAnswer questionId={idStr} onSuccess={onAnswerPosted} textareaRef={answerTextareaRef} />
+            <div
+              style={{ display: composerTab === "answer" ? "block" : "none" }}
+            >
+              <CreateAnswer
+                questionId={idStr}
+                onSuccess={onAnswerPosted}
+                textareaRef={answerTextareaRef}
+              />
             </div>
-            <div style={{ display: composerTab === "comment" ? "block" : "none" }}>
-              <CreateComment questionId={idStr} onSuccess={onCommentPosted} textareaRef={commentTextareaRef} />
+            <div
+              style={{ display: composerTab === "comment" ? "block" : "none" }}
+            >
+              <CreateComment
+                questionId={idStr}
+                onSuccess={onCommentPosted}
+                textareaRef={commentTextareaRef}
+              />
             </div>
           </div>
         </div>

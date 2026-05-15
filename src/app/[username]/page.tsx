@@ -54,7 +54,13 @@ export default function PublicProfilePage() {
         const eduFormatted =
           edu.charAt(0).toUpperCase() + edu.slice(1).replace("_", " ");
         const inst = user.institution || "University";
-        setSubtitle(`${eduFormatted} @ ${inst}`);
+        const program = user.degree_program;
+
+        if (program) {
+          setSubtitle(`${program} @ ${inst} (${eduFormatted})`);
+        } else {
+          setSubtitle(`${eduFormatted} @ ${inst}`);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -90,7 +96,7 @@ export default function PublicProfilePage() {
     </button>
   ) : (
     <button
-      className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-primary-500 hover:bg-primary-600 
+      className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-primary-500 hover:bg-primary-500 
       rounded-full text-white font-semibold shadow-sm text-xs
       cursor-pointer transition-all duration-200 active:scale-95"
     >

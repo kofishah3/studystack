@@ -20,7 +20,11 @@ export interface CreateAnswerProps {
   textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-export default function CreateAnswer({ questionId, onSuccess, textareaRef: externalRef }: CreateAnswerProps) {
+export default function CreateAnswer({
+  questionId,
+  onSuccess,
+  textareaRef: externalRef,
+}: CreateAnswerProps) {
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState("");
   const [uploads, setUploads] = useState<UploadFile[]>([]);
@@ -84,9 +88,9 @@ export default function CreateAnswer({ questionId, onSuccess, textareaRef: exter
 
       const res = await fetch(`/api/questions/${questionId}/answers`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}) // Add this!
+          ...(token ? { Authorization: `Bearer ${token}` } : {}), // Add this!
         },
         body: JSON.stringify({ content: content.trim() }),
       });
@@ -144,9 +148,17 @@ export default function CreateAnswer({ questionId, onSuccess, textareaRef: exter
                     <X size={10} />
                   </button>
                   {u.type === "image" ? (
-                    <img src={u.preview} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={u.preview}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <video src={u.preview} className="w-full h-full object-cover" muted />
+                    <video
+                      src={u.preview}
+                      className="w-full h-full object-cover"
+                      muted
+                    />
                   )}
                 </div>
               ))}
@@ -155,13 +167,15 @@ export default function CreateAnswer({ questionId, onSuccess, textareaRef: exter
 
           {/* Error */}
           {error && (
-            <p className="px-3 pb-2 text-xs text-red-500 dark:text-red-400">{error}</p>
+            <p className="px-3 pb-2 text-xs text-red-500 dark:text-red-400">
+              {error}
+            </p>
           )}
 
           {/* Bottom bar */}
           <div className="px-3 pb-3 pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
             {/* Upload label */}
-            <label className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer transition-colors">
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-500 dark:hover:text-primary-400 cursor-pointer transition-colors">
               <ImagePlus size={15} />
               <span>
                 {imageCount}/{MAX_IMAGES} img · {videoCount}/{MAX_VIDEOS} vid
@@ -183,13 +197,13 @@ export default function CreateAnswer({ questionId, onSuccess, textareaRef: exter
                 Cancel
               </button>
               <FullButton
-                  id="create-answer-post"
-                  label="Post Answer"
-                  className="w-fit! py-1.5 px-4 text-xs"
-                  isLoading={isLoading}
-                  disabled={!content.trim()}
-                  onClick={handleSubmit}
-                />
+                id="create-answer-post"
+                label="Post Answer"
+                className="w-fit! py-1.5 px-4 text-xs"
+                isLoading={isLoading}
+                disabled={!content.trim()}
+                onClick={handleSubmit}
+              />
             </div>
           </div>
         </>

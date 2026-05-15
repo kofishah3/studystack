@@ -38,8 +38,8 @@ export async function insertUser(
 ): Promise<User> {
   const row = await one<UserRow>(
     `INSERT INTO users
-       (user_id, user_name, email, password_hash, age, gender, institution, education_level)
-     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)
+       (user_id, user_name, email, password_hash, age, gender, institution, education_level, degree_program)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
       input.user_name,
@@ -49,6 +49,7 @@ export async function insertUser(
       input.gender,
       input.institution,
       input.education_level,
+      input.degree_program || null,
     ],
   );
   if (!row) throw new DatabaseError("insertUser: no row returned");

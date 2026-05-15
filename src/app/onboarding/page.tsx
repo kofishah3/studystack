@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
 import { SelectInputwLabel } from "@/components/inputs/SelectInput";
+import { SearchableSelectwLabel } from "@/components/inputs/SearchableSelect";
 import FullButton from "@/components/inputs/FullButton";
+import { CEBU_SCHOOLS, DEGREE_PROGRAMS } from "@/lib/constants";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function OnboardingPage() {
     user_name: "",
     institution: "",
     education_level: "bachelor",
+    degree_program: "",
     age: "",
     gender: "",
   });
@@ -42,6 +45,19 @@ export default function OnboardingPage() {
     if (step === 1 && !formData.user_name) {
       setError("Please pick a username");
       return;
+    }
+    if (step === 2) {
+      if (!formData.institution) {
+        setError("Please enter your institution");
+        return;
+      }
+      const isCollege = ["bachelor", "master", "doctorate"].includes(
+        formData.education_level,
+      );
+      if (isCollege && !formData.degree_program) {
+        setError("Please enter your degree program");
+        return;
+      }
     }
     setError("");
     setStep(step + 1);
@@ -74,6 +90,10 @@ export default function OnboardingPage() {
       setIsLoading(false);
     }
   };
+
+  const isCollegeLevel = ["bachelor", "master", "doctorate"].includes(
+    formData.education_level,
+  );
 
   return (
     <div
@@ -155,20 +175,10 @@ export default function OnboardingPage() {
               Education
             </h2>
             <p id="step-2-subtitle" className="text-muted mb-8 text-sm">
-              Where are you currently studying?
+              Tell us about your studies.
             </p>
 
             <div className="space-y-6">
-              <TextInputwLabel
-                id="onboarding-institution"
-                label="Institution"
-                name="institution"
-                value={formData.institution}
-                onChange={handleChange}
-                placeholder="University Name"
-                type="text"
-              />
-
               <div
                 id="onboarding-level-container"
                 className="flex flex-col gap-2"
@@ -187,6 +197,10 @@ export default function OnboardingPage() {
                           setFormData((prev) => ({
                             ...prev,
                             education_level: level,
+                            // Reset degree program if moving to high school
+                            ...(level === "high_school"
+                              ? { degree_program: "" }
+                              : {}),
                           }))
                         }
                         className={`py-3 px-4 rounded-xl border transition-all duration-200 text-sm ${
@@ -202,6 +216,30 @@ export default function OnboardingPage() {
                   )}
                 </div>
               </div>
+
+              <SearchableSelectwLabel
+                id="onboarding-institution"
+                label="Institution"
+                name="institution"
+                value={formData.institution}
+                onChange={handleChange}
+                options={CEBU_SCHOOLS}
+                placeholder="University Name"
+              />
+
+              {isCollegeLevel && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <SearchableSelectwLabel
+                    id="onboarding-degree-program"
+                    label="Degree Program"
+                    name="degree_program"
+                    value={formData.degree_program}
+                    onChange={handleChange}
+                    options={DEGREE_PROGRAMS}
+                    placeholder="BS Computer Science"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="mt-10 flex gap-4">
