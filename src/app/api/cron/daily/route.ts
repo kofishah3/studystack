@@ -1,4 +1,5 @@
 import { runDemandDecay } from "@/lib/cron/demand-decay";
+import { runTutorialPurge } from "@/lib/cron/purge-tutorials";
 import { AuthError, errorToResponse } from "@/lib/errors";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,7 +15,9 @@ export async function POST(request: NextRequest) {
       throw new AuthError("Unauthorized");
     }
 
-    const result = await runDemandDecay();
+    // Run both maintenance tasks
+    const purgeResult = await runTutorialPurge();
+    const decayResult = await runDemandDecay();
     
     try {
       const { getIO } = await import("@/lib/socket");
@@ -22,10 +25,15 @@ export async function POST(request: NextRequest) {
       // Let all feed listeners know demand scores have changed
       io.to("feed").emit("update:demand", { batch: true });
     } catch (e) {
-      console.error("Socket emission failed", e);
+      // Socket emission might fail in serverless, but we ignore it here
+      console.warn("Socket emission failed in cron", e);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      success: true,
+      purge: purgeResult,
+      decay: decayResult
+    });
   } catch (error) {
     return errorToResponse(error);
   }
