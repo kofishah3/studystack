@@ -67,6 +67,15 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       newQuestionId,
     ]);
 
+    try {
+      const { getIO } = await import("@/lib/socket");
+      const io = getIO();
+      io.emit(`user:metrics_update:${userId}`);
+      io.emit("leaderboard:update");
+    } catch (e) {
+      console.error("Socket emission failed", e);
+    }
+
     return NextResponse.json(
       {
         success: true,

@@ -1,4 +1,4 @@
-import { runTutorialPurge } from "@/lib/cron/purge-tutorials";
+import { runDemandDecay } from "@/lib/cron/demand-decay";
 import { AuthError, errorToResponse } from "@/lib/errors";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,7 +14,17 @@ export async function POST(request: NextRequest) {
       throw new AuthError("Unauthorized");
     }
 
-    const result = await runTutorialPurge();
+    const result = await runDemandDecay();
+    
+    try {
+      const { getIO } = await import("@/lib/socket");
+      const io = getIO();
+      // Let all feed listeners know demand scores have changed
+      io.to("feed").emit("update:demand", { batch: true });
+    } catch (e) {
+      console.error("Socket emission failed", e);
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     return errorToResponse(error);

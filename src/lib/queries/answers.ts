@@ -133,6 +133,17 @@ export async function listAnswersForQuestionDetailed(
 }
 
 export async function deleteAnswer(id: AnswerID, userId: UserID): Promise<boolean> {
+  const { listMaterialsForAnswer } = await import("./answer-materials");
+  const { getStorage } = await import("@/lib/storage");
+
+  try {
+    const materials = await listMaterialsForAnswer(id);
+    const storage = getStorage();
+    Promise.all(materials.map((m) => storage.delete(m.storage_key).catch(() => {})));
+  } catch (err) {
+    console.error("[deleteAnswer] failed to cleanup media", err);
+  }
+
   const row = await one<{ answer_id: number }>(
     "DELETE FROM answers WHERE answer_id = $1 AND user_id = $2 RETURNING answer_id",
     [id, userId],

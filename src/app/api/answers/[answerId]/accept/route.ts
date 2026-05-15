@@ -54,6 +54,21 @@ export const PUT = (req: NextRequest, ctx: RouteCtx) =>
         );
       });
 
+      try {
+        const { getIO } = await import("@/lib/socket");
+        const io = getIO();
+        const answerAuthor = await one<{ user_id: string }>(
+          `SELECT user_id FROM answers WHERE answer_id = $1`,
+          [id]
+        );
+        if (answerAuthor?.user_id) {
+          io.emit(`user:metrics_update:${answerAuthor.user_id}`);
+        }
+        io.emit("leaderboard:update");
+      } catch (e) {
+        console.error("Socket emission failed", e);
+      }
+
       return NextResponse.json({ success: true });
     } catch (error) {
       return errorToResponse(error);

@@ -53,6 +53,17 @@ export const POST = withAuth(
           : null,
       });
 
+      try {
+        const { questionId } = await params;
+        const { getIO } = await import("@/lib/socket");
+        const io = getIO();
+        io.emit(`user:metrics_update:${req.userId}`);
+        io.emit("leaderboard:update");
+        io.to(`question:${questionId}`).emit("new:comment");
+      } catch (e) {
+        console.error("Socket emission failed", e);
+      }
+
       return NextResponse.json({ comment }, { status: 201 });
     } catch (error) {
       return errorToResponse(error);

@@ -162,6 +162,15 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       return { tutorial, linked_question_ids: uniqueIds };
     });
 
+    try {
+      const { getIO } = await import("@/lib/socket");
+      const io = getIO();
+      io.emit(`user:metrics_update:${req.userId}`);
+      io.emit("leaderboard:update");
+    } catch (e) {
+      console.error("Socket emission failed", e);
+    }
+
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return errorToResponse(error);
