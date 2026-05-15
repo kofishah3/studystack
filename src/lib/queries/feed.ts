@@ -48,7 +48,7 @@ export async function getUnifiedFeed(
       if (row.item_type === "question") {
         const qData = await q(
           `
-        SELECT q.*, u.user_name as author, u.profile_url as profileURL 
+        SELECT q.*, u.user_name, u.profile_url
         FROM questions q 
         JOIN users u ON q.user_id = u.user_id 
         WHERE q.question_id = $1
@@ -65,13 +65,6 @@ export async function getUnifiedFeed(
           score: Number(row.score),
           data: {
             ...qData[0],
-            id: qData[0].question_id,
-            questionTitle: qData[0].title,
-            body: qData[0].content,
-            demandRate: Math.min(
-              100,
-              Math.round(Number(qData[0].demand_score) * 10),
-            ),
             answers: answers,
           },
         };

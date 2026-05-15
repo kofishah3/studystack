@@ -121,7 +121,11 @@ export async function listQuestionsDetailed(
   params.push(safeLimit, safeOffset);
 
   const rows = await q<any>(query, params);
-  return rows;
+  return rows.map((r) => ({
+    ...r,
+    user_name: r.user_name || r.author,
+    profile_url: r.profile_url || r.profileURL,
+  }));
 }
 
 export async function listQuestionsByUserDetailed(
@@ -136,7 +140,11 @@ export async function listQuestionsByUserDetailed(
     "SELECT * FROM question_details WHERE user_id = $3 ORDER BY created_at DESC LIMIT $1 OFFSET $2",
     [safeLimit, safeOffset, userId],
   );
-  return rows;
+  return rows.map((r) => ({
+    ...r,
+    user_name: r.user_name || r.author,
+    profile_url: r.profile_url || r.profileURL,
+  }));
 }
 
 export async function getQuestionByIdDetailed(
@@ -146,5 +154,10 @@ export async function getQuestionByIdDetailed(
     "SELECT * FROM question_details WHERE question_id = $1",
     [id],
   );
-  return row || null;
+  if (!row) return null;
+  return {
+    ...row,
+    user_name: row.user_name || row.author,
+    profile_url: row.profile_url || row.profileURL,
+  };
 }

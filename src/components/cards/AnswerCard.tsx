@@ -154,7 +154,6 @@ function MediaCarousel({
       <div className="mt-2 w-full flex flex-col gap-2">
         <div
           className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 group"
-          style={{ height: item.type === "video" ? "380px" : "260px" }}
           onClick={
             item.type === "image" ? () => setLightboxOpen(true) : undefined
           }
@@ -163,12 +162,12 @@ function MediaCarousel({
             <img
               src={item.url}
               alt=""
-              className="w-full object-contain cursor-pointer"
+              className="w-full h-auto max-h-[300px] object-cover cursor-pointer"
             />
           ) : (
             <video
               src={item.url}
-              className="w-full h-full object-contain"
+              className="w-full h-[380px] object-contain"
               controls
             />
           )}
