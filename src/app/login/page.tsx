@@ -2,7 +2,6 @@
 
 import FullButton from "@/components/inputs/FullButton";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
-import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -105,25 +104,12 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <FullButton
-              label="Sign In"
-              type="submit"
-              isLoading={isLoading}
-            />
+            <FullButton label="Sign In" type="submit" isLoading={isLoading} />
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border"></div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div id="login-social-auth" className="flex flex-col gap-4">
-              <GoogleAuthButton id="login-google-button" />
             </div>
           </form>
 

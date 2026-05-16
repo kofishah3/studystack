@@ -2,7 +2,6 @@
 
 import FullButton from "@/components/inputs/FullButton";
 import { TextInputwLabel } from "@/components/inputs/TextInput";
-import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -131,31 +130,7 @@ export default function SignupPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border"></div>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted">
-                    Or sign up with
-                  </span>
-                </div>
               </div>
-
-              <div id="signup-social-auth" className="flex flex-col gap-4">
-                <GoogleAuthButton id="signup-google-button" />
-              </div>
-
-              <p
-                id="signup-terms"
-                className="text-xs text-muted text-center px-4"
-              >
-                By signing up, you agree to our{" "}
-                <Link href="#" className="text-primary-500 underline">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="#" className="text-primary-500 underline">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
             </form>
 
             <p id="signup-footer" className="mt-8 text-center text-muted">
