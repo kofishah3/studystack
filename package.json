@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register server.ts",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "NODE_ENV=production ts-node -r tsconfig-paths/register server.ts",
     "lint": "eslint",
     "init-db": "ts-node -r tsconfig-paths/register scripts/init-db.ts"
