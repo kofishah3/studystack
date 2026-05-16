@@ -116,7 +116,7 @@ export async function GET(req: Request) {
 
     const authHeader = req.headers.get("authorization");
     let userInfo = undefined;
-    let userId = null;
+    let userId: string | null = null;
 
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
@@ -131,21 +131,35 @@ export async function GET(req: Request) {
           };
         }
       } catch (e) {
-        // Ignore
+        // Ignore invalid/expired token — treat as unauthenticated
       }
     }
 
+    // FIX: Use IS NOT DISTINCT FROM instead of = so that NULL userId
+    // doesn't cause a PostgreSQL type error or unexpected behaviour.
+    // When userId is null, the subquery safely returns NULL for every row.
     let query = `
-      SELECT 
+      SELECT
         q.*,
-        (SELECT value FROM interactions i WHERE i.question_id = q.question_id AND i.user_id = $1 AND i.interaction_type = 'react') as user_vote
-       FROM question_details q
-       WHERE 1=1
+        (
+          SELECT value
+          FROM interactions i
+          WHERE i.question_id = q.question_id
+            AND i.user_id IS NOT DISTINCT FROM $1
+            AND i.interaction_type = 'react'
+        ) AS user_vote
+      FROM question_details q
+      WHERE 1=1
     `;
-    const params: any[] = [userId];
+    const params: any[] = [userId]; // $1 — may be null, handled safely above
     let paramIndex = 2;
 
-    let countQuery = `SELECT COUNT(*) as count FROM questions q JOIN users u ON q.user_id = u.user_id WHERE 1=1`;
+    let countQuery = `
+      SELECT COUNT(*) AS count
+      FROM questions q
+      JOIN users u ON q.user_id = u.user_id
+      WHERE 1=1
+    `;
     const countParams: any[] = [];
     let countParamIndex = 1;
 
@@ -160,6 +174,7 @@ export async function GET(req: Request) {
     }
 
     if (search && search.trim()) {
+      // Use a single param reference — PG allows reusing the same $N
       query += ` AND (q.title ILIKE $${paramIndex} OR q.content ILIKE $${paramIndex} OR q.category ILIKE $${paramIndex})`;
       params.push(`%${search.trim()}%`);
       paramIndex++;
@@ -255,10 +270,11 @@ export async function GET(req: Request) {
           ...question,
           upvotes: Number(question.upvotes || 0),
           downvotes: Number(question.downvotes || 0),
+          // user_vote comes back as integer 1/-1 from the subquery
           user_vote:
-            question.user_vote === 1
+            question.user_vote === 1 || question.user_vote === "1"
               ? "up"
-              : question.user_vote === -1
+              : question.user_vote === -1 || question.user_vote === "-1"
                 ? "down"
                 : null,
           answers: answersWithMaterials,

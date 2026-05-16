@@ -1,3 +1,5 @@
+// PATH: src/app/api/answers/[answerId]/route.ts
+
 import { withAuth, type AuthedRequest } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { insertComment } from "@/lib/queries/comments";
@@ -24,7 +26,6 @@ export const POST = withAuth(
         );
       }
 
-      // answer_id set → question_id and tutorial_id must be null (DB CHECK constraint)
       const comment = await insertComment({
         user_id: req.userId,
         content: content.trim(),
@@ -51,26 +52,26 @@ export const DELETE = withAuth(
     try {
       const { answerId: rawAnswerId } = await params;
       const answerId = parseInt(rawAnswerId);
-      
+
       if (isNaN(answerId)) {
         return NextResponse.json(
           { error: "Invalid answer ID" },
           { status: 400 },
         );
       }
-      
+
       const success = await deleteAnswer(
         asAnswerId(answerId),
         req.userId,
       );
-      
+
       if (!success) {
         return NextResponse.json(
           { error: "Answer not found or you are not authorized to delete it" },
           { status: 403 },
         );
       }
-      
+
       return NextResponse.json({ success: true }, { status: 200 });
     } catch (error) {
       return errorToResponse(error);
