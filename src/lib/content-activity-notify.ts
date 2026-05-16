@@ -1,9 +1,7 @@
 import "server-only";
 
 import { getIO } from "@/lib/socket";
-import type { UserID } from "@/types/database";
-
-export type ContentActivityKind = "comment" | "answer" | "interaction";
+import type { ContentActivityKind, UserID } from "@/types/database";
 
 /** Notifies the content owner via their private socket room (skipped if actor is the owner). */
 export function notifyContentOwner(

@@ -1,3 +1,5 @@
+export type ContentActivityKind = "comment" | "answer" | "interaction";
+
 export type UserID = string & { readonly _brand: "UserID" };
 export type QuestionID = string & { readonly _brand: "QuestionID" };
 export type TutorialID = string & { readonly _brand: "TutorialID" };

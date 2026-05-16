@@ -98,6 +98,17 @@ export default function QuestionDetailPage() {
     };
   }, [socket, questionId, loadQuestion]);
 
+  // Vercel/serverless has no Socket.IO server; poll so comments & answers stay fresh.
+  useEffect(() => {
+    if (!questionId || loading) return;
+    const intervalMs = socket?.connected ? 25000 : 5000;
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      loadQuestion();
+    }, intervalMs);
+    return () => window.clearInterval(id);
+  }, [questionId, loading, loadQuestion, socket?.connected]);
+
   const handleAnswerPosted = useCallback(
     (raw: any) => {
       const newAnswer = raw.answer || raw;
