@@ -1,5 +1,8 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
-import { notifyContentOwner } from "@/lib/content-activity-notify";
+import {
+  getUserNotifyPublicMeta,
+  notifyContentOwner,
+} from "@/lib/content-activity-notify";
 import { one } from "@/lib/db";
 import { errorToResponse } from "@/lib/errors";
 import { insertComment } from "@/lib/queries/comments";
@@ -29,26 +32,37 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
     });
 
     let contentOwnerId: string | null = null;
+    let notifyHref: string | undefined;
+
     if (parsed.question_id) {
+      notifyHref = `/questions/${parsed.question_id}`;
       const row = await one<{ user_id: string }>(
         `SELECT user_id FROM questions WHERE question_id = $1`,
         [parsed.question_id],
       );
       contentOwnerId = row?.user_id ?? null;
     } else if (parsed.answer_id) {
-      const row = await one<{ user_id: string }>(
-        `SELECT user_id FROM answers WHERE answer_id = $1`,
+      const row = await one<{ user_id: string; question_id: string }>(
+        `SELECT user_id, question_id::text FROM answers WHERE answer_id = $1`,
         [parsed.answer_id],
       );
       contentOwnerId = row?.user_id ?? null;
+      if (row?.question_id) notifyHref = `/questions/${row.question_id}`;
     } else if (parsed.tutorial_id) {
+      notifyHref = `/tutorials/${parsed.tutorial_id}`;
       const row = await one<{ user_id: string }>(
         `SELECT user_id FROM tutorials WHERE tutorial_id = $1`,
         [parsed.tutorial_id],
       );
       contentOwnerId = row?.user_id ?? null;
     }
-    notifyContentOwner(contentOwnerId, req.userId, "comment");
+
+    const actorMeta = await getUserNotifyPublicMeta(req.userId);
+    notifyContentOwner(contentOwnerId, req.userId, "comment", {
+      actorDisplayName: actorMeta?.user_name ?? "Someone",
+      actorProfileUrl: actorMeta?.profile_url ?? null,
+      href: notifyHref,
+    });
 
     try {
       const { getIO } = await import("@/lib/socket");

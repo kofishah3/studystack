@@ -1,5 +1,8 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
-import { notifyContentOwner } from "@/lib/content-activity-notify";
+import {
+  getUserNotifyPublicMeta,
+  notifyContentOwner,
+} from "@/lib/content-activity-notify";
 import { NextResponse } from "next/server";
 import { q, one } from "@/lib/db";
 import {
@@ -11,6 +14,44 @@ import {
   type InteractionRow,
 } from "@/lib/db-brands";
 import { errorToResponse } from "@/lib/errors";
+
+async function resolveInteractionNotifyHref(
+  target_type: string,
+  fkValue: unknown,
+): Promise<string | undefined> {
+  if (target_type === "question")
+    return typeof fkValue === "string" ? `/questions/${fkValue}` : undefined;
+  if (target_type === "tutorial")
+    return typeof fkValue === "string" ? `/tutorials/${fkValue}` : undefined;
+  if (target_type === "answer") {
+    const row = await one<{ question_id: string }>(
+      `SELECT question_id::text FROM answers WHERE answer_id = $1`,
+      [fkValue],
+    );
+    return row?.question_id ? `/questions/${row.question_id}` : undefined;
+  }
+  if (target_type === "comment") {
+    const row = await one<{
+      question_id: string | null;
+      answer_id: number | null;
+      tutorial_id: string | null;
+    }>(
+      `SELECT question_id::text, answer_id, tutorial_id::text FROM comments WHERE comment_id = $1`,
+      [fkValue],
+    );
+    if (!row) return undefined;
+    if (row.tutorial_id) return `/tutorials/${row.tutorial_id}`;
+    if (row.question_id) return `/questions/${row.question_id}`;
+    if (row.answer_id != null) {
+      const aq = await one<{ question_id: string }>(
+        `SELECT question_id::text FROM answers WHERE answer_id = $1`,
+        [row.answer_id],
+      );
+      return aq?.question_id ? `/questions/${aq.question_id}` : undefined;
+    }
+  }
+  return undefined;
+}
 
 export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
   try {
@@ -136,7 +177,16 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       io.emit("leaderboard:update");
     } catch (e) {}
 
-    notifyContentOwner(targetRow?.user_id, req.userId, "interaction");
+    const notifyHref = await resolveInteractionNotifyHref(
+      target_type,
+      fkValue,
+    );
+    const actorMeta = await getUserNotifyPublicMeta(req.userId);
+    notifyContentOwner(targetRow?.user_id, req.userId, "interaction", {
+      actorDisplayName: actorMeta?.user_name ?? "Someone",
+      actorProfileUrl: actorMeta?.profile_url ?? null,
+      href: notifyHref,
+    });
 
     return NextResponse.json(
       { interaction: rowToInteraction(row) },

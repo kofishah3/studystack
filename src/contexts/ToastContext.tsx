@@ -16,6 +16,8 @@ interface ToastConfig {
   type: ToastType;
   title?: string;
   message: string;
+  href?: string;
+  actorProfileUrl?: string | null;
 }
 
 interface ToastContextProps {
@@ -50,6 +52,9 @@ function ContentActivityToasts() {
             id: string;
             kind: ContentActivityKind;
             created_at: string;
+            actor_display_name?: string;
+            actor_profile_url?: string | null;
+            href?: string;
           }>;
         };
         const events = data.events ?? [];
@@ -64,17 +69,21 @@ function ContentActivityToasts() {
             );
           }
 
+          const who = ev.actor_display_name?.trim() || "Someone";
+
           const message =
             ev.kind === "answer"
-              ? "Someone answered your question."
+              ? "answered your question."
               : ev.kind === "interaction"
-                ? "Someone reacted to your content."
-                : "Someone commented on your post.";
+                ? "reacted to your content."
+                : "commented on your post.";
 
           showToast({
             type: "info",
-            title: "New activity",
+            title: who,
             message,
+            href: ev.href,
+            actorProfileUrl: ev.actor_profile_url ?? null,
           });
 
           if (ev.created_at > maxCreated) maxCreated = ev.created_at;

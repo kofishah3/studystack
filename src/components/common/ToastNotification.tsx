@@ -1,7 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle2, XCircle, Info, AlertTriangle, X } from "lucide-react";
+import { CheckCircle2, XCircle, Info, AlertTriangle, X, UserRound } from "lucide-react";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -10,6 +11,9 @@ export interface ToastData {
   type: ToastType;
   title?: string;
   message: string;
+  /** In-app route to open when the toast body is clicked (client navigation). */
+  href?: string;
+  actorProfileUrl?: string | null;
 }
 
 interface ToastItemProps {
@@ -56,6 +60,8 @@ const ANIMATION_MS = 350;
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(100);
+  const router = useRouter();
+  const clickable = Boolean(toast.href?.startsWith("/"));
 
   const style = toastStyles[toast.type];
   const iconColor = iconColors[toast.type];
@@ -76,6 +82,11 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const handleDismiss = () => {
+    setVisible(false);
+    setTimeout(() => onDismiss(toast.id), ANIMATION_MS);
+  };
+
   useEffect(() => {
     const dismissTimer = setTimeout(() => {
       handleDismiss();
@@ -83,10 +94,34 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     return () => clearTimeout(dismissTimer);
   }, []);
 
-  const handleDismiss = () => {
-    setVisible(false);
-    setTimeout(() => onDismiss(toast.id), ANIMATION_MS);
+  const handleNavigate = () => {
+    if (!clickable || !toast.href) return;
+    handleDismiss();
+    router.push(toast.href);
   };
+
+  const handleBodyKeyDown = (e: React.KeyboardEvent) => {
+    if (!clickable) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleNavigate();
+    }
+  };
+
+  const avatarOrIcon = toast.actorProfileUrl ? (
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src={toast.actorProfileUrl}
+      alt=""
+      className="h-9 w-9 rounded-full object-cover"
+    />
+  ) : clickable ? (
+    <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 ${iconColor}`}>
+      <UserRound size={18} strokeWidth={2} />
+    </span>
+  ) : (
+    <span className={`mt-0.5 shrink-0 ${iconColor}`}>{style.icon}</span>
+  );
 
   return (
     <div
@@ -101,11 +136,26 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       `}
       style={{ transitionDuration: `${ANIMATION_MS}ms` }}
     >
-      <div id="toast-icon-container" className={`mt-0.5 shrink-0 ${iconColor}`}>
-        {style.icon}
+      <div
+        id="toast-icon-container"
+        className={`shrink-0 ${clickable ? "cursor-pointer" : ""}`}
+        onClick={handleNavigate}
+        onKeyDown={handleBodyKeyDown}
+        role={clickable ? "button" : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        aria-label={clickable ? "Open related post" : undefined}
+      >
+        {avatarOrIcon}
       </div>
 
-      <div id="toast-content" className="flex-1 min-w-0">
+      <div
+        id="toast-content"
+        className={`flex-1 min-w-0 text-left ${clickable ? "cursor-pointer hover:opacity-90" : ""}`}
+        role={clickable ? "link" : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        onClick={handleNavigate}
+        onKeyDown={handleBodyKeyDown}
+      >
         {toast.title && (
           <p id="toast-title" className="text-sm font-semibold leading-snug">
             {toast.title}
@@ -113,7 +163,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         )}
         <p
           id="toast-message"
-          className="text-xs text-gray-500 dark:text-gray-400 leading-snug mt-0.5"
+          className={`text-xs text-gray-500 dark:text-gray-400 leading-snug ${toast.title ? "mt-0.5" : ""}`}
         >
           {toast.message}
         </p>
@@ -121,6 +171,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
 
       <button
         id={`toast-dismiss-${toast.id}`}
+        type="button"
         onClick={handleDismiss}
         aria-label="Dismiss notification"
         className="shrink-0 mt-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
