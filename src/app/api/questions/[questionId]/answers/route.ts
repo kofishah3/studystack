@@ -1,8 +1,9 @@
 // PATH: src/app/api/questions/[questionId]/answers/route.ts
 
 import { withAuth, type AuthedRequest } from "@/lib/auth";
+import { notifyContentOwner } from "@/lib/content-activity-notify";
 import { NextResponse } from "next/server";
-import { insertAnswer, listAnswersForQuestionDetailed } from "@/lib/queries/answers";
+import { insertAnswer } from "@/lib/queries/answers";
 import { asQuestionId } from "@/lib/db-brands";
 import { errorToResponse } from "@/lib/errors";
 import { one } from "@/lib/db";
@@ -27,6 +28,12 @@ export const POST = withAuth(
       }
 
       const answer = await insertAnswer(req.userId, questionId, content.trim());
+
+      const questionOwner = await one<{ user_id: string }>(
+        `SELECT user_id FROM questions WHERE question_id = $1`,
+        [questionId],
+      );
+      notifyContentOwner(questionOwner?.user_id, req.userId, "answer");
 
       // Enrich with author fields so AnswerCard receives the full shape.
       // We do a single targeted lookup — no need to re-fetch all answers.

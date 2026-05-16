@@ -3,6 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+function readAuthToken(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("token") ?? "";
+}
+
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -30,6 +35,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       path: "/socket.io",
       addTrailingSlash: false,
       reconnectionAttempts: 5,
+      auth: { token: readAuthToken() },
     });
 
     socketInstance.on("connect", () => {
@@ -40,9 +46,22 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setIsConnected(false);
     });
 
+    const onAuthToken = () => {
+      const token = readAuthToken();
+      socketInstance.auth = { token };
+      if (socketInstance.connected) {
+        socketInstance.disconnect().connect();
+      } else {
+        socketInstance.connect();
+      }
+    };
+
+    window.addEventListener("studystack:auth-token", onAuthToken);
+
     setSocket(socketInstance);
 
     return () => {
+      window.removeEventListener("studystack:auth-token", onAuthToken);
       socketInstance.disconnect();
     };
   }, []);

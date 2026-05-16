@@ -1,4 +1,5 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
+import { notifyContentOwner } from "@/lib/content-activity-notify";
 import { NextResponse } from "next/server";
 import { q, one } from "@/lib/db";
 import {
@@ -134,6 +135,8 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       }
       io.emit("leaderboard:update");
     } catch (e) {}
+
+    notifyContentOwner(targetRow?.user_id, req.userId, "interaction");
 
     return NextResponse.json(
       { interaction: rowToInteraction(row) },

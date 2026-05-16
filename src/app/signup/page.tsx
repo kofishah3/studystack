@@ -38,6 +38,7 @@ export default function SignupPage() {
       if (res.data.success) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
+        window.dispatchEvent(new Event("studystack:auth-token"));
         router.push("/onboarding");
       }
     } catch (err: any) {

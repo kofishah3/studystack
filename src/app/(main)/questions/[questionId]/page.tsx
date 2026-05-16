@@ -63,6 +63,19 @@ export default function QuestionDetailPage() {
     loadQuestion();
   }, [loadQuestion]);
 
+  useEffect(() => {
+    if (loading || !data) return;
+    const raw =
+      typeof window !== "undefined" ? window.location.hash : "";
+    if (raw !== "#question-answers" && raw !== "#question-comments") return;
+    const id = raw.slice(1);
+    requestAnimationFrame(() => {
+      document
+        .getElementById(id)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [loading, data, questionId, answers.length, comments.length]);
+
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -284,45 +297,50 @@ export default function QuestionDetailPage() {
           onCommentPosted={handleQuestionCommentPosted}
         />
 
-        {comments.length > 0 && (
-          <div className="ml-7 sm:ml-12 flex flex-col gap-4 relative">
-            <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800" />
-            <div className="flex items-center gap-2 px-1">
-              <MessageSquare size={14} className="text-gray-400" />
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Comments
-              </h3>
+        <div id="question-comments" className="scroll-mt-24">
+          {comments.length > 0 && (
+            <div className="ml-7 sm:ml-12 flex flex-col gap-4 relative">
+              <div className="absolute -left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800" />
+              <div className="flex items-center gap-2 px-1">
+                <MessageSquare size={14} className="text-gray-400" />
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Comments
+                </h3>
+              </div>
+              <div className="flex flex-col gap-2">
+                {buildCommentTree(comments).map((comment) => (
+                  <CommentCard
+                    key={comment.comment_id}
+                    {...comment}
+                    onReply={async (content, parentId) => {
+                      const res = await fetch(
+                        `/api/questions/${questionId}/comments`,
+                        {
+                          method: "POST",
+                          headers: authHeaders(),
+                          body: JSON.stringify({
+                            content,
+                            parent_comment_id: parentId,
+                          }),
+                        },
+                      );
+                      if (res.ok) {
+                        const d = await res.json();
+                        setComments((prev) => [...prev, d.comment]);
+                      }
+                    }}
+                    onDelete={handleDeleteComment}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              {buildCommentTree(comments).map((comment) => (
-                <CommentCard
-                  key={comment.comment_id}
-                  {...comment}
-                  onReply={async (content, parentId) => {
-                    const res = await fetch(
-                      `/api/questions/${questionId}/comments`,
-                      {
-                        method: "POST",
-                        headers: authHeaders(),
-                        body: JSON.stringify({
-                          content,
-                          parent_comment_id: parentId,
-                        }),
-                      },
-                    );
-                    if (res.ok) {
-                      const d = await res.json();
-                      setComments((prev) => [...prev, d.comment]);
-                    }
-                  }}
-                  onDelete={handleDeleteComment}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="mt-4 flex flex-col gap-4">
+        <div
+          id="question-answers"
+          className="mt-4 flex flex-col gap-4 scroll-mt-24"
+        >
           <h2 className="text-lg font-bold flex items-center gap-2 px-2">
             Answers
             <span className="bg-primary-100 dark:bg-primary-900/30 text-primary-700 px-2.5 py-0.5 rounded-full text-xs">

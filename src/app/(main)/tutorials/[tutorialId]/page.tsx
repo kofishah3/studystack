@@ -49,6 +49,11 @@ export default function TutorialDetailPage() {
       if (json.data) {
         setTutorial(json.data);
       }
+      showToast({
+        type: "success",
+        title: "Comment posted",
+        message: "Your comment is live on this tutorial.",
+      });
     } catch (error) {
       console.error("Comment submission failed:", error);
       throw error;
@@ -77,6 +82,11 @@ export default function TutorialDetailPage() {
       if (json.data) {
         setTutorial(json.data);
       }
+      showToast({
+        type: "success",
+        title: "Reply posted",
+        message: "Your reply was added.",
+      });
     } catch (error) {
       console.error("Reply submission failed:", error);
       throw error;

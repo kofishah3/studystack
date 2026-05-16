@@ -1,4 +1,6 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
+import { notifyContentOwner } from "@/lib/content-activity-notify";
+import { one } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { insertComment } from "@/lib/queries/comments";
 import { asAnswerId, asCommentId } from "@/lib/db-brands";
@@ -40,6 +42,12 @@ export const POST = withAuth(
           ? asCommentId(Number(parent_comment_id))
           : null,
       });
+
+      const answerOwner = await one<{ user_id: string }>(
+        `SELECT user_id FROM answers WHERE answer_id = $1`,
+        [answerId],
+      );
+      notifyContentOwner(answerOwner?.user_id, req.userId, "comment");
 
       try {
         const { questionId } = await params;
