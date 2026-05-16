@@ -19,6 +19,7 @@ export default function Home() {
               src="/logos/studystack-logo.png"
               alt="StudyStack Logo"
               fill
+              sizes="(max-width: 640px) 96px, 128px"
               className="object-contain"
               priority
             />

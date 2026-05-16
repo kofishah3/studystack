@@ -140,6 +140,7 @@ export default function VotePanel({
       <button
         onClick={handleUpvote}
         disabled={loading}
+        aria-label="Upvote"
         className={`transition ${
           userVote === "up"
             ? "text-blue-500"
@@ -154,6 +155,7 @@ export default function VotePanel({
       <button
         onClick={handleDownvote}
         disabled={loading}
+        aria-label="Downvote"
         className={`transition ${
           userVote === "down"
             ? "text-red-500"

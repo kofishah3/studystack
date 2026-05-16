@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import Image from "next/image";
 
 
 function Lightbox({
@@ -39,11 +40,15 @@ function Lightbox({
 
         <div className="w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center max-h-[78vh]">
           {current.type === "image" ? (
-            <img
-              src={current.url}
-              alt=""
-              className="max-h-[78vh] max-w-full object-contain"
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={current.url}
+                alt=""
+                fill
+                sizes="100vw"
+                className="object-contain"
+              />
+            </div>
           ) : (
             <video
               src={current.url}
@@ -112,10 +117,12 @@ export function MediaCarousel({
           }
         >
           {item.type === "image" ? (
-            <img
+            <Image
               src={item.url}
               alt=""
-              className="w-full object-contain cursor-pointer"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain cursor-pointer"
             />
           ) : (
             <video

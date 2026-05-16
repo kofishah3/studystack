@@ -8,7 +8,18 @@ const pwaConfig = withPWA({
 });
 
 const nextConfig = {
-  turbopack: {},
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+      },
+    ],
+  },
 };
 
 export default pwaConfig(nextConfig);

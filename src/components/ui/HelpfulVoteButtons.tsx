@@ -37,6 +37,7 @@ export default function HelpfulVoteButtons({
           onVote("up");
         }}
         disabled={loading}
+        aria-label="Upvote"
         className={`${btnBase} ${
           userVote === "up"
             ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400"
@@ -61,6 +62,7 @@ export default function HelpfulVoteButtons({
           onVote("down");
         }}
         disabled={loading}
+        aria-label="Downvote"
         className={`${btnBase} ${
           userVote === "down"
             ? "bg-red-100 text-red-500 dark:bg-red-950/50 dark:text-red-400"
