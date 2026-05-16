@@ -1,23 +1,35 @@
 "use client";
 
 import React from "react";
+import { signIn } from "next-auth/react";
 
 interface GoogleAuthButtonProps {
   onClick?: () => void;
   label?: string;
   id?: string;
+  callbackUrl?: string;  
 }
 
 const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   onClick,
   label = "Continue with Google",
   id = "google-auth-button",
+  callbackUrl = "/onboarding",  
 }) => {
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      // Default behavior: sign in with Google
+      signIn("google", { callbackUrl });
+    }
+  };
+
   return (
     <button
       id={id}
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-border bg-surface hover:bg-primary-50 transition-all duration-200 w-full group active:scale-[0.98]"
     >
       <img
