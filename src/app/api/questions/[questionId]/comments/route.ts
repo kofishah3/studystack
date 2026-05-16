@@ -8,7 +8,10 @@
  */
 
 import { withAuth, type AuthedRequest } from "@/lib/auth";
-import { notifyContentOwner } from "@/lib/content-activity-notify";
+import {
+  getUserNotifyPublicMeta,
+  notifyContentOwner,
+} from "@/lib/content-activity-notify";
 import { one } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { insertComment } from "@/lib/queries/comments";
@@ -50,7 +53,12 @@ export const POST = withAuth(
         `SELECT user_id FROM questions WHERE question_id = $1`,
         [questionId],
       );
-      notifyContentOwner(owner?.user_id, req.userId, "comment");
+      const actorMeta = await getUserNotifyPublicMeta(req.userId);
+      notifyContentOwner(owner?.user_id, req.userId, "comment", {
+        actorDisplayName: actorMeta?.user_name ?? "Someone",
+        actorProfileUrl: actorMeta?.profile_url ?? null,
+        href: `/questions/${questionId}`,
+      });
 
       try {
         const { getIO } = await import("@/lib/socket");

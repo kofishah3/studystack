@@ -6,16 +6,18 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { ToastContainer, type ToastData, type ToastType } from "@/components/common/ToastNotification";
-import { useSocket } from "@/contexts/SocketContext";
-import type { ContentActivityKind } from "@/lib/content-activity-notify";
+import type { ContentActivityKind } from "@/types/database";
 
 interface ToastConfig {
   type: ToastType;
   title?: string;
   message: string;
+  href?: string;
+  actorProfileUrl?: string | null;
 }
 
 interface ToastContextProps {
@@ -25,33 +27,87 @@ interface ToastContextProps {
 const ToastContext = createContext<ToastContextProps | undefined>(undefined);
 
 function ContentActivityToasts() {
-  const { socket } = useSocket();
   const { showToast } = useToast();
+  const sinceRef = useRef<string>("");
+  const shownIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!socket) return;
+    sinceRef.current = new Date().toISOString();
 
-    const onActivity = (payload: { kind?: ContentActivityKind }) => {
-      const kind = payload?.kind;
-      const message =
-        kind === "answer"
-          ? "Someone answered your question."
-          : kind === "interaction"
-            ? "Someone reacted to your content."
-            : "Someone commented on your post.";
+    const poll = async () => {
+      if (typeof window === "undefined") return;
+      if (document.visibilityState !== "visible") return;
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-      showToast({
-        type: "info",
-        title: "New activity",
-        message,
-      });
+      try {
+        const since = sinceRef.current;
+        const res = await fetch(
+          `/api/me/content-activity?since=${encodeURIComponent(since)}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          events?: Array<{
+            id: string;
+            kind: ContentActivityKind;
+            created_at: string;
+            actor_display_name?: string;
+            actor_profile_url?: string | null;
+            href?: string;
+          }>;
+        };
+        const events = data.events ?? [];
+        let maxCreated = since;
+
+        for (const ev of events) {
+          if (shownIdsRef.current.has(ev.id)) continue;
+          shownIdsRef.current.add(ev.id);
+          if (shownIdsRef.current.size > 400) {
+            shownIdsRef.current = new Set(
+              [...shownIdsRef.current].slice(-200),
+            );
+          }
+
+          const who = ev.actor_display_name?.trim() || "Someone";
+
+          const message =
+            ev.kind === "answer"
+              ? "answered your question."
+              : ev.kind === "interaction"
+                ? "reacted to your content."
+                : "commented on your post.";
+
+          showToast({
+            type: "info",
+            title: who,
+            message,
+            href: ev.href,
+            actorProfileUrl: ev.actor_profile_url ?? null,
+          });
+
+          if (ev.created_at > maxCreated) maxCreated = ev.created_at;
+        }
+
+        if (events.length > 0) sinceRef.current = maxCreated;
+      } catch {
+        // Offline or transient errors — next interval retries
+      }
     };
 
-    socket.on("content:activity", onActivity);
-    return () => {
-      socket.off("content:activity", onActivity);
+    const intervalId = setInterval(poll, 8000);
+    void poll();
+    return () => clearInterval(intervalId);
+  }, [showToast]);
+
+  useEffect(() => {
+    const onAuth = () => {
+      sinceRef.current = new Date().toISOString();
+      shownIdsRef.current.clear();
     };
-  }, [socket, showToast]);
+    window.addEventListener("studystack:auth-token", onAuth);
+    return () => window.removeEventListener("studystack:auth-token", onAuth);
+  }, []);
 
   return null;
 }

@@ -1,5 +1,8 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
-import { notifyContentOwner } from "@/lib/content-activity-notify";
+import {
+  getUserNotifyPublicMeta,
+  notifyContentOwner,
+} from "@/lib/content-activity-notify";
 import { one } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { insertComment } from "@/lib/queries/comments";
@@ -12,7 +15,7 @@ export const POST = withAuth(
     { params }: { params: Promise<{ questionId: string; answerId: string }> },
   ) => {
     try {
-      const { answerId: rawAnswerId } = await params;
+      const { answerId: rawAnswerId, questionId } = await params;
       const answerId = asAnswerId(Number(rawAnswerId));
 
       if (isNaN(answerId as number)) {
@@ -47,10 +50,14 @@ export const POST = withAuth(
         `SELECT user_id FROM answers WHERE answer_id = $1`,
         [answerId],
       );
-      notifyContentOwner(answerOwner?.user_id, req.userId, "comment");
+      const actorMeta = await getUserNotifyPublicMeta(req.userId);
+      notifyContentOwner(answerOwner?.user_id, req.userId, "comment", {
+        actorDisplayName: actorMeta?.user_name ?? "Someone",
+        actorProfileUrl: actorMeta?.profile_url ?? null,
+        href: `/questions/${questionId}`,
+      });
 
       try {
-        const { questionId } = await params;
         const { getIO } = await import("@/lib/socket");
         const io = getIO();
         io.emit(`user:metrics_update:${req.userId}`);

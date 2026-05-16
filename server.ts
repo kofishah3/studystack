@@ -44,7 +44,7 @@ app.prepare().then(() => {
       console.error("Next.js handle error:", err);
       res.statusCode = 500;
       res.end("internal server error");
-    }3
+    }
   });
 
   const io = new Server(httpServer, {
