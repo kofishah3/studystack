@@ -1,7 +1,7 @@
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import Link from "next/link";
-import { HelpCircle, User, ArrowRight } from "lucide-react";
+import { HelpCircle, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 
 
@@ -75,7 +75,8 @@ export default function TutorialCard({
         w-full p-3.5
         bg-white dark:bg-gray-900 
         border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm
-        hover:shadow-md transition-shadow"
+        hover:shadow-md hover:border-primary-300/70 dark:hover:border-primary-600/50
+        transition-all duration-200"
         id={`tutorial-card-${id}`}
       >
         <div className="flex gap-4">
@@ -103,12 +104,12 @@ export default function TutorialCard({
             <div className="flex items-center justify-between gap-3">
               <Link
                 href={`/tutorials/${id}`}
-                className="group/link flex-1"
+                className="group/link flex-1 rounded-md -m-0.5 p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
                 id={`tutorial-link-${id}`}
               >
                 <h2
                   className="text-md font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight 
-                transition-colors group-hover/link:text-primary-700"
+                transition-colors group-hover/link:text-primary-600 dark:group-hover/link:text-primary-400"
                 >
                   {title}
                 </h2>
@@ -142,12 +143,25 @@ export default function TutorialCard({
               )}
             </div>
 
-            <p
-              className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2"
-              id={`tutorial-body-${id}`}
+            <Link
+              href={`/tutorials/${id}`}
+              className="group/excerpt block rounded-md -m-0.5 p-0.5 -mt-1 outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
             >
-              {content}
-            </p>
+              <p
+                className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2 group-hover/excerpt:text-gray-800 dark:group-hover/excerpt:text-gray-200 transition-colors"
+                id={`tutorial-body-${id}`}
+              >
+                {content}
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-400 group-hover/excerpt:gap-1.5 transition-all">
+                Open tutorial
+                <ArrowRight
+                  size={14}
+                  className="shrink-0 opacity-90 group-hover/excerpt:translate-x-0.5 transition-transform"
+                  aria-hidden
+                />
+              </span>
+            </Link>
           </div>
 
           <div className="shrink-0" id={`action-menu-container-${id}`}>

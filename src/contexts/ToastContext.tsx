@@ -5,9 +5,12 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useEffect,
   ReactNode,
 } from "react";
 import { ToastContainer, type ToastData, type ToastType } from "@/components/common/ToastNotification";
+import { useSocket } from "@/contexts/SocketContext";
+import type { ContentActivityKind } from "@/lib/content-activity-notify";
 
 interface ToastConfig {
   type: ToastType;
@@ -20,6 +23,38 @@ interface ToastContextProps {
 }
 
 const ToastContext = createContext<ToastContextProps | undefined>(undefined);
+
+function ContentActivityToasts() {
+  const { socket } = useSocket();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const onActivity = (payload: { kind?: ContentActivityKind }) => {
+      const kind = payload?.kind;
+      const message =
+        kind === "answer"
+          ? "Someone answered your question."
+          : kind === "interaction"
+            ? "Someone reacted to your content."
+            : "Someone commented on your post.";
+
+      showToast({
+        type: "info",
+        title: "New activity",
+        message,
+      });
+    };
+
+    socket.on("content:activity", onActivity);
+    return () => {
+      socket.off("content:activity", onActivity);
+    };
+  }, [socket, showToast]);
+
+  return null;
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastData[]>([]);
@@ -36,6 +71,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
+      <ContentActivityToasts />
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>
   );

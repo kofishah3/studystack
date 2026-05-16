@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useMemo, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, Share2, Trash2 } from "lucide-react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
+import { Share2, Trash2, ArrowRight } from "lucide-react";
 import UserMeta from "../ui/UserMeta";
 import ActionMenu from "../ui/ActionMenu";
 import SubjectTag from "../ui/Tag";
@@ -181,11 +181,35 @@ export default function QuestionCard({
     }, 0);
   }
 
+  const handleAnswerSuccess = useCallback(
+    (answer: Record<string, unknown>) => {
+      onAnswerPosted?.(answer);
+      if (mode === "preview") {
+        router.push(`/questions/${idStr}#question-answers`);
+      }
+    },
+    [mode, onAnswerPosted, router, idStr],
+  );
+
+  const handleCommentSuccess = useCallback(
+    (comment: Record<string, unknown>) => {
+      onCommentPosted?.(comment);
+      if (mode === "preview") {
+        router.push(`/questions/${idStr}#question-comments`);
+      }
+    },
+    [mode, onCommentPosted, router, idStr],
+  );
+
   return (
     <div
       className={`
         w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm
-        ${mode === "preview" ? "hover:shadow-md transition-shadow" : ""}
+        ${
+          mode === "preview"
+            ? "hover:shadow-md hover:border-primary-300/70 dark:hover:border-primary-600/50 transition-all duration-200"
+            : ""
+        }
       `}
       id={`question-card-${idStr}`}
     >
@@ -245,23 +269,36 @@ export default function QuestionCard({
 
         <div className="flex-1 min-w-0">
           {mode === "full" ? (
-            <h1 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-base sm:text-lg">
-              {title}
-            </h1>
+            <>
+              <h1 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-base sm:text-lg">
+                {title}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm whitespace-pre-wrap mt-1">
+                {content}
+              </p>
+            </>
           ) : (
-            <Link href={`/questions/${idStr}`} className="group">
-              <h2 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-sm group-hover:text-primary-700 transition-colors">
+            <Link
+              href={`/questions/${idStr}`}
+              className="group block rounded-lg -mx-1 px-1 py-0.5 -mt-0.5 hover:bg-primary-50/70 dark:hover:bg-primary-950/30 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
+            >
+              <h2 className="font-bold text-gray-900 dark:text-gray-100 leading-snug tracking-tight text-sm group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors">
                 {title}
               </h2>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-xs line-clamp-3 mt-1 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                {content}
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-400 group-hover:gap-1.5 transition-all">
+                View full question & discussion
+                <ArrowRight
+                  size={14}
+                  className="shrink-0 opacity-80 group-hover:translate-x-0.5 transition-transform"
+                  aria-hidden
+                />
+              </span>
             </Link>
           )}
         </div>
-
-        <p
-          className={`text-gray-600 dark:text-gray-400 leading-relaxed ${mode === "full" ? "text-sm whitespace-pre-wrap" : "text-xs line-clamp-3"}`}
-        >
-          {content}
-        </p>
 
         {materials.length > 0 && (
           <div
@@ -374,7 +411,7 @@ export default function QuestionCard({
             >
               <CreateAnswer
                 questionId={idStr}
-                onSuccess={onAnswerPosted}
+                onSuccess={handleAnswerSuccess}
                 textareaRef={answerTextareaRef}
               />
             </div>
@@ -383,7 +420,7 @@ export default function QuestionCard({
             >
               <CreateComment
                 questionId={idStr}
-                onSuccess={onCommentPosted}
+                onSuccess={handleCommentSuccess}
                 textareaRef={commentTextareaRef}
               />
             </div>

@@ -1,10 +1,13 @@
 import { createServer } from "http";
-import path from "path";
+import jwt from "jsonwebtoken";
 import { Server } from "socket.io";
 import next from "next";
 import cron from "node-cron";
 import { runTutorialPurge } from "./src/lib/cron/purge-tutorials";
 import type { PurgeResult } from "./src/lib/cron/purge-tutorials";
+
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
@@ -41,7 +44,7 @@ app.prepare().then(() => {
       console.error("Next.js handle error:", err);
       res.statusCode = 500;
       res.end("internal server error");
-    }
+    }3
   });
 
   const io = new Server(httpServer, {
@@ -50,8 +53,29 @@ app.prepare().then(() => {
 
   (global as any).io = io;
 
+  io.use((socket, next) => {
+    const auth = socket.handshake.auth as { token?: unknown } | undefined;
+    const token = auth?.token;
+    if (typeof token !== "string" || !token) {
+      next();
+      return;
+    }
+    try {
+      const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+      (socket.data as { userId?: string }).userId = payload.userId;
+    } catch {
+      // Invalid token: still allow the connection for public listeners
+    }
+    next();
+  });
+
   io.on("connection", (socket) => {
     console.log("socket connected:", socket.id);
+
+    const uid = (socket.data as { userId?: string }).userId;
+    if (typeof uid === "string") {
+      socket.join(`user:${uid}`);
+    }
 
     socket.on("join:question", (questionId: string) => {
       socket.join(`question:${questionId}`);

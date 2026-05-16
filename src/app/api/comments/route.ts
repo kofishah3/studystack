@@ -1,4 +1,6 @@
 import { withAuth, type AuthedRequest } from "@/lib/auth";
+import { notifyContentOwner } from "@/lib/content-activity-notify";
+import { one } from "@/lib/db";
 import { errorToResponse } from "@/lib/errors";
 import { insertComment } from "@/lib/queries/comments";
 import { createCommentSchema, parseOrThrow } from "@/lib/validation/comment";
@@ -25,6 +27,28 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       answer_id: parsed.answer_id ? asAnswerId(parsed.answer_id) : null,
       tutorial_id: parsed.tutorial_id ? asTutorialId(parsed.tutorial_id) : null,
     });
+
+    let contentOwnerId: string | null = null;
+    if (parsed.question_id) {
+      const row = await one<{ user_id: string }>(
+        `SELECT user_id FROM questions WHERE question_id = $1`,
+        [parsed.question_id],
+      );
+      contentOwnerId = row?.user_id ?? null;
+    } else if (parsed.answer_id) {
+      const row = await one<{ user_id: string }>(
+        `SELECT user_id FROM answers WHERE answer_id = $1`,
+        [parsed.answer_id],
+      );
+      contentOwnerId = row?.user_id ?? null;
+    } else if (parsed.tutorial_id) {
+      const row = await one<{ user_id: string }>(
+        `SELECT user_id FROM tutorials WHERE tutorial_id = $1`,
+        [parsed.tutorial_id],
+      );
+      contentOwnerId = row?.user_id ?? null;
+    }
+    notifyContentOwner(contentOwnerId, req.userId, "comment");
 
     try {
       const { getIO } = await import("@/lib/socket");
