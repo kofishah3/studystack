@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
 import "./globals.css";
-import Providers from "./providers";
+import { PromptProvider } from "@/contexts/PromptContext";
+import { ToastProvider } from "@/contexts/ToastContext";
+import { TooltipProvider } from "@/contexts/TooltipContext";
+import { SocketProvider } from "@/contexts/SocketContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -88,7 +91,13 @@ export default function RootLayout({
         <meta name="theme-color" content="#6366f1" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-text">
-        <Providers>{children}</Providers>
+        <SocketProvider>
+          <PromptProvider>
+            <ToastProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+            </ToastProvider>
+          </PromptProvider>
+        </SocketProvider>
       </body>
     </html>
   );
