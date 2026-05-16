@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import { useToast } from "@/contexts/ToastContext";
 
 export type VoteType = "up" | "down" | null;
 
@@ -20,13 +21,13 @@ export default function VotePanel({
   targetType,
   initialUserVote = null,
 }: VoteProps) {
+  const { showToast } = useToast();
   const [voteUp, setVoteUp] = useState(initialUp);
   const [voteDown, setVoteDown] = useState(initialDown);
   const [userVote, setUserVote] = useState<VoteType>(initialUserVote);
   const [loading, setLoading] = useState(false);
 
-  // Fetch real counts + current user's vote on mount
-  useEffect(() => {
+  const fetchCounts = useCallback(() => {
     if (!targetID) return;
 
     const token = localStorage.getItem("token");
@@ -47,15 +48,29 @@ export default function VotePanel({
       .catch(() => {});
   }, [targetID, targetType]);
 
+  useEffect(() => {
+    fetchCounts();
+  }, [fetchCounts]);
+
   const submitVote = async (value: 1 | -1 | 0) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await fetch("/api/interactions", {
+      if (!token) {
+        showToast({
+          type: "error",
+          title: "Login Required",
+          message: "Please log in to vote.",
+        });
+        fetchCounts();
+        return;
+      }
+
+      const res = await fetch("/api/interactions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           interaction_type: "react",
@@ -64,8 +79,19 @@ export default function VotePanel({
           target_id: targetID,
         }),
       });
-    } catch (err) {
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to vote");
+      }
+    } catch (err: any) {
       console.error("Vote failed", err);
+      showToast({
+        type: "error",
+        title: "Action failed",
+        message: err.message || "Something went wrong. Please try again.",
+      });
+      fetchCounts();
     } finally {
       setLoading(false);
     }

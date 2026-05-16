@@ -168,10 +168,10 @@ CREATE INDEX idx_interactions_tutorial_id ON interactions(tutorial_id);
 CREATE INDEX idx_interactions_type ON interactions(interaction_type);
 
 -- Unique partial indexes for interactions
-CREATE UNIQUE INDEX unique_user_question_interaction ON interactions(user_id, question_id) WHERE question_id IS NOT NULL;
-CREATE UNIQUE INDEX unique_user_answer_interaction ON interactions(user_id, answer_id) WHERE answer_id IS NOT NULL;
-CREATE UNIQUE INDEX unique_user_comment_interaction ON interactions(user_id, comment_id) WHERE comment_id IS NOT NULL;
-CREATE UNIQUE INDEX unique_user_tutorial_interaction ON interactions(user_id, tutorial_id) WHERE tutorial_id IS NOT NULL;
+CREATE UNIQUE INDEX unique_user_question_interaction_type ON interactions(user_id, question_id, interaction_type) WHERE question_id IS NOT NULL;
+CREATE UNIQUE INDEX unique_user_answer_interaction_type ON interactions(user_id, answer_id, interaction_type) WHERE answer_id IS NOT NULL;
+CREATE UNIQUE INDEX unique_user_comment_interaction_type ON interactions(user_id, comment_id, interaction_type) WHERE comment_id IS NOT NULL;
+CREATE UNIQUE INDEX unique_user_tutorial_interaction_type ON interactions(user_id, tutorial_id, interaction_type) WHERE tutorial_id IS NOT NULL;
 
 -- Tutorial materials indexes
 CREATE INDEX idx_tutorial_materials_tutorial_id ON tutorial_materials(tutorial_id);
