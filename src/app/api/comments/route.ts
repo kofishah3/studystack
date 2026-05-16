@@ -8,7 +8,8 @@ import {
 } from "@/lib/content-activity-notify";
 import { one } from "@/lib/db";
 import { errorToResponse } from "@/lib/errors";
-import { insertComment } from "@/lib/queries/comments";
+import { NotFoundError, ForbiddenError } from "@/lib/errors";
+import { insertComment, getCommentById, deleteComment } from "@/lib/queries/comments";
 import { createCommentSchema, parseOrThrow } from "@/lib/validation/comment";
 import { NextResponse } from "next/server";
 import {
@@ -66,6 +67,12 @@ export const POST = withAuth(async (req: AuthedRequest, _ctx: unknown) => {
       actorProfileUrl: actorMeta?.profile_url ?? null,
       href: notifyHref,
     });
+
+    return NextResponse.json({ comment }, { status: 201 });
+  } catch (error) {
+    return errorToResponse(error);
+  }
+});
 
 export const DELETE = withAuth(
   async (
